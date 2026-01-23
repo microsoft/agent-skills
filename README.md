@@ -5,9 +5,13 @@
 
 A collection of **skills**, **prompts**, **agents**, and **MCP server configurations** designed to supercharge your AI coding agents when working with Microsoft AI SDKs and Azure services.
 
+> **📖 Read the full blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
+
 ## What's This About?
 
 This repo embraces **context-driven development** — the practice of providing AI coding agents with precisely the right context at the right time. The quality of agent output is directly proportional to the quality and relevance of context it receives.
+
+![Context-Driven Development Architecture](assets/context-driven-development.png)
 
 Modern coding agents (GitHub Copilot CLI, [Claude Code](https://devblogs.microsoft.com/all-things-azure/claude-code-microsoft-foundry-enterprise-ai-coding-agent-setup/), [Codex](https://devblogs.microsoft.com/all-things-azure/codex-azure-openai-integration-fast-secure-code-development/), etc.) are powerful out of the box, but they lack domain-specific knowledge about your SDKs, patterns, and best practices. This repo provides the "onboarding guides" that turn general-purpose agents into specialized experts.
 
@@ -44,11 +48,12 @@ Each skill is a self-contained knowledge package with a `SKILL.md` file. **Copy 
 
 | Skill | Location | Description |
 |-------|----------|-------------|
+| `azd-deployment` | `.github/skills/azd-deployment/` | Azure Developer CLI deployment to Container Apps with Bicep |
 | `azure-ai-search-python` | `.github/skills/azure-ai-search-python/` | Azure AI Search SDK patterns, vector/hybrid search, agentic retrieval |
 | `azure-ai-voicelive-skill` | `.github/skills/azure-ai-voicelive-skill/` | Azure AI Voice Live SDK integration |
 | `cosmos-db-python-skill` | `.github/skills/cosmos-db-python-skill/` | Cosmos DB NoSQL with Python/FastAPI, CRUD patterns |
 | `fastapi-router` | `.github/skills/fastapi-router/` | FastAPI routers with CRUD, auth, and response models |
-| `foundry-iq-agent` | `.github/skills/foundry-iq-agent/` | Foundry agents with IQ knowledge bases |
+| `foundry-iq-python` | `.github/skills/foundry-iq-python/` | Agentic retrieval with knowledge bases and Foundry Agent Service |
 | `foundry-nextgen-frontend` | `.github/skills/foundry-nextgen-frontend/` | NextGen Design System UI patterns (Vite + React) |
 | `issue-creator` | `.github/skills/issue-creator/` | GitHub issue creation patterns |
 | `mcp-builder` | `.github/skills/mcp-builder/` | Building MCP servers (Python/Node) |
