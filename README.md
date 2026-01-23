@@ -5,9 +5,13 @@
 
 A collection of **skills**, **prompts**, **agents**, and **MCP server configurations** designed to supercharge your AI coding agents when working with Microsoft AI SDKs and Azure services.
 
+> **📖 Read the full blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
+
 ## What's This About?
 
 This repo embraces **context-driven development** — the practice of providing AI coding agents with precisely the right context at the right time. The quality of agent output is directly proportional to the quality and relevance of context it receives.
+
+![Context-Driven Development Architecture](assets/context-driven-development.png)
 
 Modern coding agents (GitHub Copilot CLI, [Claude Code](https://devblogs.microsoft.com/all-things-azure/claude-code-microsoft-foundry-enterprise-ai-coding-agent-setup/), [Codex](https://devblogs.microsoft.com/all-things-azure/codex-azure-openai-integration-fast-secure-code-development/), etc.) are powerful out of the box, but they lack domain-specific knowledge about your SDKs, patterns, and best practices. This repo provides the "onboarding guides" that turn general-purpose agents into specialized experts.
 
