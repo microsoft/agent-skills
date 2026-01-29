@@ -1,7 +1,6 @@
 {
-  "$schema": "https://context7.com/schema/context7.json",
   "projectTitle": "Agent Skills",
-  "description": "Skills, prompts, and MCP configurations for AI coding agents working with Azure SDKs and Microsoft AI Foundry. Includes 127 skills for Python, .NET, TypeScript, and Java with patterns for authentication, data storage, messaging, and AI services.",
+  "description": "127 skills for AI coding agents working with Azure SDKs and Microsoft AI Foundry. Python, .NET, TypeScript, Java patterns.",
   "folders": [".github/skills", ".github/prompts", ".github/agents", ".github/docs", "output"],
   "excludeFolders": ["skills", ".claude", ".opencode", "node_modules"],
   "excludeFiles": ["SECURITY.md", "blog.wordpress.xml"],
