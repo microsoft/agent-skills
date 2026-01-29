@@ -168,7 +168,7 @@ See `references/azure-sdk-patterns.md` for detailed patterns including:
 
 ```markdown
 ---
-name: azure-ai-example-python
+name: skill-creator
 description: |
   Azure AI Example SDK for Python. Use for [specific service features].
   Triggers: "example service", "create example", "list examples".
@@ -277,7 +277,7 @@ scripts/init_skill.py <skill-name> --path <output-directory>
 
 ```yaml
 ---
-name: skill-name
+name: skill-creator
 description: |
   What the skill does AND when to use it.
   Include trigger phrases: "Use when [scenario]".

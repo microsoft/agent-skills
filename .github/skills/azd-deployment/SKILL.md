@@ -43,7 +43,7 @@ project/
 ### Minimal Configuration
 
 ```yaml
-name: my-project
+name: azd-deployment
 services:
   backend:
     project: ./src/backend
@@ -57,7 +57,7 @@ services:
 ### Full Configuration with Hooks
 
 ```yaml
-name: my-project
+name: azd-deployment
 metadata:
   template: my-project@1.0.0
 

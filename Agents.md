@@ -15,7 +15,7 @@ Before implementing anything with Azure/Foundry SDKs:
 ```
 # Always do this first
 1. Search Microsoft Learn for current docs
-2. Check Context7 for indexed Foundry documentation
+2. Check Context7 for indexed Foundry documentation (updated daily)
 3. Verify against actual installed package version
 ```
 
@@ -146,33 +146,28 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 
 ## Skills
 
-Skills are domain-specific knowledge packages. Each has a `SKILL.md` with:
+Skills are domain-specific knowledge packages in `.github/skills/`. Each has a `SKILL.md` with:
 - **YAML frontmatter** (`name`, `description`) — triggers skill loading
 - **Markdown body** — loaded only when skill activates
 
-### Core Skills (Auto-discovered)
+### Quick Start
 
-> Location: `.github/skills/` • 16 skills
+```bash
+# Install skills using skills.sh
+npx skills add microsoft/agent-skills
+```
 
-| Category | Skills |
-|----------|--------|
-| **AI Foundry** | `foundry-sdk-python`, `foundry-iq-python`, `azure-ai-agents-python`, `agent-framework-azure-hosted-agents` |
-| **AI Services** | `azure-ai-search-python`, `azure-ai-voicelive` |
-| **Backend** | `fastapi-router`, `pydantic-models`, `cosmos-db-python-skill` |
-| **Infrastructure** | `azd-deployment`, `azure-resourcemanager-mysql-dotnet`, `azure-resourcemanager-postgresql-dotnet` |
-| **Tooling** | `skill-creator`, `mcp-builder`, `github-issue-creator` |
-| **Other** | `podcast-generation` |
+### Skill Catalog
 
-### Extended Catalog
+> Location: `.github/skills/` • 127 skills • See [CATALOG.md](CATALOG.md)
 
-> Location: `skills/{language}/` • 113 skills • See [CATALOG.md](CATALOG.md)
-
-| Language | Skills | Coverage |
-|----------|--------|----------|
-| **Python** | 33 | AI, Data, Messaging, Monitoring, Identity, Security, Integration |
-| **.NET** | 29 | Foundry, AI, Data, Messaging, Identity, Security, Partner |
-| **TypeScript** | 23 | Foundry, AI, Data, Messaging, Frontend, Identity |
-| **Java** | 28 | Foundry, AI, Data, Messaging, Communication, Identity |
+| Language | Skills | Suffix | Examples |
+|----------|--------|--------|----------|
+| **Core** | 5 | — | `mcp-builder`, `skill-creator`, `azd-deployment` |
+| **Python** | 42 | `-py` | `inference-py`, `cosmos-py`, `foundry-sdk-py` |
+| **.NET** | 29 | `-dotnet` | `inference-dotnet`, `cosmosdb-dotnet`, `keyvault-dotnet` |
+| **TypeScript** | 23 | `-ts` | `inference-ts`, `agents-ts`, `blob-ts` |
+| **Java** | 28 | `-java` | `inference-java`, `cosmos-java`, `eventhubs-java` |
 
 ### Skill Selection
 
@@ -189,7 +184,7 @@ Pre-configured Model Context Protocol servers in `.vscode/mcp.json` provide addi
 | MCP | Purpose |
 |-----|---------|
 | `microsoft-docs` | **Search Microsoft Learn** — Official Azure/Foundry docs. Use this FIRST. |
-| `context7` | Indexed documentation with semantic search |
+| `context7` | Indexed Foundry documentation with semantic search (updated daily via GitHub workflow) |
 | `deepwiki` | Ask questions about GitHub repositories |
 
 ### Development Tools
