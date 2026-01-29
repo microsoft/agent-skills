@@ -43,6 +43,7 @@ Modern coding agents (GitHub Copilot CLI, [Claude Code](https://devblogs.microso
 └── workflows/        # Automated workflows (e.g., docs sync)
 
 skills/               # Extended skill catalog (copy what you need)
+├── python/           # Python SDK skills organized by product area
 ├── dotnet/           # .NET SDK skills organized by product area
 └── typescript/       # TypeScript/frontend skills
 
@@ -81,7 +82,7 @@ skills/               # Extended skill catalog (copy what you need)
 
 ---
 
-### Python Skills
+### Python Skills (Core)
 
 > Location: `.github/skills/` — Auto-discovered by agents
 
@@ -104,6 +105,147 @@ skills/               # Extended skill catalog (copy what you need)
 | [fastapi-router](.github/skills/fastapi-router/) | FastAPI routers with CRUD, auth, and response models |
 | [pydantic-models](.github/skills/pydantic-models/) | Pydantic v2 multi-model patterns (Base/Create/Update/Response) |
 | [podcast-generation](.github/skills/podcast-generation/) | Podcast generation workflows |
+
+---
+
+### Python Skills (Extended)
+
+> Location: `skills/python/` — Copy to your project's `.github/skills/` as needed
+
+<details>
+<summary><strong>Foundry</strong> (3 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [contentsafety](skills/python/foundry/contentsafety/) | `azure-ai-contentsafety` | Content moderation and safety |
+| [contentunderstanding](skills/python/foundry/contentunderstanding/) | `azure-ai-contentunderstanding` | Document and media understanding |
+| [evaluation](skills/python/foundry/evaluation/) | `azure-ai-evaluation` | AI model evaluation and metrics |
+
+</details>
+
+<details>
+<summary><strong>AI</strong> (9 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [inference](skills/python/ai/inference/) | `azure-ai-inference` | Azure AI Model Inference for chat, embeddings |
+| [ml](skills/python/ai/ml/) | `azure-ai-ml` | Azure Machine Learning SDK v2 |
+| [textanalytics](skills/python/ai/textanalytics/) | `azure-ai-textanalytics` | Text Analytics — NER, sentiment, key phrases |
+| [transcription](skills/python/ai/transcription/) | `azure-cognitiveservices-speech` | Speech-to-text transcription |
+| [translation-document](skills/python/ai/translation-document/) | `azure-ai-translation-document` | Document translation (batch) |
+| [translation-text](skills/python/ai/translation-text/) | `azure-ai-translation-text` | Text translation API |
+| [vision-imageanalysis](skills/python/ai/vision-imageanalysis/) | `azure-ai-vision-imageanalysis` | Image analysis, captions, tags, objects |
+| [weightsandbiases](skills/python/ai/weightsandbiases/) | `wandb` | Weights & Biases ML experiment tracking |
+
+</details>
+
+<details>
+<summary><strong>Search</strong> (1 skill)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [documents](skills/python/search/documents/) | `azure-search-documents` | Azure AI Search indexing and querying |
+
+</details>
+
+<details>
+<summary><strong>Data</strong> (8 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [blob](skills/python/data/blob/) | `azure-storage-blob` | Blob storage operations, containers, SAS tokens |
+| [cosmos](skills/python/data/cosmos/) | `azure-cosmos` | Cosmos DB NoSQL API operations |
+| [datalake](skills/python/data/datalake/) | `azure-storage-file-datalake` | Data Lake Storage Gen2, hierarchical namespace |
+| [fileshare](skills/python/data/fileshare/) | `azure-storage-file-share` | Azure Files SMB shares |
+| [queue](skills/python/data/queue/) | `azure-storage-queue` | Queue storage for async messaging |
+| [storage-general](skills/python/data/storage-general/) | `azure-storage-*` | Common storage patterns and utilities |
+| [tables](skills/python/data/tables/) | `azure-data-tables` | Azure Tables / Cosmos DB Table API |
+
+</details>
+
+<details>
+<summary><strong>Identity</strong> (1 skill)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [azure-identity](skills/python/identity/azure-identity/) | `azure-identity` | DefaultAzureCredential, managed identity, service principals |
+
+</details>
+
+<details>
+<summary><strong>Security</strong> (1 skill)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [keyvault](skills/python/security/keyvault/) | `azure-keyvault-*` | Key Vault secrets, keys, certificates |
+
+</details>
+
+<details>
+<summary><strong>Integration</strong> (3 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [appconfiguration](skills/python/integration/appconfiguration/) | `azure-appconfiguration` | App Configuration key-values, feature flags |
+| [apicenter](skills/python/integration/apicenter/) | `azure-mgmt-apicenter` | API Center for API inventory management |
+| [apimanagement](skills/python/integration/apimanagement/) | `azure-mgmt-apimanagement` | API Management services, APIs, products |
+
+</details>
+
+<details>
+<summary><strong>Messaging</strong> (5 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [eventgrid](skills/python/messaging/eventgrid/) | `azure-eventgrid` | Event Grid publishing and consumption |
+| [eventhub](skills/python/messaging/eventhub/) | `azure-eventhub` | Event Hubs streaming data ingestion |
+| [servicebus](skills/python/messaging/servicebus/) | `azure-servicebus` | Service Bus queues, topics, subscriptions |
+| [webpubsub-client](skills/python/messaging/webpubsub-client/) | `azure-messaging-webpubsubclient` | Web PubSub real-time messaging (client-side) |
+| [webpubsub-service](skills/python/messaging/webpubsub-service/) | `azure-messaging-webpubsubservice` | Web PubSub real-time messaging (server-side) |
+
+</details>
+
+<details>
+<summary><strong>Monitoring</strong> (5 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [applicationinsights](skills/python/monitoring/applicationinsights/) | `azure-mgmt-applicationinsights` | Application Insights management |
+| [ingestion](skills/python/monitoring/ingestion/) | `azure-monitor-ingestion` | Custom logs ingestion via DCR |
+| [opentelemetry](skills/python/monitoring/opentelemetry/) | `azure-monitor-opentelemetry` | OpenTelemetry auto-instrumentation |
+| [opentelemetry-exporter](skills/python/monitoring/opentelemetry-exporter/) | `azure-monitor-opentelemetry-exporter` | Manual OpenTelemetry export |
+| [query](skills/python/monitoring/query/) | `azure-monitor-query` | Log Analytics and Metrics queries |
+
+</details>
+
+<details>
+<summary><strong>Compute</strong> (2 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [botservice](skills/python/compute/botservice/) | `azure-mgmt-botservice` | Azure Bot Service management |
+| [fabric](skills/python/compute/fabric/) | `azure-mgmt-fabric` | Microsoft Fabric capacity management |
+
+</details>
+
+<details>
+<summary><strong>Container</strong> (1 skill)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [containerregistry](skills/python/container/containerregistry/) | `azure-containerregistry` | Container Registry operations |
+
+</details>
+
+<details>
+<summary><strong>Partner</strong> (2 skills)</summary>
+
+| Skill | Package | Description |
+|-------|---------|-------------|
+| [arize-ai-observability-eval](skills/python/partner/arize-ai-observability-eval/) | `arize` | Arize AI observability & evaluation |
+| [mongodbatlas](skills/python/partner/mongodbatlas/) | `pymongo` | MongoDB Atlas with Python |
+
+</details>
 
 ---
 
