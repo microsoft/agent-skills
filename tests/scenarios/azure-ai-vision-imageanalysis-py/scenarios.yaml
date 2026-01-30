@@ -1,0 +1,431 @@
+# Test scenarios for azure-ai-vision-imageanalysis-py skill evaluation
+# Each scenario tests a specific usage pattern against acceptance criteria
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Basic Image Captioning
+  - name: image_captioning_from_url
+    prompt: |
+      Create a basic example that analyzes an image from a URL to generate a caption.
+      Include proper authentication with DefaultAzureCredential, context manager for cleanup,
+      and extract the caption text with confidence score.
+    expected_patterns:
+      - "DefaultAzureCredential"
+      - "ImageAnalysisClient"
+      - "analyze_from_url"
+      - "VisualFeatures.CAPTION"
+      - "result.caption"
+    forbidden_patterns:
+      - "hardcoded"
+      - "AzureKeyCredential"
+      - "ComputerVisionClient"
+    tags:
+      - basic
+      - captioning
+      - authentication
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/sample.jpg",
+              visual_features=[VisualFeatures.CAPTION],
+              gender_neutral_caption=True
+          )
+          
+          if result.caption:
+              print(f"Caption: {result.caption.text}")
+              print(f"Confidence: {result.caption.confidence:.2f}")
+
+  # OCR Text Extraction
+  - name: ocr_text_extraction
+    prompt: |
+      Create an example that extracts text from an image using OCR.
+      Include handling the READ visual feature to get text blocks, lines, and words.
+      Display text with confidence scores and bounding polygons.
+    expected_patterns:
+      - "VisualFeatures.READ"
+      - "result.read"
+      - "blocks"
+      - "lines"
+      - "words"
+      - "confidence"
+    forbidden_patterns:
+      - "ComputerVisionClient"
+      - "read_in_stream"
+    tags:
+      - ocr
+      - text-extraction
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/document.jpg",
+              visual_features=[VisualFeatures.READ]
+          )
+          
+          if result.read:
+              for block in result.read.blocks:
+                  for line in block.lines:
+                      print(f"Line: {line.text}")
+                      for word in line.words:
+                          print(f"  Word: {word.text} (confidence: {word.confidence:.2f})")
+
+  # Object Detection with Bounding Boxes
+  - name: object_detection
+    prompt: |
+      Create an example that detects objects in an image with bounding boxes.
+      Use the OBJECTS visual feature to get object names, confidence scores,
+      and bounding box coordinates (x, y, width, height).
+    expected_patterns:
+      - "VisualFeatures.OBJECTS"
+      - "result.objects"
+      - "bounding_box"
+      - "tags\\[0\\]\\.name"
+    forbidden_patterns:
+      - "analyze_in_stream"
+    tags:
+      - object-detection
+      - computer-vision
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/scene.jpg",
+              visual_features=[VisualFeatures.OBJECTS]
+          )
+          
+          if result.objects:
+              for obj in result.objects.list:
+                  print(f"Object: {obj.tags[0].name}")
+                  print(f"  Confidence: {obj.tags[0].confidence:.2f}")
+                  box = obj.bounding_box
+                  print(f"  Location: x={box.x}, y={box.y}, w={box.width}, h={box.height}")
+
+  # Content Tagging
+  - name: content_tagging
+    prompt: |
+      Create an example that extracts tags from an image to identify content,
+      objects, scenes, and actions. Use the TAGS visual feature and iterate
+      through tag names with confidence scores.
+    expected_patterns:
+      - "VisualFeatures.TAGS"
+      - "result.tags"
+      - "tags.list"
+      - "tag.name"
+      - "tag.confidence"
+    forbidden_patterns:
+      - "describe"
+    tags:
+      - tagging
+      - content-analysis
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/photo.jpg",
+              visual_features=[VisualFeatures.TAGS]
+          )
+          
+          if result.tags:
+              for tag in result.tags.list:
+                  print(f"Tag: {tag.name}")
+                  print(f"  Confidence: {tag.confidence:.2f}")
+
+  # Smart Cropping for Thumbnails
+  - name: smart_cropping
+    prompt: |
+      Create an example that uses smart cropping to generate thumbnail crop regions
+      for different aspect ratios (portrait, 4:3, 16:9). Use the SMART_CROPS visual
+      feature with specific aspect ratios and extract bounding box coordinates.
+    expected_patterns:
+      - "VisualFeatures.SMART_CROPS"
+      - "smart_crops_aspect_ratios"
+      - "result.smart_crops"
+      - "aspect_ratio"
+      - "bounding_box"
+    forbidden_patterns:
+      - "thumbnail_generator"
+    tags:
+      - smart-crop
+      - image-processing
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/image.jpg",
+              visual_features=[VisualFeatures.SMART_CROPS],
+              smart_crops_aspect_ratios=[0.9, 1.33, 1.78]
+          )
+          
+          if result.smart_crops:
+              for crop in result.smart_crops.list:
+                  print(f"Aspect ratio: {crop.aspect_ratio}")
+                  box = crop.bounding_box
+                  print(f"  Crop region: x={box.x}, y={box.y}, w={box.width}, h={box.height}")
+
+  # Async Image Analysis
+  - name: async_image_analysis
+    prompt: |
+      Create an async version of image analysis that uses the async client
+      from azure.ai.vision.imageanalysis.aio with proper async context manager
+      and await patterns. Include caption analysis.
+    expected_patterns:
+      - "from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient"
+      - "from azure.identity.aio import DefaultAzureCredential"
+      - "async def"
+      - "async with"
+      - "await client.analyze_from_url"
+    forbidden_patterns:
+      - "from azure.identity import DefaultAzureCredential"
+      - "ImageAnalysisClient\\("
+    tags:
+      - async
+      - advanced
+    mock_response: |
+      import os
+      import asyncio
+      from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity.aio import DefaultAzureCredential
+      
+      async def analyze_image():
+          async with ImageAnalysisClient(
+              endpoint=os.environ["VISION_ENDPOINT"],
+              credential=DefaultAzureCredential()
+          ) as client:
+              result = await client.analyze_from_url(
+                  image_url="https://example.com/image.jpg",
+                  visual_features=[VisualFeatures.CAPTION]
+              )
+              
+              if result.caption:
+                  print(f"Caption: {result.caption.text}")
+      
+      asyncio.run(analyze_image())
+
+  # Dense Captions (Multiple Regions)
+  - name: dense_captions_multiple_regions
+    prompt: |
+      Create an example that extracts dense captions for multiple regions of an image.
+      Use the DENSE_CAPTIONS visual feature to get captions and bounding boxes for
+      different parts of the image.
+    expected_patterns:
+      - "VisualFeatures.DENSE_CAPTIONS"
+      - "result.dense_captions"
+      - "dense_captions.list"
+      - "caption.text"
+      - "bounding_box"
+    forbidden_patterns:
+      - "describe_in_stream"
+    tags:
+      - dense-captions
+      - advanced
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/complex-image.jpg",
+              visual_features=[VisualFeatures.DENSE_CAPTIONS]
+          )
+          
+          if result.dense_captions:
+              for caption in result.dense_captions.list:
+                  print(f"Caption: {caption.text}")
+                  print(f"  Confidence: {caption.confidence:.2f}")
+                  print(f"  Bounding box: {caption.bounding_box}")
+
+  # File-Based Image Analysis
+  - name: local_file_analysis
+    prompt: |
+      Create an example that analyzes a local image file instead of a URL.
+      Use the analyze() method with binary image data and multiple visual features.
+      Include proper file handling and analysis of caption, tags, and objects.
+    expected_patterns:
+      - "analyze\\("
+      - "image_data"
+      - "open\\("
+      - "rb"
+      - "VisualFeatures"
+    forbidden_patterns:
+      - "analyze_from_url"
+    tags:
+      - file-based
+      - local-image
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with open("local_image.jpg", "rb") as f:
+          image_data = f.read()
+      
+      with client:
+          result = client.analyze(
+              image_data=image_data,
+              visual_features=[
+                  VisualFeatures.CAPTION,
+                  VisualFeatures.TAGS,
+                  VisualFeatures.OBJECTS
+              ]
+          )
+          
+          if result.caption:
+              print(f"Caption: {result.caption.text}")
+          if result.tags:
+              for tag in result.tags.list:
+                  print(f"Tag: {tag.name}")
+
+  # People Detection
+  - name: people_detection
+    prompt: |
+      Create an example that detects people in an image with confidence scores
+      and bounding boxes. Use the PEOPLE visual feature to locate and analyze
+      detected people with coordinate information.
+    expected_patterns:
+      - "VisualFeatures.PEOPLE"
+      - "result.people"
+      - "people.list"
+      - "confidence"
+      - "bounding_box"
+    forbidden_patterns:
+      - "face_detection"
+    tags:
+      - people-detection
+      - advanced
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      with client:
+          result = client.analyze_from_url(
+              image_url="https://example.com/group-photo.jpg",
+              visual_features=[VisualFeatures.PEOPLE]
+          )
+          
+          if result.people:
+              for person in result.people.list:
+                  print(f"Person detected:")
+                  print(f"  Confidence: {person.confidence:.2f}")
+                  box = person.bounding_box
+                  print(f"  Location: x={box.x}, y={box.y}, w={box.width}, h={box.height}")
+
+  # Combined Visual Features with Error Handling
+  - name: combined_features_error_handling
+    prompt: |
+      Create an example that analyzes an image with multiple visual features
+      at once (caption, tags, objects, and read). Include proper error handling
+      using HttpResponseError for invalid URLs or authentication failures.
+    expected_patterns:
+      - "HttpResponseError"
+      - "try"
+      - "except"
+      - "VisualFeatures\\."
+      - "\\[.*VisualFeatures"
+    forbidden_patterns:
+      - "except:\\s*$"
+    tags:
+      - error-handling
+      - multiple-features
+    mock_response: |
+      import os
+      from azure.ai.vision.imageanalysis import ImageAnalysisClient
+      from azure.ai.vision.imageanalysis.models import VisualFeatures
+      from azure.identity import DefaultAzureCredential
+      from azure.core.exceptions import HttpResponseError
+      
+      client = ImageAnalysisClient(
+          endpoint=os.environ["VISION_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+      
+      try:
+          with client:
+              result = client.analyze_from_url(
+                  image_url="https://example.com/image.jpg",
+                  visual_features=[
+                      VisualFeatures.CAPTION,
+                      VisualFeatures.TAGS,
+                      VisualFeatures.OBJECTS,
+                      VisualFeatures.READ
+                  ]
+              )
+              
+              if result.caption:
+                  print(f"Caption: {result.caption.text}")
+              if result.tags:
+                  for tag in result.tags.list:
+                      print(f"Tag: {tag.name}")
+      except HttpResponseError as e:
+          print(f"Error: {e.status_code} - {e.reason}")
+
