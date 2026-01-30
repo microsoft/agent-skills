@@ -9,12 +9,12 @@ from __future__ import annotations
 import pytest
 from pathlib import Path
 
-from tests.harness import (
+from harness import (
     AcceptanceCriteriaLoader,
     CodeEvaluator,
     SkillEvaluationRunner,
 )
-from tests.harness.copilot_client import SkillCopilotClient, GenerationConfig
+from harness.copilot_client import SkillCopilotClient, GenerationConfig
 
 
 @pytest.fixture(scope="session")
@@ -79,7 +79,7 @@ def pytest_generate_tests(metafunc):
         base_path = Path(__file__).parent.parent
         loader = AcceptanceCriteriaLoader(base_path)
         skills = loader.list_skills_with_criteria()
-        
+
         if skills:
             metafunc.parametrize("skill_name", skills)
 
@@ -90,9 +90,5 @@ def pytest_configure(config):
     config.addinivalue_line(
         "markers", "slow: marks tests as slow (deselect with '-m \"not slow\"')"
     )
-    config.addinivalue_line(
-        "markers", "requires_copilot: marks tests that require Copilot SDK"
-    )
-    config.addinivalue_line(
-        "markers", "skill(name): marks test as testing a specific skill"
-    )
+    config.addinivalue_line("markers", "requires_copilot: marks tests that require Copilot SDK")
+    config.addinivalue_line("markers", "skill(name): marks test as testing a specific skill")
