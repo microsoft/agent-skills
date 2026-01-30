@@ -1,0 +1,24 @@
+# Test dependencies for skill evaluation harness
+
+# Testing framework
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+pytest-xdist>=3.5.0  # Parallel test execution
+pytest-cov>=4.1.0    # Coverage reporting
+
+# YAML processing
+pyyaml>=6.0.0
+
+# Optional: Copilot SDK for real code generation
+# Install separately: pip install github-copilot-sdk
+# github-copilot-sdk>=0.1.0
+
+# Optional: Rich console output
+rich>=13.0.0
+
+# Development
+ruff>=0.1.0
+mypy>=1.8.0
+
+# Type stubs
+types-PyYAML>=6.0.0

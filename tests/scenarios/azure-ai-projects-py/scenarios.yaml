@@ -1,0 +1,730 @@
+# Test scenarios for azure-ai-projects-py skill evaluation
+# Each scenario tests a specific usage pattern against acceptance criteria
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Client Creation and Setup
+  - name: client_creation
+    prompt: |
+      Create an AIProjectClient with proper authentication using DefaultAzureCredential.
+      Use environment variables for the endpoint and include a context manager pattern.
+    expected_patterns:
+      - "from azure.ai.projects import AIProjectClient"
+      - "from azure.identity import DefaultAzureCredential"
+      - "DefaultAzureCredential()"
+      - "endpoint="
+      - "credential="
+      - "with project_client:"
+    forbidden_patterns:
+      - "from azure.ai.projects.models import AIProjectClient"  # Wrong location
+      - "from azure.ai.projects import AgentsClient"  # Wrong class
+      - "url="  # Wrong parameter name
+      - "project_endpoint="  # Wrong parameter name
+    tags:
+      - basic
+      - authentication
+      - client
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Use project_client for all operations
+          connections = project_client.connections.list()
+          for conn in connections:
+              print(f"Connection: {conn.name}")
+
+  # Versioned Agent with PromptAgentDefinition
+  - name: versioned_agent_creation
+    prompt: |
+      Create a versioned agent using create_version() with PromptAgentDefinition.
+      Include a version label and description. The agent should be named "customer-support-agent".
+    expected_patterns:
+      - "from azure.ai.projects.models import PromptAgentDefinition"
+      - "create_version"
+      - "agent_name="
+      - "definition=PromptAgentDefinition"
+      - "version_label="
+      - "model="
+      - "instructions="
+    forbidden_patterns:
+      - "from azure.ai.agents.models import PromptAgentDefinition"  # Wrong module
+      - "version_label=" # on create_agent - doesn't support versioning
+    tags:
+      - agents
+      - versioned
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.projects.models import PromptAgentDefinition
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          agent = project_client.agents.create_version(
+              agent_name="customer-support-agent",
+              definition=PromptAgentDefinition(
+                  model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+                  instructions="You are a customer support specialist.",
+                  tools=[],
+              ),
+              version_label="v1.0",
+              description="Initial version",
+          )
+          print(f"Agent: id={agent.id}, name={agent.name}, version={agent.version}")
+          
+          # Clean up
+          project_client.agents.delete_agent(agent.id)
+
+  # Agent with Code Interpreter Tool
+  - name: agent_with_code_interpreter
+    prompt: |
+      Create an agent with CodeInterpreterTool that can execute Python code.
+      Upload a data file and attach it to the code interpreter.
+    expected_patterns:
+      - "from azure.ai.agents.models import CodeInterpreterTool"
+      - "CodeInterpreterTool()"
+      - "FilePurpose.AGENTS"
+      - "upload_and_poll"
+      - "tool_resources"
+      - "code_interpreter"
+      - "file_ids"
+    forbidden_patterns:
+      - "from azure.ai.projects.models import CodeInterpreterTool"  # Wrong module!
+      - "from azure.ai.projects import CodeInterpreterTool"  # Wrong module!
+      - "FilePurpose.ASSISTANTS"  # Doesn't exist
+      - 'tools=["code_interpreter"]'  # Should use CodeInterpreterTool class
+    tags:
+      - tools
+      - code-interpreter
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.agents.models import CodeInterpreterTool, FilePurpose
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Upload file for code interpreter
+          file = project_client.agents.files.upload_and_poll(
+              file_path="data.csv",
+              purpose=FilePurpose.AGENTS,
+          )
+          
+          code_interpreter = CodeInterpreterTool()
+          
+          agent = project_client.agents.create_agent(
+              model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+              name="data-analyst",
+              instructions="Analyze data and create visualizations.",
+              tools=code_interpreter.definitions,
+              tool_resources={"code_interpreter": {"file_ids": [file.id]}},
+          )
+          
+          print(f"Created agent with code interpreter: {agent.id}")
+          
+          # Clean up
+          project_client.agents.delete_agent(agent.id)
+
+  # Agent with File Search and Vector Store
+  - name: agent_with_file_search
+    prompt: |
+      Create an agent with FileSearchTool for RAG over documents.
+      Upload a document, create a vector store, and configure the agent to use it.
+    expected_patterns:
+      - "from azure.ai.agents.models import FileSearchTool"
+      - "FileSearchTool"
+      - "vector_stores.create_and_poll"
+      - "vector_store_ids"
+      - "file_search"
+      - "tool_resources"
+    forbidden_patterns:
+      - "from azure.ai.projects.models import FileSearchTool"  # Wrong module!
+      - "from azure.ai.projects import FileSearchTool"  # Wrong module!
+    tags:
+      - tools
+      - file-search
+      - rag
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.agents.models import FileSearchTool, FilePurpose
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Upload document
+          file = project_client.agents.files.upload_and_poll(
+              file_path="./data/product_info.md",
+              purpose=FilePurpose.AGENTS,
+          )
+          
+          # Create vector store
+          vector_store = project_client.agents.vector_stores.create_and_poll(
+              file_ids=[file.id],
+              name="product-docs",
+          )
+          
+          # Create file search tool
+          file_search = FileSearchTool(vector_store_ids=[vector_store.id])
+          
+          agent = project_client.agents.create_agent(
+              model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+              name="search-agent",
+              instructions="Search uploaded files to answer questions.",
+              tools=file_search.definitions,
+              tool_resources=file_search.resources,
+          )
+          
+          print(f"Created RAG agent: {agent.id}")
+          
+          # Clean up
+          project_client.agents.delete_agent(agent.id)
+
+  # Full Thread/Message/Run Conversation Flow
+  - name: thread_message_run
+    prompt: |
+      Create a complete conversation flow: create a thread, add a user message,
+      run the agent, and retrieve the assistant's response. Check the run status.
+    expected_patterns:
+      - "threads.create()"
+      - "messages.create"
+      - "thread_id="
+      - 'role="user"'
+      - "runs.create_and_process"
+      - "agent_id="
+      - "run.status"
+      - "messages.list"
+    forbidden_patterns:
+      - 'role="human"'  # Must be "user"
+    tags:
+      - conversation
+      - threads
+      - messages
+      - runs
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Create agent
+          agent = project_client.agents.create_agent(
+              model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+              name="conversation-agent",
+              instructions="You are a helpful assistant.",
+          )
+          
+          # Create thread
+          thread = project_client.agents.threads.create()
+          print(f"Created thread: {thread.id}")
+          
+          # Add user message
+          message = project_client.agents.messages.create(
+              thread_id=thread.id,
+              role="user",
+              content="What is the capital of Japan?",
+          )
+          
+          # Run agent
+          run = project_client.agents.runs.create_and_process(
+              thread_id=thread.id,
+              agent_id=agent.id,
+          )
+          print(f"Run finished with status: {run.status}")
+          
+          # Get response
+          if run.status == "completed":
+              messages = project_client.agents.messages.list(thread_id=thread.id)
+              for msg in messages:
+                  if msg.role == "assistant":
+                      for content in msg.content:
+                          if hasattr(content, 'text'):
+                              print(f"Assistant: {content.text.value}")
+          elif run.status == "failed":
+              print(f"Run failed: {run.last_error}")
+          
+          # Clean up
+          project_client.agents.delete_agent(agent.id)
+
+  # Streaming with AgentEventHandler
+  - name: streaming_with_handler
+    prompt: |
+      Create an agent that uses streaming responses with AgentEventHandler.
+      Implement on_message_delta to print text as it arrives.
+    expected_patterns:
+      - "from azure.ai.agents.models import AgentEventHandler"
+      - "class"
+      - "AgentEventHandler"
+      - "on_message_delta"
+      - "runs.stream"
+      - "event_handler="
+      - "until_done"
+    forbidden_patterns:
+      - "from azure.ai.projects.models import AgentEventHandler"  # Wrong module
+      - "stream=True"  # Old pattern
+    tags:
+      - streaming
+      - advanced
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.agents.models import AgentEventHandler
+      from azure.identity import DefaultAzureCredential
+      
+      class MyHandler(AgentEventHandler):
+          def on_message_delta(self, delta):
+              if delta.text:
+                  print(delta.text.value, end="", flush=True)
+          
+          def on_error(self, data):
+              print(f"Error: {data}")
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          agent = project_client.agents.create_agent(
+              model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+              name="streaming-agent",
+              instructions="You are a helpful assistant.",
+          )
+          
+          thread = project_client.agents.threads.create()
+          
+          project_client.agents.messages.create(
+              thread_id=thread.id,
+              role="user",
+              content="Tell me a story.",
+          )
+          
+          with project_client.agents.runs.stream(
+              thread_id=thread.id,
+              agent_id=agent.id,
+              event_handler=MyHandler(),
+          ) as stream:
+              stream.until_done()
+          
+          project_client.agents.delete_agent(agent.id)
+
+  # Connections Listing and Filtering
+  - name: connections_listing
+    prompt: |
+      List project connections and filter by connection type.
+      Show how to get a specific connection by name and filter by ConnectionType.AZURE_OPEN_AI.
+    expected_patterns:
+      - "from azure.ai.projects.models import ConnectionType"
+      - "connections.list"
+      - "ConnectionType.AZURE_OPEN_AI"
+      - "connections.get"
+      - "connection_name="
+    forbidden_patterns:
+      - 'connection_type="AzureOpenAI"'  # Must use enum, not string
+      - "name="  # Wrong parameter, should be connection_name
+    tags:
+      - connections
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.projects.models import ConnectionType
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # List all connections
+          print("All connections:")
+          for conn in project_client.connections.list():
+              print(f"  {conn.name}: {conn.connection_type}")
+          
+          # Filter by type
+          print("\nAzure OpenAI connections:")
+          for conn in project_client.connections.list(
+              connection_type=ConnectionType.AZURE_OPEN_AI
+          ):
+              print(f"  {conn.name}")
+          
+          # Get specific connection by name
+          connection = project_client.connections.get(
+              connection_name="my-aoai-connection"
+          )
+          print(f"\nConnection details: {connection.name}, type: {connection.connection_type}")
+
+  # Deployments Listing
+  - name: deployments_listing
+    prompt: |
+      List model deployments in the project. Filter by model publisher and model name.
+      Show how to dynamically select a GPT-4 deployment for agent creation.
+    expected_patterns:
+      - "deployments.list"
+      - "model_publisher"
+      - "model_name"
+      - "deployment.name"
+    forbidden_patterns:
+      - "deployment.model"  # Wrong! Use model_name
+    tags:
+      - deployments
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # List all deployments
+          print("All deployments:")
+          for deployment in project_client.deployments.list():
+              print(f"  {deployment.name}: {deployment.model_name} ({deployment.model_publisher})")
+          
+          # Filter by publisher
+          print("\nOpenAI deployments:")
+          for deployment in project_client.deployments.list(model_publisher="OpenAI"):
+              print(f"  {deployment.name}: {deployment.model_name}")
+          
+          # Filter by model name
+          print("\nGPT-4o deployments:")
+          for deployment in project_client.deployments.list(model_name="gpt-4o"):
+              print(f"  {deployment.name}")
+          
+          # Dynamic model selection for agent
+          gpt4_deployments = [
+              d for d in project_client.deployments.list()
+              if "gpt-4" in d.model_name.lower()
+          ]
+          
+          if gpt4_deployments:
+              deployment_name = gpt4_deployments[0].name
+              
+              agent = project_client.agents.create_agent(
+                  model=deployment_name,
+                  name="dynamic-agent",
+                  instructions="You are helpful.",
+              )
+              print(f"\nCreated agent using deployment: {deployment_name}")
+              project_client.agents.delete_agent(agent.id)
+
+  # OpenAI Client and Evaluations
+  - name: openai_client_evals
+    prompt: |
+      Get an OpenAI client from the project client and create an evaluation.
+      Define a DataSourceConfigCustom with an item schema and testing criteria
+      using built-in evaluators like builtin.fluency.
+    expected_patterns:
+      - "get_openai_client"
+      - "from azure.ai.projects.models import DataSourceConfigCustom"
+      - "DataSourceConfigCustom"
+      - 'type="custom"'
+      - "item_schema"
+      - "openai_client.evals.create"
+      - "testing_criteria"
+      - "builtin."
+    forbidden_patterns:
+      - "project_client.evals.create"  # Wrong! evals are on openai_client
+      - 'type="json"'  # Wrong type value
+    tags:
+      - evaluations
+      - openai
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.projects.models import DataSourceConfigCustom
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Get OpenAI client
+          openai_client = project_client.get_openai_client()
+          
+          # Define data source configuration
+          data_source_config = DataSourceConfigCustom(
+              type="custom",
+              item_schema={
+                  "type": "object",
+                  "properties": {
+                      "query": {"type": "string"},
+                      "expected_response": {"type": "string"},
+                  },
+                  "required": ["query"],
+              },
+              include_sample_schema=True,
+          )
+          
+          # Define testing criteria with built-in evaluators
+          testing_criteria = [
+              {
+                  "type": "azure_ai_evaluator",
+                  "name": "fluency_check",
+                  "evaluator_name": "builtin.fluency",
+                  "data_mapping": {
+                      "query": "{{item.query}}",
+                      "response": "{{item.response}}",
+                  },
+              },
+              {
+                  "type": "azure_ai_evaluator",
+                  "name": "task_adherence",
+                  "evaluator_name": "builtin.task_adherence",
+                  "data_mapping": {
+                      "query": "{{item.query}}",
+                      "response": "{{item.response}}",
+                  },
+              },
+          ]
+          
+          # Create evaluation
+          eval_object = openai_client.evals.create(
+              name="Agent Quality Evaluation",
+              data_source_config=data_source_config,
+              testing_criteria=testing_criteria,
+          )
+          print(f"Created evaluation: {eval_object.id}")
+
+  # Bing Grounding Tool (Project-Level)
+  - name: bing_grounding_tool
+    prompt: |
+      Create a versioned agent with BingGroundingAgentTool for web search capabilities.
+      Use the project-level tool with BingGroundingSearchConfiguration.
+    expected_patterns:
+      - "from azure.ai.projects.models import"
+      - "BingGroundingAgentTool"
+      - "BingGroundingSearchToolParameters"
+      - "BingGroundingSearchConfiguration"
+      - "project_connection_id"
+      - "search_configurations"
+      - "PromptAgentDefinition"
+    forbidden_patterns:
+      - "from azure.ai.agents.models import BingGroundingAgentTool"  # This is the low-level version
+    tags:
+      - tools
+      - bing
+      - web-search
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.projects.models import (
+          PromptAgentDefinition,
+          BingGroundingAgentTool,
+          BingGroundingSearchToolParameters,
+          BingGroundingSearchConfiguration,
+      )
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Get Bing connection
+          bing_connection = project_client.connections.get(
+              connection_name=os.environ["BING_CONNECTION_NAME"]
+          )
+          
+          # Create agent with Bing grounding
+          agent = project_client.agents.create_version(
+              agent_name="bing-search-agent",
+              definition=PromptAgentDefinition(
+                  model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+                  instructions="You are a helpful assistant with web search capabilities.",
+                  tools=[
+                      BingGroundingAgentTool(
+                          bing_grounding=BingGroundingSearchToolParameters(
+                              search_configurations=[
+                                  BingGroundingSearchConfiguration(
+                                      project_connection_id=bing_connection.id
+                                  )
+                              ]
+                          )
+                      )
+                  ],
+              ),
+          )
+          print(f"Created Bing-enabled agent: {agent.id}")
+          
+          # Clean up
+          project_client.agents.delete_agent(agent.id)
+
+  # Azure AI Search Tool
+  - name: azure_ai_search_tool
+    prompt: |
+      Create a versioned agent with AzureAISearchAgentTool for enterprise search.
+      Configure the tool with an index resource and query type.
+    expected_patterns:
+      - "from azure.ai.projects.models import"
+      - "AzureAISearchAgentTool"
+      - "AzureAISearchToolResource"
+      - "AISearchIndexResource"
+      - "AzureAISearchQueryType"
+      - "project_connection_id"
+      - "index_name"
+      - "query_type"
+    forbidden_patterns:
+      - "from azure.ai.agents.models import AzureAISearchAgentTool"  # Wrong module
+    tags:
+      - tools
+      - azure-search
+      - enterprise
+    mock_response: |
+      import os
+      from azure.ai.projects import AIProjectClient
+      from azure.ai.projects.models import (
+          AzureAISearchAgentTool,
+          AzureAISearchToolResource,
+          AISearchIndexResource,
+          AzureAISearchQueryType,
+          PromptAgentDefinition,
+      )
+      from azure.identity import DefaultAzureCredential
+      
+      project_client = AIProjectClient(
+          endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential(),
+      )
+      
+      with project_client:
+          # Get search connection
+          search_connection = project_client.connections.get(
+              connection_name=os.environ["AI_SEARCH_CONNECTION_NAME"]
+          )
+          
+          # Create agent with Azure AI Search
+          agent = project_client.agents.create_version(
+              agent_name="enterprise-search-agent",
+              definition=PromptAgentDefinition(
+                  model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+                  instructions="""You are a helpful assistant. Always provide citations 
+                  using format: [message_idx:search_idx source].""",
+                  tools=[
+                      AzureAISearchAgentTool(
+                          azure_ai_search=AzureAISearchToolResource(
+                              indexes=[
+                                  AISearchIndexResource(
+                                      project_connection_id=search_connection.id,
+                                      index_name=os.environ["AI_SEARCH_INDEX_NAME"],
+                                      query_type=AzureAISearchQueryType.VECTOR_SEMANTIC_HYBRID,
+                                  ),
+                              ]
+                          )
+                      )
+                  ],
+              ),
+          )
+          print(f"Created search agent: {agent.id}")
+          
+          # Clean up
+          project_client.agents.delete_agent(agent.id)
+
+  # Async Operations
+  - name: async_operations
+    prompt: |
+      Create an async version of an Azure AI Projects client using the async client
+      with proper context management, await patterns, and AsyncAgentEventHandler for streaming.
+    expected_patterns:
+      - "from azure.ai.projects.aio import AIProjectClient"
+      - "from azure.identity.aio import DefaultAzureCredential"
+      - "async with"
+      - "await client.agents.create_agent"
+      - "await client.agents.threads.create"
+      - "AsyncAgentEventHandler"
+      - "async def"
+      - "asyncio.run"
+    forbidden_patterns:
+      - "from azure.ai.projects import AIProjectClient"  # Should use .aio for async
+      - "from azure.identity import DefaultAzureCredential"  # Should use .aio for async
+      - "from azure.ai.agents.models import AgentEventHandler"  # Sync handler with async!
+    tags:
+      - async
+      - streaming
+      - advanced
+    mock_response: |
+      import os
+      import asyncio
+      from azure.ai.projects.aio import AIProjectClient
+      from azure.ai.agents.aio import AsyncAgentEventHandler
+      from azure.identity.aio import DefaultAzureCredential
+      
+      class AsyncHandler(AsyncAgentEventHandler):
+          async def on_message_delta(self, delta):
+              if delta.text:
+                  print(delta.text.value, end="", flush=True)
+          
+          async def on_error(self, data):
+              print(f"Error: {data}")
+      
+      async def main():
+          async with (
+              DefaultAzureCredential() as credential,
+              AIProjectClient(
+                  endpoint=os.environ["AZURE_AI_PROJECT_ENDPOINT"],
+                  credential=credential,
+              ) as client,
+          ):
+              # Create agent
+              agent = await client.agents.create_agent(
+                  model=os.environ["AZURE_AI_MODEL_DEPLOYMENT_NAME"],
+                  name="async-agent",
+                  instructions="You are a helpful assistant.",
+              )
+              
+              # Create thread
+              thread = await client.agents.threads.create()
+              
+              # Add message
+              await client.agents.messages.create(
+                  thread_id=thread.id,
+                  role="user",
+                  content="Tell me a short story.",
+              )
+              
+              # Stream response
+              async with client.agents.runs.stream(
+                  thread_id=thread.id,
+                  agent_id=agent.id,
+                  event_handler=AsyncHandler(),
+              ) as stream:
+                  await stream.until_done()
+              
+              # Clean up
+              await client.agents.delete_agent(agent.id)
+      
+      asyncio.run(main())
