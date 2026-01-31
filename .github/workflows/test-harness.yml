@@ -1,0 +1,44 @@
+name: Test Harness
+
+on:
+  pull_request:
+    paths:
+      - 'tests/**'
+      - '.github/skills/**'
+  push:
+    branches: [main]
+    paths:
+      - 'tests/**'
+      - '.github/skills/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          cache-dependency-path: tests/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: tests
+        run: pnpm install
+
+      - name: TypeScript check
+        working-directory: tests
+        run: pnpm typecheck
+
+      - name: Run tests
+        working-directory: tests
+        run: pnpm test:run
+
+      - name: Run harness (mock mode)
+        working-directory: tests
+        run: pnpm harness azure-ai-agents-py --mock
