@@ -1,0 +1,682 @@
+# yaml-language-server: $schema=https://json-schema.org/draft/2020-12/schema
+# Test scenarios for azure-postgres-ts skill evaluation
+# Each scenario tests a specific usage pattern against acceptance criteria
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: basic_connection_password
+    prompt: |
+      Create a connection to Azure Database for PostgreSQL using the pg package
+      in TypeScript with password authentication. Use environment variables for
+      configuration and enable SSL.
+    expected_patterns:
+      - "import { Client } from \"pg\""
+      - "ssl:"
+      - "rejectUnauthorized"
+      - "process.env"
+      - "client.connect()"
+      - "client.end()"
+    forbidden_patterns:
+      - "require("
+      - "ssl: false"
+      - "rejectUnauthorized: false"
+    tags:
+      - connection
+      - password-auth
+    mock_response: |
+      import { Client } from "pg";
+
+      const client = new Client({
+        host: process.env.AZURE_POSTGRESQL_HOST,
+        port: parseInt(process.env.AZURE_POSTGRESQL_PORT || "5432"),
+        database: process.env.AZURE_POSTGRESQL_DATABASE,
+        user: process.env.AZURE_POSTGRESQL_USER,
+        password: process.env.AZURE_POSTGRESQL_PASSWORD,
+        ssl: { rejectUnauthorized: true },
+      });
+
+      async function main() {
+        await client.connect();
+        try {
+          const result = await client.query("SELECT NOW()");
+          console.log("Server time:", result.rows[0].now);
+        } finally {
+          await client.end();
+        }
+      }
+
+      main();
+
+  - name: entra_id_authentication
+    prompt: |
+      Connect to Azure Database for PostgreSQL using Microsoft Entra ID
+      (passwordless) authentication with DefaultAzureCredential in TypeScript.
+    expected_patterns:
+      - "import { DefaultAzureCredential } from \"@azure/identity\""
+      - "getToken"
+      - "https://ossrdbms-aad.database.windows.net"
+      - "ssl:"
+      - "rejectUnauthorized: true"
+    forbidden_patterns:
+      - "require("
+      - "ssl: false"
+    tags:
+      - authentication
+      - entra-id
+      - passwordless
+    mock_response: |
+      import { Client } from "pg";
+      import { DefaultAzureCredential } from "@azure/identity";
+
+      async function connectWithEntraId() {
+        const credential = new DefaultAzureCredential();
+        const token = await credential.getToken(
+          "https://ossrdbms-aad.database.windows.net/.default"
+        );
+
+        const client = new Client({
+          host: process.env.AZURE_POSTGRESQL_HOST,
+          port: parseInt(process.env.AZURE_POSTGRESQL_PORT || "5432"),
+          database: process.env.AZURE_POSTGRESQL_DATABASE,
+          user: process.env.AZURE_POSTGRESQL_USER,
+          password: token.token,
+          ssl: { rejectUnauthorized: true },
+        });
+
+        await client.connect();
+        try {
+          const result = await client.query("SELECT current_user");
+          console.log("Connected as:", result.rows[0].current_user);
+        } finally {
+          await client.end();
+        }
+      }
+
+      connectWithEntraId();
+
+  - name: connection_pool_basic
+    prompt: |
+      Create a connection pool for Azure PostgreSQL using the pg package in
+      TypeScript. Configure appropriate pool size and enable SSL.
+    expected_patterns:
+      - "import { Pool } from \"pg\""
+      - "new Pool"
+      - "ssl:"
+      - "rejectUnauthorized: true"
+      - "pool.query"
+      - "pool.end()"
+    forbidden_patterns:
+      - "require("
+      - "ssl: false"
+      - "new Client"
+    tags:
+      - pool
+      - connection
+    mock_response: |
+      import { Pool } from "pg";
+
+      const pool = new Pool({
+        host: process.env.AZURE_POSTGRESQL_HOST,
+        port: parseInt(process.env.AZURE_POSTGRESQL_PORT || "5432"),
+        database: process.env.AZURE_POSTGRESQL_DATABASE,
+        user: process.env.AZURE_POSTGRESQL_USER,
+        password: process.env.AZURE_POSTGRESQL_PASSWORD,
+        ssl: { rejectUnauthorized: true },
+        max: 20,
+        idleTimeoutMillis: 30000,
+        connectionTimeoutMillis: 10000,
+      });
+
+      async function query<T>(text: string, params?: unknown[]): Promise<T[]> {
+        const result = await pool.query(text, params);
+        return result.rows as T[];
+      }
+
+      // Cleanup on shutdown
+      process.on("SIGTERM", async () => {
+        await pool.end();
+      });
+
+  - name: parameterized_query
+    prompt: |
+      Write a parameterized query in TypeScript for PostgreSQL that searches
+      for users by email domain. Prevent SQL injection using parameter placeholders.
+    expected_patterns:
+      - "$1"
+      - "params"
+      - "query("
+      - "LIKE"
+    forbidden_patterns:
+      - "require("
+      - "`SELECT"
+      - "${email}"
+      - "' + "
+    tags:
+      - query
+      - parameterized
+      - security
+    mock_response: |
+      import { Pool, QueryResult } from "pg";
+
+      interface User {
+        id: number;
+        email: string;
+        name: string;
+        created_at: Date;
+      }
+
+      async function findUsersByEmailDomain(
+        pool: Pool,
+        domain: string
+      ): Promise<User[]> {
+        const query = `
+          SELECT id, email, name, created_at
+          FROM users
+          WHERE email LIKE $1
+          ORDER BY created_at DESC
+        `;
+        const result: QueryResult<User> = await pool.query(query, [`%@${domain}`]);
+        return result.rows;
+      }
+
+      // Usage
+      const users = await findUsersByEmailDomain(pool, "example.com");
+
+  - name: transaction_basic
+    prompt: |
+      Implement a database transaction in TypeScript for PostgreSQL that
+      transfers funds between accounts. Use BEGIN, COMMIT, and ROLLBACK properly.
+    expected_patterns:
+      - "BEGIN"
+      - "COMMIT"
+      - "ROLLBACK"
+      - "try"
+      - "catch"
+      - "finally"
+      - "$1"
+    forbidden_patterns:
+      - "require("
+      - "autoCommit"
+    tags:
+      - transaction
+      - error-handling
+    mock_response: |
+      import { Pool, PoolClient } from "pg";
+
+      async function transferFunds(
+        pool: Pool,
+        fromAccount: string,
+        toAccount: string,
+        amount: number
+      ): Promise<void> {
+        const client: PoolClient = await pool.connect();
+        try {
+          await client.query("BEGIN");
+
+          // Debit from source account
+          const debitResult = await client.query(
+            `UPDATE accounts SET balance = balance - $1 
+             WHERE account_id = $2 AND balance >= $1
+             RETURNING balance`,
+            [amount, fromAccount]
+          );
+
+          if (debitResult.rowCount === 0) {
+            throw new Error("Insufficient funds or account not found");
+          }
+
+          // Credit to destination account
+          await client.query(
+            `UPDATE accounts SET balance = balance + $1 WHERE account_id = $2`,
+            [amount, toAccount]
+          );
+
+          // Record the transfer
+          await client.query(
+            `INSERT INTO transfers (from_account, to_account, amount, created_at)
+             VALUES ($1, $2, $3, NOW())`,
+            [fromAccount, toAccount, amount]
+          );
+
+          await client.query("COMMIT");
+        } catch (error) {
+          await client.query("ROLLBACK");
+          throw error;
+        } finally {
+          client.release();
+        }
+      }
+
+  - name: transaction_helper
+    prompt: |
+      Create a reusable transaction helper function in TypeScript that
+      automatically handles BEGIN, COMMIT, and ROLLBACK for PostgreSQL operations.
+    expected_patterns:
+      - "BEGIN"
+      - "COMMIT"
+      - "ROLLBACK"
+      - "PoolClient"
+      - "client.release()"
+      - "Promise<T>"
+      - "async"
+    forbidden_patterns:
+      - "require("
+    tags:
+      - transaction
+      - helper
+      - reusable
+    mock_response: |
+      import { Pool, PoolClient } from "pg";
+
+      async function withTransaction<T>(
+        pool: Pool,
+        callback: (client: PoolClient) => Promise<T>
+      ): Promise<T> {
+        const client = await pool.connect();
+        try {
+          await client.query("BEGIN");
+          const result = await callback(client);
+          await client.query("COMMIT");
+          return result;
+        } catch (error) {
+          await client.query("ROLLBACK");
+          throw error;
+        } finally {
+          client.release();
+        }
+      }
+
+      // Usage example
+      interface Order {
+        orderId: string;
+        items: { productId: string; quantity: number }[];
+      }
+
+      async function createOrder(pool: Pool, order: Order): Promise<string> {
+        return withTransaction(pool, async (client) => {
+          // Insert order
+          const orderResult = await client.query(
+            `INSERT INTO orders (order_id, created_at) VALUES ($1, NOW()) RETURNING id`,
+            [order.orderId]
+          );
+          const dbOrderId = orderResult.rows[0].id;
+
+          // Insert order items
+          for (const item of order.items) {
+            await client.query(
+              `INSERT INTO order_items (order_id, product_id, quantity) VALUES ($1, $2, $3)`,
+              [dbOrderId, item.productId, item.quantity]
+            );
+
+            // Update inventory
+            await client.query(
+              `UPDATE products SET stock = stock - $1 WHERE id = $2`,
+              [item.quantity, item.productId]
+            );
+          }
+
+          return dbOrderId;
+        });
+      }
+
+  - name: typed_query_generics
+    prompt: |
+      Use TypeScript generics to create a type-safe query function for PostgreSQL
+      that returns properly typed results.
+    expected_patterns:
+      - "QueryResult<T>"
+      - "<T>"
+      - "result.rows"
+      - "interface"
+    forbidden_patterns:
+      - "require("
+      - ": any"
+    tags:
+      - typescript
+      - generics
+      - type-safety
+    mock_response: |
+      import { Pool, QueryResult } from "pg";
+
+      interface User {
+        id: number;
+        email: string;
+        name: string;
+        created_at: Date;
+      }
+
+      interface Product {
+        id: number;
+        name: string;
+        price: number;
+        stock: number;
+      }
+
+      async function queryOne<T>(
+        pool: Pool,
+        sql: string,
+        params?: unknown[]
+      ): Promise<T | null> {
+        const result: QueryResult<T> = await pool.query(sql, params);
+        return result.rows[0] ?? null;
+      }
+
+      async function queryMany<T>(
+        pool: Pool,
+        sql: string,
+        params?: unknown[]
+      ): Promise<T[]> {
+        const result: QueryResult<T> = await pool.query(sql, params);
+        return result.rows;
+      }
+
+      // Usage with full type safety
+      const user = await queryOne<User>(pool, "SELECT * FROM users WHERE id = $1", [1]);
+      if (user) {
+        console.log(user.email); // TypeScript knows this is a string
+      }
+
+      const products = await queryMany<Product>(
+        pool,
+        "SELECT * FROM products WHERE price < $1",
+        [100]
+      );
+      products.forEach((p) => console.log(p.name, p.price));
+
+  - name: token_refresh_pool
+    prompt: |
+      Create a PostgreSQL connection pool that automatically refreshes
+      Entra ID tokens before they expire. Handle token expiration gracefully.
+    expected_patterns:
+      - "DefaultAzureCredential"
+      - "getToken"
+      - "expiresOnTimestamp"
+      - "setInterval"
+      - "https://ossrdbms-aad.database.windows.net"
+      - "pool.options.password"
+    forbidden_patterns:
+      - "require("
+      - "ssl: false"
+    tags:
+      - authentication
+      - token-refresh
+      - production
+    mock_response: |
+      import { Pool } from "pg";
+      import { DefaultAzureCredential, AccessToken } from "@azure/identity";
+
+      class AzurePostgresPool {
+        private pool: Pool;
+        private credential: DefaultAzureCredential;
+        private refreshTimer?: NodeJS.Timeout;
+
+        constructor(config: {
+          host: string;
+          database: string;
+          user: string;
+          port?: number;
+          max?: number;
+        }) {
+          this.credential = new DefaultAzureCredential();
+          this.pool = new Pool({
+            host: config.host,
+            port: config.port || 5432,
+            database: config.database,
+            user: config.user,
+            password: "", // Will be set after token fetch
+            ssl: { rejectUnauthorized: true },
+            max: config.max || 20,
+          });
+        }
+
+        async initialize(): Promise<void> {
+          await this.refreshToken();
+          // Refresh token every 45 minutes (tokens valid for 1 hour)
+          this.refreshTimer = setInterval(() => this.refreshToken(), 45 * 60 * 1000);
+        }
+
+        private async refreshToken(): Promise<void> {
+          const token: AccessToken = await this.credential.getToken(
+            "https://ossrdbms-aad.database.windows.net/.default"
+          );
+          (this.pool.options as { password: string }).password = token.token;
+          console.log(
+            `Token refreshed, expires at: ${new Date(token.expiresOnTimestamp)}`
+          );
+        }
+
+        async query<T>(sql: string, params?: unknown[]): Promise<T[]> {
+          const result = await this.pool.query(sql, params);
+          return result.rows as T[];
+        }
+
+        async end(): Promise<void> {
+          if (this.refreshTimer) {
+            clearInterval(this.refreshTimer);
+          }
+          await this.pool.end();
+        }
+      }
+
+      // Usage
+      const db = new AzurePostgresPool({
+        host: process.env.AZURE_POSTGRESQL_HOST!,
+        database: process.env.AZURE_POSTGRESQL_DATABASE!,
+        user: process.env.AZURE_POSTGRESQL_USER!,
+      });
+
+      await db.initialize();
+
+  - name: error_handling_postgres
+    prompt: |
+      Implement proper error handling for PostgreSQL operations in TypeScript.
+      Handle connection errors, constraint violations, and transient errors.
+    expected_patterns:
+      - "catch"
+      - "error.code"
+      - "23505"
+      - "ECONNREFUSED"
+      - "instanceof"
+    forbidden_patterns:
+      - "require("
+    tags:
+      - error-handling
+      - resilience
+    mock_response: |
+      import { Pool, DatabaseError } from "pg";
+
+      interface User {
+        id?: number;
+        email: string;
+        name: string;
+      }
+
+      class PostgresError extends Error {
+        constructor(
+          message: string,
+          public readonly code?: string,
+          public readonly isRetryable: boolean = false
+        ) {
+          super(message);
+          this.name = "PostgresError";
+        }
+      }
+
+      async function createUser(pool: Pool, user: User): Promise<number> {
+        try {
+          const result = await pool.query(
+            `INSERT INTO users (email, name) VALUES ($1, $2) RETURNING id`,
+            [user.email, user.name]
+          );
+          return result.rows[0].id;
+        } catch (error) {
+          if (error instanceof DatabaseError) {
+            switch (error.code) {
+              case "23505": // unique_violation
+                throw new PostgresError(
+                  `User with email ${user.email} already exists`,
+                  error.code
+                );
+              case "23503": // foreign_key_violation
+                throw new PostgresError("Referenced record not found", error.code);
+              case "23502": // not_null_violation
+                throw new PostgresError(
+                  `Required field is missing: ${error.column}`,
+                  error.code
+                );
+              case "57P01": // admin_shutdown
+              case "57P02": // crash_shutdown
+              case "57P03": // cannot_connect_now
+                throw new PostgresError(
+                  "Database temporarily unavailable",
+                  error.code,
+                  true // retryable
+                );
+              default:
+                throw new PostgresError(
+                  `Database error: ${error.message}`,
+                  error.code
+                );
+            }
+          }
+
+          // Connection errors
+          if (error instanceof Error) {
+            if (error.message.includes("ECONNREFUSED")) {
+              throw new PostgresError(
+                "Cannot connect to database",
+                "ECONNREFUSED",
+                true
+              );
+            }
+            if (error.message.includes("timeout")) {
+              throw new PostgresError("Database operation timed out", "TIMEOUT", true);
+            }
+          }
+
+          throw error;
+        }
+      }
+
+  - name: pool_events_monitoring
+    prompt: |
+      Set up connection pool event monitoring in TypeScript for PostgreSQL
+      to track pool health and diagnose connection issues.
+    expected_patterns:
+      - "pool.on("
+      - "\"connect\""
+      - "\"error\""
+      - "\"acquire\""
+      - "\"remove\""
+      - "pool.totalCount"
+      - "pool.idleCount"
+    forbidden_patterns:
+      - "require("
+    tags:
+      - monitoring
+      - pool
+      - events
+    mock_response: |
+      import { Pool, PoolClient } from "pg";
+
+      function createMonitoredPool(): Pool {
+        const pool = new Pool({
+          host: process.env.AZURE_POSTGRESQL_HOST,
+          port: parseInt(process.env.AZURE_POSTGRESQL_PORT || "5432"),
+          database: process.env.AZURE_POSTGRESQL_DATABASE,
+          user: process.env.AZURE_POSTGRESQL_USER,
+          password: process.env.AZURE_POSTGRESQL_PASSWORD,
+          ssl: { rejectUnauthorized: true },
+          max: 20,
+        });
+
+        pool.on("connect", (client: PoolClient) => {
+          console.log("New client connected to pool");
+        });
+
+        pool.on("acquire", (client: PoolClient) => {
+          console.log(
+            `Client acquired. Total: ${pool.totalCount}, Idle: ${pool.idleCount}, Waiting: ${pool.waitingCount}`
+          );
+        });
+
+        pool.on("release", (err: Error | undefined, client: PoolClient) => {
+          if (err) {
+            console.error("Client released with error:", err.message);
+          }
+        });
+
+        pool.on("remove", (client: PoolClient) => {
+          console.log(
+            `Client removed. Total: ${pool.totalCount}, Idle: ${pool.idleCount}`
+          );
+        });
+
+        pool.on("error", (err: Error, client: PoolClient) => {
+          console.error("Unexpected pool error:", err.message);
+        });
+
+        // Health check endpoint data
+        setInterval(() => {
+          console.log({
+            total: pool.totalCount,
+            idle: pool.idleCount,
+            waiting: pool.waitingCount,
+          });
+        }, 30000);
+
+        return pool;
+      }
+
+  - name: managed_identity_auth
+    prompt: |
+      Connect to Azure PostgreSQL using managed identity authentication
+      (ManagedIdentityCredential) for Azure-hosted applications.
+    expected_patterns:
+      - "ManagedIdentityCredential"
+      - "getToken"
+      - "https://ossrdbms-aad.database.windows.net"
+      - "ssl:"
+      - "rejectUnauthorized: true"
+    forbidden_patterns:
+      - "require("
+      - "DefaultAzureCredential"
+    tags:
+      - authentication
+      - managed-identity
+      - azure
+    mock_response: |
+      import { Client } from "pg";
+      import { ManagedIdentityCredential } from "@azure/identity";
+
+      async function connectWithManagedIdentity(clientId?: string) {
+        // Use system-assigned or user-assigned managed identity
+        const credential = clientId
+          ? new ManagedIdentityCredential(clientId)
+          : new ManagedIdentityCredential();
+
+        const token = await credential.getToken(
+          "https://ossrdbms-aad.database.windows.net/.default"
+        );
+
+        const client = new Client({
+          host: process.env.AZURE_POSTGRESQL_HOST,
+          port: parseInt(process.env.AZURE_POSTGRESQL_PORT || "5432"),
+          database: process.env.AZURE_POSTGRESQL_DATABASE,
+          user: process.env.AZURE_POSTGRESQL_USER, // Entra ID user name
+          password: token.token,
+          ssl: { rejectUnauthorized: true },
+        });
+
+        await client.connect();
+        return client;
+      }
+
+      // For user-assigned managed identity
+      const client = await connectWithManagedIdentity(
+        process.env.AZURE_POSTGRESQL_CLIENTID
+      );
