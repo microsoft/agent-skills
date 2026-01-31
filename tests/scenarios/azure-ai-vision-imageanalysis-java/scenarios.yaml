@@ -1,0 +1,396 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-ai-vision-imageanalysis-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_image_analysis_client
+    prompt: |
+      Create an ImageAnalysisClient using API key authentication.
+      Use environment variables for endpoint and key.
+    expected_patterns:
+      - "ImageAnalysisClientBuilder"
+      - "buildClient"
+      - "KeyCredential"
+      - "System.getenv"
+    forbidden_patterns:
+      - "new ImageAnalysisClient("
+      - "AzureKeyCredential"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.ImageAnalysisClient;
+      import com.azure.ai.vision.imageanalysis.ImageAnalysisClientBuilder;
+      import com.azure.core.credential.KeyCredential;
+
+      String endpoint = System.getenv("VISION_ENDPOINT");
+      String key = System.getenv("VISION_KEY");
+
+      ImageAnalysisClient client = new ImageAnalysisClientBuilder()
+          .endpoint(endpoint)
+          .credential(new KeyCredential(key))
+          .buildClient();
+
+  - name: create_async_client_with_default_credential
+    prompt: |
+      Create an ImageAnalysisAsyncClient using DefaultAzureCredential.
+    expected_patterns:
+      - "ImageAnalysisClientBuilder"
+      - "buildAsyncClient"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+    forbidden_patterns:
+      - "KeyCredential"
+      - "new DefaultAzureCredential()"
+    tags:
+      - client-creation
+      - managed-identity
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.ImageAnalysisAsyncClient;
+      import com.azure.ai.vision.imageanalysis.ImageAnalysisClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      String endpoint = System.getenv("VISION_ENDPOINT");
+
+      ImageAnalysisAsyncClient asyncClient = new ImageAnalysisClientBuilder()
+          .endpoint(endpoint)
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildAsyncClient();
+
+  - name: generate_caption
+    prompt: |
+      Generate a caption for an image using Azure Vision, with gender-neutral language.
+    expected_patterns:
+      - "analyzeFromUrl"
+      - "VisualFeatures.CAPTION"
+      - "setGenderNeutralCaption"
+      - "getCaption"
+      - "getText"
+      - "getConfidence"
+    forbidden_patterns:
+      - "analyze("
+      - "BinaryData"
+    tags:
+      - caption
+      - image-analysis
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          "https://example.com/image.jpg",
+          Arrays.asList(VisualFeatures.CAPTION),
+          new ImageAnalysisOptions().setGenderNeutralCaption(true));
+
+      System.out.printf("Caption: \"%s\" (confidence: %.4f)%n",
+          result.getCaption().getText(),
+          result.getCaption().getConfidence());
+
+  - name: analyze_image_from_file
+    prompt: |
+      Analyze an image file to generate a caption.
+    expected_patterns:
+      - "analyze("
+      - "BinaryData.fromFile"
+      - "VisualFeatures.CAPTION"
+      - "ImageAnalysisOptions"
+    forbidden_patterns:
+      - "analyzeFromUrl"
+    tags:
+      - file-upload
+      - caption
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import com.azure.core.util.BinaryData;
+      import java.io.File;
+      import java.util.Arrays;
+
+      BinaryData imageData = BinaryData.fromFile(new File("image.jpg").toPath());
+
+      ImageAnalysisResult result = client.analyze(
+          imageData,
+          Arrays.asList(VisualFeatures.CAPTION),
+          new ImageAnalysisOptions().setGenderNeutralCaption(true));
+
+      System.out.printf("Caption: \"%s\" (confidence: %.4f)%n",
+          result.getCaption().getText(),
+          result.getCaption().getConfidence());
+
+  - name: extract_text_ocr
+    prompt: |
+      Extract text from an image using OCR (Read feature).
+    expected_patterns:
+      - "VisualFeatures.READ"
+      - "getRead"
+      - "getBlocks"
+      - "getLines"
+      - "getWords"
+      - "DetectedTextBlock"
+      - "DetectedTextLine"
+    forbidden_patterns:
+      - "VisualFeatures.CAPTION"
+    tags:
+      - ocr
+      - text-extraction
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import com.azure.core.util.BinaryData;
+      import java.io.File;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyze(
+          BinaryData.fromFile(new File("document.jpg").toPath()),
+          Arrays.asList(VisualFeatures.READ),
+          null);
+
+      for (DetectedTextBlock block : result.getRead().getBlocks()) {
+          for (DetectedTextLine line : block.getLines()) {
+              System.out.printf("Line: '%s'%n", line.getText());
+              System.out.printf("  Bounding polygon: %s%n", line.getBoundingPolygon());
+              
+              for (DetectedTextWord word : line.getWords()) {
+                  System.out.printf("  Word: '%s' (confidence: %.4f)%n",
+                      word.getText(),
+                      word.getConfidence());
+              }
+          }
+      }
+
+  - name: detect_objects
+    prompt: |
+      Detect objects in an image and get their bounding boxes.
+    expected_patterns:
+      - "VisualFeatures.OBJECTS"
+      - "getObjects"
+      - "DetectedObject"
+      - "getBoundingBox"
+      - "getTags"
+    forbidden_patterns:
+      - "VisualFeatures.PEOPLE"
+    tags:
+      - object-detection
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(VisualFeatures.OBJECTS),
+          null);
+
+      for (DetectedObject obj : result.getObjects()) {
+          System.out.printf("Object: %s (confidence: %.4f)%n",
+              obj.getTags().get(0).getName(),
+              obj.getTags().get(0).getConfidence());
+          
+          ImageBoundingBox box = obj.getBoundingBox();
+          System.out.printf("  Location: x=%d, y=%d, w=%d, h=%d%n",
+              box.getX(), box.getY(), box.getWidth(), box.getHeight());
+      }
+
+  - name: get_tags
+    prompt: |
+      Get content tags for an image with confidence scores.
+    expected_patterns:
+      - "VisualFeatures.TAGS"
+      - "getTags"
+      - "DetectedTag"
+      - "getName"
+      - "getConfidence"
+    forbidden_patterns:
+      - "VisualFeatures.OBJECTS"
+    tags:
+      - tagging
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(VisualFeatures.TAGS),
+          null);
+
+      for (DetectedTag tag : result.getTags()) {
+          System.out.printf("Tag: %s (confidence: %.4f)%n",
+              tag.getName(),
+              tag.getConfidence());
+      }
+
+  - name: detect_people
+    prompt: |
+      Detect people in an image and get their bounding box locations.
+    expected_patterns:
+      - "VisualFeatures.PEOPLE"
+      - "getPeople"
+      - "DetectedPerson"
+      - "getBoundingBox"
+    forbidden_patterns:
+      - "VisualFeatures.OBJECTS"
+    tags:
+      - people-detection
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(VisualFeatures.PEOPLE),
+          null);
+
+      for (DetectedPerson person : result.getPeople()) {
+          ImageBoundingBox box = person.getBoundingBox();
+          System.out.printf("Person at x=%d, y=%d (confidence: %.4f)%n",
+              box.getX(), box.getY(), person.getConfidence());
+      }
+
+  - name: smart_cropping
+    prompt: |
+      Generate smart crop regions for an image with aspect ratios 1.0 and 1.5.
+    expected_patterns:
+      - "VisualFeatures.SMART_CROPS"
+      - "setSmartCropsAspectRatios"
+      - "getSmartCrops"
+      - "CropRegion"
+      - "getAspectRatio"
+    forbidden_patterns:
+      - "VisualFeatures.CAPTION"
+    tags:
+      - smart-crop
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(VisualFeatures.SMART_CROPS),
+          new ImageAnalysisOptions().setSmartCropsAspectRatios(Arrays.asList(1.0, 1.5)));
+
+      for (CropRegion crop : result.getSmartCrops()) {
+          System.out.printf("Crop region: aspect=%.2f, x=%d, y=%d, w=%d, h=%d%n",
+              crop.getAspectRatio(),
+              crop.getBoundingBox().getX(),
+              crop.getBoundingBox().getY(),
+              crop.getBoundingBox().getWidth(),
+              crop.getBoundingBox().getHeight());
+      }
+
+  - name: dense_captions
+    prompt: |
+      Generate dense captions for multiple regions in an image.
+    expected_patterns:
+      - "VisualFeatures.DENSE_CAPTIONS"
+      - "getDenseCaptions"
+      - "DenseCaption"
+      - "setGenderNeutralCaption"
+    forbidden_patterns:
+      - "VisualFeatures.CAPTION"
+    tags:
+      - dense-captions
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(VisualFeatures.DENSE_CAPTIONS),
+          new ImageAnalysisOptions().setGenderNeutralCaption(true));
+
+      for (DenseCaption caption : result.getDenseCaptions()) {
+          System.out.printf("Caption: \"%s\" (confidence: %.4f)%n",
+              caption.getText(),
+              caption.getConfidence());
+          System.out.printf("  Region: x=%d, y=%d, w=%d, h=%d%n",
+              caption.getBoundingBox().getX(),
+              caption.getBoundingBox().getY(),
+              caption.getBoundingBox().getWidth(),
+              caption.getBoundingBox().getHeight());
+      }
+
+  - name: multiple_features
+    prompt: |
+      Analyze an image for multiple features: caption, tags, objects, and text.
+    expected_patterns:
+      - "VisualFeatures.CAPTION"
+      - "VisualFeatures.TAGS"
+      - "VisualFeatures.OBJECTS"
+      - "VisualFeatures.READ"
+      - "Arrays.asList"
+      - "setLanguage"
+    forbidden_patterns:
+      - "VisualFeatures.SMART_CROPS"
+    tags:
+      - multi-feature
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      ImageAnalysisResult result = client.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(
+              VisualFeatures.CAPTION,
+              VisualFeatures.TAGS,
+              VisualFeatures.OBJECTS,
+              VisualFeatures.READ),
+          new ImageAnalysisOptions()
+              .setGenderNeutralCaption(true)
+              .setLanguage("en"));
+
+      // Access all results
+      System.out.println("Caption: " + result.getCaption().getText());
+      System.out.println("Tags: " + result.getTags().size());
+      System.out.println("Objects: " + result.getObjects().size());
+      System.out.println("Text blocks: " + result.getRead().getBlocks().size());
+
+  - name: async_analysis
+    prompt: |
+      Analyze an image asynchronously using the async client.
+    expected_patterns:
+      - "asyncClient"
+      - "analyzeFromUrl"
+      - "subscribe"
+      - "doOnError"
+    forbidden_patterns:
+      - "buildClient"
+      - "getFinalResult"
+    tags:
+      - async
+    mock_response: |
+      import com.azure.ai.vision.imageanalysis.models.*;
+      import java.util.Arrays;
+
+      asyncClient.analyzeFromUrl(
+          imageUrl,
+          Arrays.asList(VisualFeatures.CAPTION),
+          null)
+          .subscribe(
+              result -> System.out.println("Caption: " + result.getCaption().getText()),
+              error -> System.err.println("Error: " + error.getMessage()),
+              () -> System.out.println("Complete")
+          );
+
+  - name: error_handling
+    prompt: |
+      Implement proper error handling for image analysis API calls.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse().getStatusCode()"
+      - "getMessage()"
+      - "try"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+
+      try {
+          client.analyzeFromUrl(imageUrl, Arrays.asList(VisualFeatures.CAPTION), null);
+      } catch (HttpResponseException e) {
+          System.out.println("Status: " + e.getResponse().getStatusCode());
+          System.out.println("Error: " + e.getMessage());
+      }

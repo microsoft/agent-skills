@@ -1,0 +1,458 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-appconfiguration-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_client_connection_string
+    prompt: |
+      Create a ConfigurationClient using a connection string from environment variables.
+    expected_patterns:
+      - "ConfigurationClientBuilder"
+      - "connectionString"
+      - "buildClient"
+      - "System.getenv"
+    forbidden_patterns:
+      - "new ConfigurationClient("
+      - "hardcoded.*string"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.data.appconfiguration.ConfigurationClient;
+      import com.azure.data.appconfiguration.ConfigurationClientBuilder;
+
+      ConfigurationClient configClient = new ConfigurationClientBuilder()
+          .connectionString(System.getenv("AZURE_APPCONFIG_CONNECTION_STRING"))
+          .buildClient();
+
+  - name: create_client_with_default_credential
+    prompt: |
+      Create a ConfigurationClient using DefaultAzureCredential for managed identity.
+    expected_patterns:
+      - "ConfigurationClientBuilder"
+      - "DefaultAzureCredentialBuilder"
+      - "endpoint"
+      - "buildClient"
+      - ".build()"
+    forbidden_patterns:
+      - "connectionString"
+      - "new DefaultAzureCredential()"
+    tags:
+      - client-creation
+      - managed-identity
+    mock_response: |
+      import com.azure.data.appconfiguration.ConfigurationClient;
+      import com.azure.data.appconfiguration.ConfigurationClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      ConfigurationClient configClient = new ConfigurationClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint(System.getenv("AZURE_APPCONFIG_ENDPOINT"))
+          .buildClient();
+
+  - name: create_async_client
+    prompt: |
+      Create a ConfigurationAsyncClient for reactive programming patterns.
+    expected_patterns:
+      - "ConfigurationAsyncClient"
+      - "ConfigurationClientBuilder"
+      - "buildAsyncClient"
+    forbidden_patterns:
+      - "buildClient"
+    tags:
+      - client-creation
+      - async
+    mock_response: |
+      import com.azure.data.appconfiguration.ConfigurationAsyncClient;
+      import com.azure.data.appconfiguration.ConfigurationClientBuilder;
+
+      ConfigurationAsyncClient asyncClient = new ConfigurationClientBuilder()
+          .connectionString(connectionString)
+          .buildAsyncClient();
+
+  - name: add_configuration_setting
+    prompt: |
+      Add a new configuration setting with a key, label, and value.
+    expected_patterns:
+      - "addConfigurationSetting"
+      - "ConfigurationSetting"
+    forbidden_patterns:
+      - "setConfigurationSetting"
+    tags:
+      - crud
+      - create
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+
+      ConfigurationSetting setting = configClient.addConfigurationSetting(
+          "app/database/connection", 
+          "Production", 
+          "Server=prod.db.com;Database=myapp"
+      );
+
+  - name: set_configuration_setting
+    prompt: |
+      Create or update a configuration setting (upsert behavior).
+    expected_patterns:
+      - "setConfigurationSetting"
+      - "ConfigurationSetting"
+    forbidden_patterns:
+      - "addConfigurationSetting"
+    tags:
+      - crud
+      - upsert
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+
+      ConfigurationSetting setting = configClient.setConfigurationSetting(
+          "app/cache/enabled", 
+          "Production", 
+          "true"
+      );
+
+  - name: get_configuration_setting
+    prompt: |
+      Get a configuration setting by key and label, and display its properties.
+    expected_patterns:
+      - "getConfigurationSetting"
+      - "getValue"
+      - "getContentType"
+      - "getLastModified"
+    forbidden_patterns:
+      - "listConfigurationSettings"
+    tags:
+      - crud
+      - read
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+
+      ConfigurationSetting setting = configClient.getConfigurationSetting(
+          "app/database/connection", 
+          "Production"
+      );
+      System.out.println("Value: " + setting.getValue());
+      System.out.println("Content-Type: " + setting.getContentType());
+      System.out.println("Last Modified: " + setting.getLastModified());
+
+  - name: conditional_get
+    prompt: |
+      Get a configuration setting only if it has been modified (using ETag).
+    expected_patterns:
+      - "getConfigurationSettingWithResponse"
+      - "ifChanged"
+      - "Context.NONE"
+      - "getStatusCode"
+      - "304"
+    forbidden_patterns:
+      - "getConfigurationSetting"
+    tags:
+      - crud
+      - conditional
+    mock_response: |
+      import com.azure.core.http.rest.Response;
+      import com.azure.core.util.Context;
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+
+      Response<ConfigurationSetting> response = configClient.getConfigurationSettingWithResponse(
+          setting,
+          null,
+          true,  // ifChanged
+          Context.NONE
+      );
+
+      if (response.getStatusCode() == 304) {
+          System.out.println("Setting not modified");
+      } else {
+          ConfigurationSetting updated = response.getValue();
+      }
+
+  - name: delete_configuration_setting
+    prompt: |
+      Delete a configuration setting by key and label.
+    expected_patterns:
+      - "deleteConfigurationSetting"
+    forbidden_patterns:
+      - "setConfigurationSetting"
+      - "addConfigurationSetting"
+    tags:
+      - crud
+      - delete
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+
+      ConfigurationSetting deleted = configClient.deleteConfigurationSetting(
+          "app/cache/enabled", 
+          "Production"
+      );
+
+  - name: list_settings_by_pattern
+    prompt: |
+      List all configuration settings with keys matching "app/*" pattern.
+    expected_patterns:
+      - "SettingSelector"
+      - "setKeyFilter"
+      - "listConfigurationSettings"
+      - "PagedIterable"
+    forbidden_patterns:
+      - "getConfigurationSetting"
+    tags:
+      - listing
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+      import com.azure.data.appconfiguration.models.SettingSelector;
+      import com.azure.core.http.rest.PagedIterable;
+
+      SettingSelector selector = new SettingSelector()
+          .setKeyFilter("app/*");
+
+      PagedIterable<ConfigurationSetting> settings = configClient.listConfigurationSettings(selector);
+      for (ConfigurationSetting s : settings) {
+          System.out.println(s.getKey() + " = " + s.getValue());
+      }
+
+  - name: list_settings_by_label
+    prompt: |
+      List all configuration settings with the "Production" label.
+    expected_patterns:
+      - "SettingSelector"
+      - "setLabelFilter"
+      - "listConfigurationSettings"
+    forbidden_patterns:
+      - "getConfigurationSetting"
+    tags:
+      - listing
+    mock_response: |
+      import com.azure.data.appconfiguration.models.SettingSelector;
+      import com.azure.core.http.rest.PagedIterable;
+
+      SettingSelector selector = new SettingSelector()
+          .setKeyFilter("*")
+          .setLabelFilter("Production");
+
+      PagedIterable<ConfigurationSetting> settings = configClient.listConfigurationSettings(selector);
+
+  - name: list_revisions
+    prompt: |
+      List all historical revisions of a configuration setting.
+    expected_patterns:
+      - "listRevisions"
+      - "SettingSelector"
+      - "getLastModified"
+    forbidden_patterns:
+      - "listConfigurationSettings"
+    tags:
+      - revisions
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+      import com.azure.data.appconfiguration.models.SettingSelector;
+      import com.azure.core.http.rest.PagedIterable;
+
+      SettingSelector selector = new SettingSelector()
+          .setKeyFilter("app/database/connection");
+
+      PagedIterable<ConfigurationSetting> revisions = configClient.listRevisions(selector);
+      for (ConfigurationSetting revision : revisions) {
+          System.out.println("Value: " + revision.getValue() + ", Modified: " + revision.getLastModified());
+      }
+
+  - name: create_feature_flag
+    prompt: |
+      Create a feature flag with a percentage-based rollout filter.
+    expected_patterns:
+      - "FeatureFlagConfigurationSetting"
+      - "FeatureFlagFilter"
+      - "addParameter"
+      - "setClientFilters"
+      - "addConfigurationSetting"
+    forbidden_patterns:
+      - "SecretReferenceConfigurationSetting"
+    tags:
+      - feature-flags
+    mock_response: |
+      import com.azure.data.appconfiguration.models.FeatureFlagConfigurationSetting;
+      import com.azure.data.appconfiguration.models.FeatureFlagFilter;
+      import java.util.Arrays;
+
+      FeatureFlagFilter percentageFilter = new FeatureFlagFilter("Microsoft.Percentage")
+          .addParameter("Value", 50);
+
+      FeatureFlagConfigurationSetting featureFlag = new FeatureFlagConfigurationSetting("beta-feature", true)
+          .setDescription("Beta feature rollout")
+          .setClientFilters(Arrays.asList(percentageFilter));
+
+      FeatureFlagConfigurationSetting created = (FeatureFlagConfigurationSetting)
+          configClient.addConfigurationSetting(featureFlag);
+
+  - name: get_feature_flag
+    prompt: |
+      Get a feature flag and check if it's enabled.
+    expected_patterns:
+      - "FeatureFlagConfigurationSetting"
+      - "getConfigurationSetting"
+      - "getFeatureId"
+      - "isEnabled"
+      - "getClientFilters"
+    forbidden_patterns:
+      - "addConfigurationSetting"
+    tags:
+      - feature-flags
+    mock_response: |
+      import com.azure.data.appconfiguration.models.FeatureFlagConfigurationSetting;
+
+      FeatureFlagConfigurationSetting flag = (FeatureFlagConfigurationSetting)
+          configClient.getConfigurationSetting(featureFlag);
+
+      System.out.println("Feature: " + flag.getFeatureId());
+      System.out.println("Enabled: " + flag.isEnabled());
+      System.out.println("Filters: " + flag.getClientFilters());
+
+  - name: create_secret_reference
+    prompt: |
+      Create a configuration setting that references a Key Vault secret.
+    expected_patterns:
+      - "SecretReferenceConfigurationSetting"
+      - "vault.azure.net"
+      - "addConfigurationSetting"
+    forbidden_patterns:
+      - "FeatureFlagConfigurationSetting"
+    tags:
+      - secret-reference
+    mock_response: |
+      import com.azure.data.appconfiguration.models.SecretReferenceConfigurationSetting;
+
+      SecretReferenceConfigurationSetting secretRef = new SecretReferenceConfigurationSetting(
+          "app/secrets/api-key",
+          "https://myvault.vault.azure.net/secrets/api-key"
+      );
+
+      SecretReferenceConfigurationSetting created = (SecretReferenceConfigurationSetting)
+          configClient.addConfigurationSetting(secretRef);
+
+  - name: set_read_only
+    prompt: |
+      Lock a configuration setting to make it read-only.
+    expected_patterns:
+      - "setReadOnly"
+      - "true"
+    forbidden_patterns:
+      - "deleteConfigurationSetting"
+    tags:
+      - read-only
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+
+      ConfigurationSetting readOnly = configClient.setReadOnly(
+          "app/critical/setting", 
+          "Production", 
+          true
+      );
+
+  - name: create_snapshot
+    prompt: |
+      Create a snapshot of configuration settings with a key prefix filter.
+    expected_patterns:
+      - "beginCreateSnapshot"
+      - "ConfigurationSnapshot"
+      - "ConfigurationSettingsFilter"
+      - "SyncPoller"
+      - "getFinalResult"
+    forbidden_patterns:
+      - "listConfigurationSettings"
+    tags:
+      - snapshots
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSnapshot;
+      import com.azure.data.appconfiguration.models.ConfigurationSettingsFilter;
+      import com.azure.core.util.Context;
+      import com.azure.core.util.polling.SyncPoller;
+      import com.azure.core.util.polling.PollOperationDetails;
+      import java.time.Duration;
+      import java.util.ArrayList;
+      import java.util.List;
+
+      List<ConfigurationSettingsFilter> filters = new ArrayList<>();
+      filters.add(new ConfigurationSettingsFilter("app/*"));
+
+      SyncPoller<PollOperationDetails, ConfigurationSnapshot> poller = configClient.beginCreateSnapshot(
+          "release-v1.0",
+          new ConfigurationSnapshot(filters),
+          Context.NONE
+      );
+      poller.setPollInterval(Duration.ofSeconds(10));
+      poller.waitForCompletion();
+
+      ConfigurationSnapshot snapshot = poller.getFinalResult();
+      System.out.println("Snapshot: " + snapshot.getName() + ", Status: " + snapshot.getStatus());
+
+  - name: list_snapshot_settings
+    prompt: |
+      List all configuration settings in a snapshot.
+    expected_patterns:
+      - "listConfigurationSettingsForSnapshot"
+      - "PagedIterable"
+    forbidden_patterns:
+      - "listConfigurationSettings"
+    tags:
+      - snapshots
+    mock_response: |
+      import com.azure.data.appconfiguration.models.ConfigurationSetting;
+      import com.azure.core.http.rest.PagedIterable;
+
+      PagedIterable<ConfigurationSetting> settings = 
+          configClient.listConfigurationSettingsForSnapshot("release-v1.0");
+
+      for (ConfigurationSetting setting : settings) {
+          System.out.println(setting.getKey() + " = " + setting.getValue());
+      }
+
+  - name: async_list_settings
+    prompt: |
+      List configuration settings asynchronously using reactive patterns.
+    expected_patterns:
+      - "ConfigurationAsyncClient"
+      - "listConfigurationSettings"
+      - "subscribe"
+    forbidden_patterns:
+      - "buildClient"
+    tags:
+      - async
+    mock_response: |
+      import com.azure.data.appconfiguration.ConfigurationAsyncClient;
+      import com.azure.data.appconfiguration.models.SettingSelector;
+
+      asyncClient.listConfigurationSettings(new SettingSelector().setLabelFilter("Production"))
+          .subscribe(
+              setting -> System.out.println(setting.getKey() + " = " + setting.getValue()),
+              error -> System.err.println("Error: " + error.getMessage()),
+              () -> System.out.println("Completed")
+          );
+
+  - name: error_handling
+    prompt: |
+      Implement proper error handling for configuration operations, including 404 handling.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse().getStatusCode()"
+      - "404"
+      - "try"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+
+      try {
+          configClient.getConfigurationSetting("nonexistent", null);
+      } catch (HttpResponseException e) {
+          if (e.getResponse().getStatusCode() == 404) {
+              System.err.println("Setting not found");
+          } else {
+              System.err.println("Error: " + e.getMessage());
+          }
+      }

@@ -1,0 +1,312 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-ai-anomalydetector-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_univariate_client
+    prompt: |
+      Create a UnivariateClient for Azure Anomaly Detector using API key authentication.
+      Use environment variables for endpoint and key.
+    expected_patterns:
+      - "AnomalyDetectorClientBuilder"
+      - "buildUnivariateClient"
+      - "AzureKeyCredential"
+      - "System.getenv"
+    forbidden_patterns:
+      - "new UnivariateClient("
+      - "hardcoded.*key"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.ai.anomalydetector.AnomalyDetectorClientBuilder;
+      import com.azure.ai.anomalydetector.UnivariateClient;
+      import com.azure.core.credential.AzureKeyCredential;
+
+      String endpoint = System.getenv("AZURE_ANOMALY_DETECTOR_ENDPOINT");
+      String key = System.getenv("AZURE_ANOMALY_DETECTOR_API_KEY");
+
+      UnivariateClient univariateClient = new AnomalyDetectorClientBuilder()
+          .credential(new AzureKeyCredential(key))
+          .endpoint(endpoint)
+          .buildUnivariateClient();
+
+  - name: create_multivariate_client_with_default_credential
+    prompt: |
+      Create a MultivariateClient for Azure Anomaly Detector using DefaultAzureCredential.
+    expected_patterns:
+      - "AnomalyDetectorClientBuilder"
+      - "buildMultivariateClient"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+    forbidden_patterns:
+      - "AzureKeyCredential"
+      - "new DefaultAzureCredential()"
+    tags:
+      - client-creation
+      - managed-identity
+    mock_response: |
+      import com.azure.ai.anomalydetector.AnomalyDetectorClientBuilder;
+      import com.azure.ai.anomalydetector.MultivariateClient;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      String endpoint = System.getenv("AZURE_ANOMALY_DETECTOR_ENDPOINT");
+
+      MultivariateClient client = new AnomalyDetectorClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint(endpoint)
+          .buildMultivariateClient();
+
+  - name: univariate_batch_detection
+    prompt: |
+      Detect anomalies in a time series using univariate batch detection.
+      Use daily granularity and sensitivity of 95.
+    expected_patterns:
+      - "UnivariateDetectionOptions"
+      - "TimeSeriesPoint"
+      - "detectUnivariateEntireSeries"
+      - "setGranularity"
+      - "TimeGranularity.DAILY"
+      - "setSensitivity"
+    forbidden_patterns:
+      - "detectEntireSeries"
+      - "MultivariateClient"
+    tags:
+      - univariate
+      - batch-detection
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.*;
+      import java.time.OffsetDateTime;
+      import java.util.List;
+
+      List<TimeSeriesPoint> series = List.of(
+          new TimeSeriesPoint(OffsetDateTime.parse("2023-01-01T00:00:00Z"), 1.0),
+          new TimeSeriesPoint(OffsetDateTime.parse("2023-01-02T00:00:00Z"), 2.5),
+          new TimeSeriesPoint(OffsetDateTime.parse("2023-01-03T00:00:00Z"), 3.1)
+      );
+
+      UnivariateDetectionOptions options = new UnivariateDetectionOptions(series)
+          .setGranularity(TimeGranularity.DAILY)
+          .setSensitivity(95);
+
+      UnivariateEntireDetectionResult result = univariateClient.detectUnivariateEntireSeries(options);
+
+      for (int i = 0; i < result.getIsAnomaly().size(); i++) {
+          if (result.getIsAnomaly().get(i)) {
+              System.out.printf("Anomaly at index %d%n", i);
+          }
+      }
+
+  - name: univariate_streaming_detection
+    prompt: |
+      Detect if the latest data point is an anomaly using univariate last point detection.
+    expected_patterns:
+      - "detectUnivariateLastPoint"
+      - "UnivariateLastDetectionResult"
+      - "isAnomaly()"
+      - "getExpectedValue"
+    forbidden_patterns:
+      - "detectUnivariateEntireSeries"
+      - "MultivariateClient"
+    tags:
+      - univariate
+      - streaming
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.*;
+
+      UnivariateLastDetectionResult result = univariateClient.detectUnivariateLastPoint(options);
+
+      if (result.isAnomaly()) {
+          System.out.println("Latest point is an anomaly!");
+          System.out.printf("Expected: %.2f, Upper: %.2f, Lower: %.2f%n",
+              result.getExpectedValue(),
+              result.getUpperMargin(),
+              result.getLowerMargin());
+      }
+
+  - name: change_point_detection
+    prompt: |
+      Detect change points (trend changes) in a time series using univariate analysis.
+    expected_patterns:
+      - "UnivariateChangePointDetectionOptions"
+      - "detectUnivariateChangePoint"
+      - "UnivariateChangePointDetectionResult"
+      - "getIsChangePoint"
+      - "getConfidenceScores"
+    forbidden_patterns:
+      - "detectUnivariateEntireSeries"
+      - "MultivariateClient"
+    tags:
+      - univariate
+      - change-point
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.*;
+
+      UnivariateChangePointDetectionOptions changeOptions = 
+          new UnivariateChangePointDetectionOptions(series, TimeGranularity.DAILY);
+
+      UnivariateChangePointDetectionResult result = 
+          univariateClient.detectUnivariateChangePoint(changeOptions);
+
+      for (int i = 0; i < result.getIsChangePoint().size(); i++) {
+          if (result.getIsChangePoint().get(i)) {
+              System.out.printf("Change point at index %d with confidence %.2f%n",
+                  i, result.getConfidenceScores().get(i));
+          }
+      }
+
+  - name: train_multivariate_model
+    prompt: |
+      Train a multivariate anomaly detection model using blob storage data.
+    expected_patterns:
+      - "ModelInfo"
+      - "setDataSource"
+      - "setStartTime"
+      - "setEndTime"
+      - "setSlidingWindow"
+      - "trainMultivariateModel"
+    forbidden_patterns:
+      - "UnivariateClient"
+      - "detectUnivariateEntireSeries"
+    tags:
+      - multivariate
+      - training
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.*;
+      import java.time.OffsetDateTime;
+
+      ModelInfo modelInfo = new ModelInfo()
+          .setDataSource("https://storage.blob.core.windows.net/container/data.zip?sasToken")
+          .setStartTime(OffsetDateTime.parse("2023-01-01T00:00:00Z"))
+          .setEndTime(OffsetDateTime.parse("2023-06-01T00:00:00Z"))
+          .setSlidingWindow(200)
+          .setDisplayName("MyMultivariateModel");
+
+      AnomalyDetectionModel trainedModel = multivariateClient.trainMultivariateModel(modelInfo);
+      String modelId = trainedModel.getModelId();
+      System.out.println("Model ID: " + modelId);
+
+  - name: multivariate_batch_inference
+    prompt: |
+      Run batch anomaly detection using a trained multivariate model.
+    expected_patterns:
+      - "MultivariateBatchDetectionOptions"
+      - "detectMultivariateBatchAnomaly"
+      - "setTopContributorCount"
+      - "MultivariateDetectionResult"
+    forbidden_patterns:
+      - "UnivariateClient"
+      - "trainMultivariateModel"
+    tags:
+      - multivariate
+      - inference
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.*;
+      import java.time.OffsetDateTime;
+
+      MultivariateBatchDetectionOptions options = new MultivariateBatchDetectionOptions()
+          .setDataSource("https://storage.blob.core.windows.net/container/inference-data.zip?sasToken")
+          .setStartTime(OffsetDateTime.parse("2023-07-01T00:00:00Z"))
+          .setEndTime(OffsetDateTime.parse("2023-07-31T00:00:00Z"))
+          .setTopContributorCount(10);
+
+      MultivariateDetectionResult result = 
+          multivariateClient.detectMultivariateBatchAnomaly(modelId, options);
+
+      for (AnomalyState state : result.getResults()) {
+          if (state.getValue().isAnomaly()) {
+              System.out.printf("Anomaly at %s, severity: %.2f%n",
+                  state.getTimestamp(), state.getValue().getSeverity());
+          }
+      }
+
+  - name: multivariate_last_point_detection
+    prompt: |
+      Detect anomalies on the latest data point using a multivariate model with variable values.
+    expected_patterns:
+      - "MultivariateLastDetectionOptions"
+      - "setVariables"
+      - "VariableValues"
+      - "detectMultivariateLastAnomaly"
+      - "getInterpretation"
+    forbidden_patterns:
+      - "UnivariateClient"
+      - "detectMultivariateBatchAnomaly"
+    tags:
+      - multivariate
+      - streaming
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.*;
+      import java.util.List;
+
+      MultivariateLastDetectionOptions lastOptions = new MultivariateLastDetectionOptions()
+          .setVariables(List.of(
+              new VariableValues("variable1", List.of("timestamp1"), List.of(1.0f)),
+              new VariableValues("variable2", List.of("timestamp1"), List.of(2.5f))
+          ))
+          .setTopContributorCount(5);
+
+      MultivariateLastDetectionResult result = 
+          multivariateClient.detectMultivariateLastAnomaly(modelId, lastOptions);
+
+      if (result.getValue().isAnomaly()) {
+          System.out.println("Anomaly detected!");
+          for (AnomalyContributor contributor : result.getValue().getInterpretation()) {
+              System.out.printf("Variable: %s, Contribution: %.2f%n",
+                  contributor.getVariable(), contributor.getContributionScore());
+          }
+      }
+
+  - name: list_and_delete_models
+    prompt: |
+      List all multivariate models and delete a specific model by ID.
+    expected_patterns:
+      - "listMultivariateModels"
+      - "PagedIterable"
+      - "deleteMultivariateModel"
+      - "getModelId"
+    forbidden_patterns:
+      - "UnivariateClient"
+    tags:
+      - model-management
+    mock_response: |
+      import com.azure.ai.anomalydetector.models.AnomalyDetectionModel;
+      import com.azure.core.http.rest.PagedIterable;
+
+      // List all models
+      PagedIterable<AnomalyDetectionModel> models = multivariateClient.listMultivariateModels();
+      for (AnomalyDetectionModel model : models) {
+          System.out.printf("Model: %s, Status: %s%n",
+              model.getModelId(),
+              model.getModelInfo().getStatus());
+      }
+
+      // Delete a model
+      multivariateClient.deleteMultivariateModel(modelId);
+
+  - name: error_handling
+    prompt: |
+      Implement proper error handling for anomaly detection API calls.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse().getStatusCode()"
+      - "getMessage()"
+      - "try"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+
+      try {
+          univariateClient.detectUnivariateEntireSeries(options);
+      } catch (HttpResponseException e) {
+          System.out.println("Status code: " + e.getResponse().getStatusCode());
+          System.out.println("Error: " + e.getMessage());
+      }

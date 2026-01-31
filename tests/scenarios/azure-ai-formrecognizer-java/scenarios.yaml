@@ -1,0 +1,419 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-ai-formrecognizer-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_document_analysis_client
+    prompt: |
+      Create a DocumentAnalysisClient using API key authentication.
+      Use environment variables for endpoint and key.
+    expected_patterns:
+      - "DocumentAnalysisClientBuilder"
+      - "buildClient"
+      - "AzureKeyCredential"
+      - "System.getenv"
+    forbidden_patterns:
+      - "new DocumentAnalysisClient("
+      - "FormRecognizerClient"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.DocumentAnalysisClient;
+      import com.azure.ai.formrecognizer.documentanalysis.DocumentAnalysisClientBuilder;
+      import com.azure.core.credential.AzureKeyCredential;
+
+      String endpoint = System.getenv("FORM_RECOGNIZER_ENDPOINT");
+      String key = System.getenv("FORM_RECOGNIZER_KEY");
+
+      DocumentAnalysisClient client = new DocumentAnalysisClientBuilder()
+          .credential(new AzureKeyCredential(key))
+          .endpoint(endpoint)
+          .buildClient();
+
+  - name: create_admin_client_with_default_credential
+    prompt: |
+      Create a DocumentModelAdministrationClient using DefaultAzureCredential.
+    expected_patterns:
+      - "DocumentModelAdministrationClientBuilder"
+      - "buildClient"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+    forbidden_patterns:
+      - "AzureKeyCredential"
+      - "new DefaultAzureCredential()"
+    tags:
+      - client-creation
+      - managed-identity
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.administration.DocumentModelAdministrationClient;
+      import com.azure.ai.formrecognizer.documentanalysis.administration.DocumentModelAdministrationClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      String endpoint = System.getenv("FORM_RECOGNIZER_ENDPOINT");
+
+      DocumentModelAdministrationClient adminClient = new DocumentModelAdministrationClientBuilder()
+          .endpoint(endpoint)
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: analyze_layout_from_file
+    prompt: |
+      Analyze a PDF document layout to extract text, tables, and selection marks.
+    expected_patterns:
+      - "BinaryData.fromFile"
+      - "beginAnalyzeDocument"
+      - "prebuilt-layout"
+      - "SyncPoller"
+      - "getFinalResult"
+      - "getPages"
+      - "getTables"
+    forbidden_patterns:
+      - "beginAnalyzeDocumentFromUrl"
+      - "FormRecognizerClient"
+    tags:
+      - document-analysis
+      - layout
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.models.*;
+      import com.azure.core.util.BinaryData;
+      import com.azure.core.util.polling.SyncPoller;
+      import java.io.File;
+
+      File document = new File("document.pdf");
+      BinaryData documentData = BinaryData.fromFile(document.toPath());
+
+      SyncPoller<OperationResult, AnalyzeResult> poller = 
+          client.beginAnalyzeDocument("prebuilt-layout", documentData);
+
+      AnalyzeResult result = poller.getFinalResult();
+
+      for (DocumentPage page : result.getPages()) {
+          System.out.printf("Page %d: %.2f x %.2f %s%n",
+              page.getPageNumber(),
+              page.getWidth(),
+              page.getHeight(),
+              page.getUnit());
+          
+          for (DocumentLine line : page.getLines()) {
+              System.out.println("Line: " + line.getContent());
+          }
+      }
+
+      for (DocumentTable table : result.getTables()) {
+          System.out.printf("Table: %d rows x %d columns%n",
+              table.getRowCount(),
+              table.getColumnCount());
+      }
+
+  - name: analyze_invoice_from_url
+    prompt: |
+      Analyze an invoice document from a URL and extract key fields.
+    expected_patterns:
+      - "beginAnalyzeDocumentFromUrl"
+      - "prebuilt-invoice"
+      - "SyncPoller"
+      - "getDocuments"
+      - "getFields"
+    forbidden_patterns:
+      - "beginAnalyzeDocument"
+      - "BinaryData"
+    tags:
+      - document-analysis
+      - invoice
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.models.*;
+      import com.azure.core.util.polling.SyncPoller;
+
+      String documentUrl = "https://example.com/invoice.pdf";
+
+      SyncPoller<OperationResult, AnalyzeResult> poller = 
+          client.beginAnalyzeDocumentFromUrl("prebuilt-invoice", documentUrl);
+
+      AnalyzeResult result = poller.getFinalResult();
+
+      for (AnalyzedDocument doc : result.getDocuments()) {
+          Map<String, DocumentField> fields = doc.getFields();
+          
+          DocumentField vendorName = fields.get("VendorName");
+          if (vendorName != null) {
+              System.out.printf("Vendor: %s%n", vendorName.getValueAsString());
+          }
+          
+          DocumentField invoiceTotal = fields.get("InvoiceTotal");
+          if (invoiceTotal != null) {
+              System.out.printf("Total: %.2f%n", invoiceTotal.getValueAsCurrency().getAmount());
+          }
+      }
+
+  - name: analyze_receipt
+    prompt: |
+      Analyze a receipt and extract merchant name, transaction date, and line items.
+    expected_patterns:
+      - "beginAnalyzeDocumentFromUrl"
+      - "prebuilt-receipt"
+      - "MerchantName"
+      - "TransactionDate"
+      - "Items"
+      - "getValueAsString"
+      - "getValueAsDate"
+      - "getValueAsList"
+    forbidden_patterns:
+      - "prebuilt-invoice"
+    tags:
+      - document-analysis
+      - receipt
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.models.*;
+      import com.azure.core.util.polling.SyncPoller;
+
+      SyncPoller<OperationResult, AnalyzeResult> poller = 
+          client.beginAnalyzeDocumentFromUrl("prebuilt-receipt", receiptUrl);
+
+      AnalyzeResult result = poller.getFinalResult();
+
+      for (AnalyzedDocument doc : result.getDocuments()) {
+          Map<String, DocumentField> fields = doc.getFields();
+          
+          DocumentField merchantName = fields.get("MerchantName");
+          if (merchantName != null && merchantName.getType() == DocumentFieldType.STRING) {
+              System.out.printf("Merchant: %s (confidence: %.2f)%n",
+                  merchantName.getValueAsString(),
+                  merchantName.getConfidence());
+          }
+          
+          DocumentField transactionDate = fields.get("TransactionDate");
+          if (transactionDate != null && transactionDate.getType() == DocumentFieldType.DATE) {
+              System.out.printf("Date: %s%n", transactionDate.getValueAsDate());
+          }
+          
+          DocumentField items = fields.get("Items");
+          if (items != null && items.getType() == DocumentFieldType.LIST) {
+              for (DocumentField item : items.getValueAsList()) {
+                  Map<String, DocumentField> itemFields = item.getValueAsMap();
+                  System.out.printf("Item: %s, Price: %.2f%n",
+                      itemFields.get("Name").getValueAsString(),
+                      itemFields.get("Price").getValueAsDouble());
+              }
+          }
+      }
+
+  - name: extract_key_value_pairs
+    prompt: |
+      Extract key-value pairs from a general document.
+    expected_patterns:
+      - "prebuilt-document"
+      - "getKeyValuePairs"
+      - "DocumentKeyValuePair"
+      - "getKey"
+      - "getValue"
+      - "getContent"
+    forbidden_patterns:
+      - "prebuilt-layout"
+    tags:
+      - document-analysis
+      - key-value
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.models.*;
+      import com.azure.core.util.polling.SyncPoller;
+
+      SyncPoller<OperationResult, AnalyzeResult> poller = 
+          client.beginAnalyzeDocumentFromUrl("prebuilt-document", documentUrl);
+
+      AnalyzeResult result = poller.getFinalResult();
+
+      for (DocumentKeyValuePair kvp : result.getKeyValuePairs()) {
+          System.out.printf("Key: %s => Value: %s%n",
+              kvp.getKey().getContent(),
+              kvp.getValue() != null ? kvp.getValue().getContent() : "null");
+      }
+
+  - name: build_custom_model
+    prompt: |
+      Build a custom document model from training data in blob storage.
+    expected_patterns:
+      - "beginBuildDocumentModel"
+      - "DocumentModelBuildMode.TEMPLATE"
+      - "BuildDocumentModelOptions"
+      - "setModelId"
+      - "setDescription"
+      - "SyncPoller"
+    forbidden_patterns:
+      - "beginAnalyzeDocument"
+    tags:
+      - custom-model
+      - training
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.administration.models.*;
+      import com.azure.core.util.Context;
+      import com.azure.core.util.polling.SyncPoller;
+
+      String blobContainerUrl = "{SAS_URL_of_training_data}";
+      String prefix = "training-docs/";
+
+      SyncPoller<OperationResult, DocumentModelDetails> poller = adminClient.beginBuildDocumentModel(
+          blobContainerUrl,
+          DocumentModelBuildMode.TEMPLATE,
+          prefix,
+          new BuildDocumentModelOptions()
+              .setModelId("my-custom-model")
+              .setDescription("Custom invoice model"),
+          Context.NONE);
+
+      DocumentModelDetails model = poller.getFinalResult();
+
+      System.out.println("Model ID: " + model.getModelId());
+      System.out.println("Created: " + model.getCreatedOn());
+
+  - name: compose_models
+    prompt: |
+      Compose multiple custom models into a single model.
+    expected_patterns:
+      - "beginComposeDocumentModel"
+      - "ComposeDocumentModelOptions"
+      - "setModelId"
+      - "Arrays.asList"
+    forbidden_patterns:
+      - "beginBuildDocumentModel"
+    tags:
+      - custom-model
+      - composition
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.administration.models.*;
+      import com.azure.core.util.polling.SyncPoller;
+      import java.util.Arrays;
+      import java.util.List;
+
+      List<String> modelIds = Arrays.asList("model-1", "model-2", "model-3");
+
+      SyncPoller<OperationResult, DocumentModelDetails> poller = 
+          adminClient.beginComposeDocumentModel(
+              modelIds,
+              new ComposeDocumentModelOptions()
+                  .setModelId("composed-model")
+                  .setDescription("Composed from multiple models"));
+
+      DocumentModelDetails composedModel = poller.getFinalResult();
+
+  - name: manage_models
+    prompt: |
+      List all document models, get details of one model, and delete a model.
+    expected_patterns:
+      - "listDocumentModels"
+      - "getDocumentModel"
+      - "deleteDocumentModel"
+      - "PagedIterable"
+      - "DocumentModelSummary"
+    forbidden_patterns:
+      - "beginBuildDocumentModel"
+    tags:
+      - model-management
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.administration.models.*;
+      import com.azure.core.http.rest.PagedIterable;
+
+      // List models
+      PagedIterable<DocumentModelSummary> models = adminClient.listDocumentModels();
+      for (DocumentModelSummary summary : models) {
+          System.out.printf("Model: %s, Created: %s%n",
+              summary.getModelId(),
+              summary.getCreatedOn());
+      }
+
+      // Get model details
+      DocumentModelDetails model = adminClient.getDocumentModel("model-id");
+
+      // Delete model
+      adminClient.deleteDocumentModel("model-id");
+
+      // Check resource limits
+      ResourceDetails resources = adminClient.getResourceDetails();
+      System.out.printf("Models: %d / %d%n",
+          resources.getCustomDocumentModelCount(),
+          resources.getCustomDocumentModelLimit());
+
+  - name: build_classifier
+    prompt: |
+      Build a document classifier to categorize documents as invoices or receipts.
+    expected_patterns:
+      - "beginBuildDocumentClassifier"
+      - "ClassifierDocumentTypeDetails"
+      - "AzureBlobContentSource"
+      - "setPrefix"
+      - "BuildDocumentClassifierOptions"
+      - "setClassifierId"
+    forbidden_patterns:
+      - "beginBuildDocumentModel"
+    tags:
+      - classification
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.administration.models.*;
+      import com.azure.core.util.polling.SyncPoller;
+      import java.util.HashMap;
+      import java.util.Map;
+
+      Map<String, ClassifierDocumentTypeDetails> docTypes = new HashMap<>();
+      docTypes.put("invoice", new ClassifierDocumentTypeDetails()
+          .setAzureBlobSource(new AzureBlobContentSource(containerUrl).setPrefix("invoices/")));
+      docTypes.put("receipt", new ClassifierDocumentTypeDetails()
+          .setAzureBlobSource(new AzureBlobContentSource(containerUrl).setPrefix("receipts/")));
+
+      SyncPoller<OperationResult, DocumentClassifierDetails> poller = 
+          adminClient.beginBuildDocumentClassifier(docTypes,
+              new BuildDocumentClassifierOptions().setClassifierId("my-classifier"));
+
+      DocumentClassifierDetails classifier = poller.getFinalResult();
+
+  - name: classify_document
+    prompt: |
+      Classify a document using a custom classifier.
+    expected_patterns:
+      - "beginClassifyDocumentFromUrl"
+      - "getDocType"
+      - "getConfidence"
+    forbidden_patterns:
+      - "beginAnalyzeDocument"
+    tags:
+      - classification
+    mock_response: |
+      import com.azure.ai.formrecognizer.documentanalysis.models.*;
+      import com.azure.core.util.Context;
+      import com.azure.core.util.polling.SyncPoller;
+
+      SyncPoller<OperationResult, AnalyzeResult> poller = 
+          client.beginClassifyDocumentFromUrl("my-classifier", documentUrl, Context.NONE);
+
+      AnalyzeResult result = poller.getFinalResult();
+
+      for (AnalyzedDocument doc : result.getDocuments()) {
+          System.out.printf("Classified as: %s (confidence: %.2f)%n",
+              doc.getDocType(),
+              doc.getConfidence());
+      }
+
+  - name: error_handling
+    prompt: |
+      Implement proper error handling for document analysis API calls.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse().getStatusCode()"
+      - "getMessage()"
+      - "try"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+
+      try {
+          client.beginAnalyzeDocumentFromUrl("prebuilt-receipt", "invalid-url");
+      } catch (HttpResponseException e) {
+          System.out.println("Status: " + e.getResponse().getStatusCode());
+          System.out.println("Error: " + e.getMessage());
+      }

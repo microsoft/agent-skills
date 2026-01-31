@@ -1,0 +1,363 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-ai-contentsafety-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_content_safety_client
+    prompt: |
+      Create a ContentSafetyClient using API key authentication.
+      Use environment variables for endpoint and key.
+    expected_patterns:
+      - "ContentSafetyClientBuilder"
+      - "buildClient"
+      - "KeyCredential"
+      - "System.getenv"
+    forbidden_patterns:
+      - "new ContentSafetyClient("
+      - "hardcoded.*key"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.ai.contentsafety.ContentSafetyClient;
+      import com.azure.ai.contentsafety.ContentSafetyClientBuilder;
+      import com.azure.core.credential.KeyCredential;
+
+      String endpoint = System.getenv("CONTENT_SAFETY_ENDPOINT");
+      String key = System.getenv("CONTENT_SAFETY_KEY");
+
+      ContentSafetyClient client = new ContentSafetyClientBuilder()
+          .credential(new KeyCredential(key))
+          .endpoint(endpoint)
+          .buildClient();
+
+  - name: create_blocklist_client_with_default_credential
+    prompt: |
+      Create a BlocklistClient using DefaultAzureCredential for managed identity authentication.
+    expected_patterns:
+      - "BlocklistClientBuilder"
+      - "buildClient"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+    forbidden_patterns:
+      - "KeyCredential"
+      - "new DefaultAzureCredential()"
+    tags:
+      - client-creation
+      - managed-identity
+    mock_response: |
+      import com.azure.ai.contentsafety.BlocklistClient;
+      import com.azure.ai.contentsafety.BlocklistClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      String endpoint = System.getenv("CONTENT_SAFETY_ENDPOINT");
+
+      BlocklistClient blocklistClient = new BlocklistClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint(endpoint)
+          .buildClient();
+
+  - name: analyze_text_basic
+    prompt: |
+      Analyze text content for harmful content using Azure Content Safety.
+      Print the category and severity for each result.
+    expected_patterns:
+      - "AnalyzeTextOptions"
+      - "analyzeText"
+      - "AnalyzeTextResult"
+      - "getCategoriesAnalysis"
+      - "getCategory"
+      - "getSeverity"
+    forbidden_patterns:
+      - "analyzeText(\"text\")"
+    tags:
+      - text-analysis
+      - content-moderation
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+
+      AnalyzeTextResult result = client.analyzeText(
+          new AnalyzeTextOptions("This is text to analyze"));
+
+      for (TextCategoriesAnalysis category : result.getCategoriesAnalysis()) {
+          System.out.printf("Category: %s, Severity: %d%n",
+              category.getCategory(),
+              category.getSeverity());
+      }
+
+  - name: analyze_text_with_categories
+    prompt: |
+      Analyze text for only hate and violence categories using eight severity levels.
+    expected_patterns:
+      - "AnalyzeTextOptions"
+      - "setCategories"
+      - "TextCategory.HATE"
+      - "TextCategory.VIOLENCE"
+      - "setOutputType"
+      - "EIGHT_SEVERITY_LEVELS"
+    forbidden_patterns:
+      - "TextCategory.SEXUAL"
+      - "TextCategory.SELF_HARM"
+    tags:
+      - text-analysis
+      - category-filter
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+      import java.util.Arrays;
+
+      AnalyzeTextOptions options = new AnalyzeTextOptions("Text to analyze")
+          .setCategories(Arrays.asList(
+              TextCategory.HATE,
+              TextCategory.VIOLENCE))
+          .setOutputType(AnalyzeTextOutputType.EIGHT_SEVERITY_LEVELS);
+
+      AnalyzeTextResult result = client.analyzeText(options);
+
+  - name: analyze_text_with_blocklist
+    prompt: |
+      Analyze text using a custom blocklist and halt on blocklist hit.
+      Check for blocklist matches in the result.
+    expected_patterns:
+      - "setBlocklistNames"
+      - "setHaltOnBlocklistHit"
+      - "getBlocklistsMatch"
+      - "TextBlocklistMatch"
+      - "getBlocklistName"
+    forbidden_patterns:
+      - "addBlocklistItems"
+    tags:
+      - text-analysis
+      - blocklist
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+      import java.util.Arrays;
+
+      AnalyzeTextOptions options = new AnalyzeTextOptions("Text to check")
+          .setBlocklistNames(Arrays.asList("my-blocklist"))
+          .setHaltOnBlocklistHit(true);
+
+      AnalyzeTextResult result = client.analyzeText(options);
+
+      if (result.getBlocklistsMatch() != null) {
+          for (TextBlocklistMatch match : result.getBlocklistsMatch()) {
+              System.out.printf("Blocklist: %s, Item: %s, Text: %s%n",
+                  match.getBlocklistName(),
+                  match.getBlocklistItemId(),
+                  match.getBlocklistItemText());
+          }
+      }
+
+  - name: analyze_image_from_file
+    prompt: |
+      Analyze an image file for harmful content using Azure Content Safety.
+    expected_patterns:
+      - "ContentSafetyImageData"
+      - "setContent"
+      - "BinaryData.fromBytes"
+      - "AnalyzeImageOptions"
+      - "analyzeImage"
+      - "ImageCategoriesAnalysis"
+    forbidden_patterns:
+      - "setBlobUrl"
+    tags:
+      - image-analysis
+      - file-upload
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+      import com.azure.core.util.BinaryData;
+      import java.nio.file.Files;
+      import java.nio.file.Paths;
+
+      byte[] imageBytes = Files.readAllBytes(Paths.get("image.png"));
+      ContentSafetyImageData imageData = new ContentSafetyImageData()
+          .setContent(BinaryData.fromBytes(imageBytes));
+
+      AnalyzeImageResult result = client.analyzeImage(
+          new AnalyzeImageOptions(imageData));
+
+      for (ImageCategoriesAnalysis category : result.getCategoriesAnalysis()) {
+          System.out.printf("Category: %s, Severity: %d%n",
+              category.getCategory(),
+              category.getSeverity());
+      }
+
+  - name: analyze_image_from_url
+    prompt: |
+      Analyze an image from a URL for harmful content.
+    expected_patterns:
+      - "ContentSafetyImageData"
+      - "setBlobUrl"
+      - "AnalyzeImageOptions"
+      - "analyzeImage"
+    forbidden_patterns:
+      - "setContent"
+      - "BinaryData"
+    tags:
+      - image-analysis
+      - url
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+
+      ContentSafetyImageData imageData = new ContentSafetyImageData()
+          .setBlobUrl("https://example.com/image.jpg");
+
+      AnalyzeImageResult result = client.analyzeImage(
+          new AnalyzeImageOptions(imageData));
+
+  - name: create_blocklist
+    prompt: |
+      Create or update a text blocklist with a description.
+    expected_patterns:
+      - "createOrUpdateTextBlocklistWithResponse"
+      - "RequestOptions"
+      - "BinaryData.fromObject"
+      - "Response"
+    forbidden_patterns:
+      - "addOrUpdateBlocklistItems"
+    tags:
+      - blocklist-management
+    mock_response: |
+      import com.azure.core.http.rest.RequestOptions;
+      import com.azure.core.http.rest.Response;
+      import com.azure.core.util.BinaryData;
+      import java.util.Map;
+
+      Map<String, String> description = Map.of("description", "Custom blocklist");
+      BinaryData resource = BinaryData.fromObject(description);
+
+      Response<BinaryData> response = blocklistClient.createOrUpdateTextBlocklistWithResponse(
+          "my-blocklist", resource, new RequestOptions());
+
+      if (response.getStatusCode() == 201) {
+          System.out.println("Blocklist created");
+      } else if (response.getStatusCode() == 200) {
+          System.out.println("Blocklist updated");
+      }
+
+  - name: add_blocklist_items
+    prompt: |
+      Add multiple items to a text blocklist with descriptions.
+    expected_patterns:
+      - "TextBlocklistItem"
+      - "setDescription"
+      - "AddOrUpdateTextBlocklistItemsOptions"
+      - "addOrUpdateBlocklistItems"
+    forbidden_patterns:
+      - "createOrUpdateTextBlocklist"
+    tags:
+      - blocklist-management
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+      import java.util.Arrays;
+      import java.util.List;
+
+      List<TextBlocklistItem> items = Arrays.asList(
+          new TextBlocklistItem("badword1").setDescription("Offensive term"),
+          new TextBlocklistItem("badword2").setDescription("Another term")
+      );
+
+      AddOrUpdateTextBlocklistItemsResult result = blocklistClient.addOrUpdateBlocklistItems(
+          "my-blocklist",
+          new AddOrUpdateTextBlocklistItemsOptions(items));
+
+      for (TextBlocklistItem item : result.getBlocklistItems()) {
+          System.out.printf("Added: %s (ID: %s)%n",
+              item.getText(),
+              item.getBlocklistItemId());
+      }
+
+  - name: list_blocklists_and_items
+    prompt: |
+      List all blocklists and their items.
+    expected_patterns:
+      - "listTextBlocklists"
+      - "listTextBlocklistItems"
+      - "PagedIterable"
+      - "TextBlocklist"
+      - "TextBlocklistItem"
+    forbidden_patterns:
+      - "addOrUpdateBlocklistItems"
+    tags:
+      - blocklist-management
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+      import com.azure.core.http.rest.PagedIterable;
+
+      // List all blocklists
+      PagedIterable<TextBlocklist> blocklists = blocklistClient.listTextBlocklists();
+      for (TextBlocklist blocklist : blocklists) {
+          System.out.printf("Blocklist: %s, Description: %s%n",
+              blocklist.getName(),
+              blocklist.getDescription());
+      }
+
+      // List items in a blocklist
+      PagedIterable<TextBlocklistItem> items = 
+          blocklistClient.listTextBlocklistItems("my-blocklist");
+      for (TextBlocklistItem item : items) {
+          System.out.printf("ID: %s, Text: %s%n",
+              item.getBlocklistItemId(),
+              item.getText());
+      }
+
+  - name: remove_blocklist_items
+    prompt: |
+      Remove specific items from a blocklist by their IDs.
+    expected_patterns:
+      - "RemoveTextBlocklistItemsOptions"
+      - "removeBlocklistItems"
+      - "Arrays.asList"
+    forbidden_patterns:
+      - "deleteTextBlocklist"
+    tags:
+      - blocklist-management
+    mock_response: |
+      import com.azure.ai.contentsafety.models.*;
+      import java.util.Arrays;
+      import java.util.List;
+
+      List<String> itemIds = Arrays.asList("item-id-1", "item-id-2");
+
+      blocklistClient.removeBlocklistItems(
+          "my-blocklist",
+          new RemoveTextBlocklistItemsOptions(itemIds));
+
+  - name: delete_blocklist
+    prompt: |
+      Delete a text blocklist by name.
+    expected_patterns:
+      - "deleteTextBlocklist"
+    forbidden_patterns:
+      - "removeBlocklistItems"
+      - "createOrUpdate"
+    tags:
+      - blocklist-management
+    mock_response: |
+      blocklistClient.deleteTextBlocklist("my-blocklist");
+
+  - name: error_handling
+    prompt: |
+      Implement proper error handling for content safety API calls.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse().getStatusCode()"
+      - "getMessage()"
+      - "try"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+
+      try {
+          client.analyzeText(new AnalyzeTextOptions("test"));
+      } catch (HttpResponseException e) {
+          System.out.println("Status: " + e.getResponse().getStatusCode());
+          System.out.println("Error: " + e.getMessage());
+      }
