@@ -20,16 +20,16 @@ uv sync
 cd ..
 
 # List available skills with acceptance criteria
-uv run --project tests python -m tests.harness.runner --list
+uv run python -m harness.runner --list
 
 # Run evaluation in mock mode (no Copilot SDK required)
-uv run --project tests python -m tests.harness.runner azure-ai-agents-py --mock --verbose
+uv run python -m harness.runner azure-ai-agents-py --mock --verbose
 
 # Run with pytest
-uv run --project tests pytest tests/ -v
+uv run pytest -v
 
 # Run specific skill tests
-uv run --project tests pytest tests/test_skills.py -k "azure_ai_agents" -v
+uv run pytest test_skills.py -k "azure_ai_agents" -v
 ```
 
 ## Architecture
@@ -64,10 +64,10 @@ tests/
 
 ```bash
 # Basic usage
-uv run python -m tests.harness.runner <skill-name>
+uv run python -m harness.runner <skill-name>
 
 # Options
-uv run python -m tests.harness.runner azure-ai-agents-py \
+uv run python -m harness.runner azure-ai-agents-py \
     --mock                  # Use mock responses (no Copilot SDK)
     --verbose               # Show detailed output
     --filter basic          # Filter scenarios by name/tag
@@ -79,25 +79,25 @@ uv run python -m tests.harness.runner azure-ai-agents-py \
 
 ```bash
 # Run all tests
-uv run pytest tests/ -v
+uv run pytest -v
 
 # Run tests for a specific skill
-uv run pytest tests/test_skills.py -k "azure_ai_agents" -v
+uv run pytest test_skills.py -k "azure_ai_agents" -v
 
 # Run with coverage
-uv run pytest tests/ --cov=tests.harness --cov-report=html
+uv run pytest --cov=harness --cov-report=html
 
 # Skip slow tests
-uv run pytest tests/ -m "not slow"
+uv run pytest -m "not slow"
 
 # Run in parallel
-uv run pytest tests/ -n auto
+uv run pytest -n auto
 ```
 
 ### Programmatic Usage
 
 ```python
-from tests.harness import (
+from harness import (
     AcceptanceCriteriaLoader,
     CodeEvaluator,
     SkillEvaluationRunner,
@@ -196,13 +196,13 @@ scenarios:
 
 ```bash
 # Verify criteria loads correctly
-uv run python -m tests.harness.criteria_loader <skill-name>
+uv run python -m harness.criteria_loader <skill-name>
 
 # Run evaluation
-uv run python -m tests.harness.runner <skill-name> --mock --verbose
+uv run python -m harness.runner <skill-name> --mock --verbose
 
 # Run pytest
-uv run pytest tests/test_skills.py -k "<skill_name>" -v
+uv run pytest test_skills.py -k "<skill_name>" -v
 ```
 
 ## Evaluation Scoring
@@ -235,10 +235,10 @@ A result **passes** if it has no error-severity findings.
 
 ```bash
 # Check if Copilot is available
-uv run python -m tests.harness.copilot_client
+uv run python -m harness.copilot_client
 
 # Run with real Copilot (if available)
-uv run python -m tests.harness.runner azure-ai-agents-py
+uv run python -m harness.runner azure-ai-agents-py
 ```
 
 ## Reports
@@ -250,7 +250,7 @@ uv run python -m tests.harness.runner azure-ai-agents-py --verbose
 
 ### Markdown Report
 ```python
-from tests.harness.reporters import MarkdownReporter
+from harness.reporters import MarkdownReporter
 
 reporter = MarkdownReporter(output_dir=Path("tests/reports"))
 report_path = reporter.generate_report(summary)
@@ -305,16 +305,19 @@ Orchestrates the full evaluation:
 
 ## Test Coverage Summary
 
-| Skill | Scenarios | Status |
-|-------|-----------|--------|
-| `azure-ai-agents-py` | 7 | ✅ Complete |
-| `azure-ai-projects-py` | 12 | ✅ Complete |
-| `foundry-iq-py` | 10 | ✅ Complete |
-| `pydantic-models-py` | 5 | ✅ Complete |
+**127 skills with 1128 test scenarios** — all skills have acceptance criteria and test scenarios.
+
+| Language | Skills | Scenarios | Top Skills by Scenarios |
+|----------|--------|-----------|-------------------------|
+| Core | 5 | 40 | `azd-deployment` (8), `github-issue-creator` (8), `mcp-builder` (8) |
+| Python | 41 | 358 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
+| .NET | 29 | 296 | `azure-resource-manager-redis-dotnet` (14), `azure-resource-manager-sql-dotnet` (14), `azure-ai-projects-dotnet` (13) |
+| TypeScript | 24 | 255 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `azure-ai-contentsafety-ts` (12) |
+| Java | 28 | 179 | `azure-identity-java` (12), `azure-storage-blob-java` (12), `azure-ai-agents-persistent-java` (11) |
 
 For a complete list of skills with acceptance criteria, run:
 ```bash
-uv run --project tests python -m tests.harness.runner --list
+uv run python -m harness.runner --list
 ```
 
 ## Contributing

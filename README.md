@@ -564,14 +564,21 @@ uv run python -m tests.harness.runner azure-ai-projects-py --mock --verbose
 uv run pytest tests/test_skills.py -v
 ```
 
+### Test Coverage Summary
+
+**127 skills with 1128 test scenarios** — all skills have acceptance criteria and test scenarios.
+
+| Language | Skills | Scenarios | Top Skills by Scenarios |
+|----------|--------|-----------|-------------------------|
+| Core | 5 | 40 | `azd-deployment` (8), `github-issue-creator` (8), `mcp-builder` (8) |
+| Python | 41 | 358 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
+| .NET | 29 | 296 | `azure-resource-manager-redis-dotnet` (14), `azure-resource-manager-sql-dotnet` (14), `azure-ai-projects-dotnet` (13) |
+| TypeScript | 24 | 255 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `azure-ai-contentsafety-ts` (12) |
+| Java | 28 | 179 | `azure-identity-java` (12), `azure-storage-blob-java` (12), `azure-ai-agents-persistent-java` (11) |
+
 ### Adding Test Coverage
 
-See [`tests/AGENTS.md`](tests/AGENTS.md) for instructions on adding acceptance criteria and scenarios for new skills.
-
-| Skill | Scenarios |
-|-------|-----------|
-| `azure-ai-agents-py` | 7 |
-| `azure-ai-projects-py` | 12 |
+See [`tests/README.md`](tests/README.md) for instructions on adding acceptance criteria and scenarios for new skills.
 
 ---
 
