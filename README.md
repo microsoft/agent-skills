@@ -1,5 +1,9 @@
 # Agent Skills
 
+[![Test Harness](https://github.com/microsoft/agent-skills/actions/workflows/test-harness.yml/badge.svg?branch=main)](https://github.com/microsoft/agent-skills/actions/workflows/test-harness.yml)
+[![Install via skills.sh](https://img.shields.io/badge/skills.sh-install-blue)](https://skills.sh/microsoft/agent-skills)
+[![Browse on Context7](https://img.shields.io/badge/Context7-browse%20skills-purple)](https://context7.com/microsoft/agent-skills?tab=skills)
+
 Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding agents working with Azure SDKs and Microsoft AI Foundry.
 
 > **Blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
