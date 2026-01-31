@@ -1,0 +1,305 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-communication-common-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_static_credential
+    prompt: |
+      Create a CommunicationTokenCredential using a static user access token.
+    expected_patterns:
+      - "CommunicationTokenCredential"
+      - "new CommunicationTokenCredential"
+    forbidden_patterns:
+      - "CommunicationTokenRefreshOptions"
+    tags:
+      - authentication
+      - credential
+    mock_response: |
+      import com.azure.communication.common.CommunicationTokenCredential;
+      
+      String userToken = "<user-access-token>";
+      CommunicationTokenCredential credential = new CommunicationTokenCredential(userToken);
+
+  - name: create_credential_with_proactive_refresh
+    prompt: |
+      Create a CommunicationTokenCredential with proactive token refresh for a long-lived client.
+    expected_patterns:
+      - "CommunicationTokenCredential"
+      - "CommunicationTokenRefreshOptions"
+      - "setRefreshProactively"
+      - "true"
+      - "Callable"
+    tags:
+      - authentication
+      - token-refresh
+    mock_response: |
+      import com.azure.communication.common.CommunicationTokenCredential;
+      import com.azure.communication.common.CommunicationTokenRefreshOptions;
+      import java.util.concurrent.Callable;
+      
+      Callable<String> tokenRefresher = () -> {
+          return fetchNewTokenFromServer();
+      };
+      
+      CommunicationTokenRefreshOptions refreshOptions = new CommunicationTokenRefreshOptions(tokenRefresher)
+          .setRefreshProactively(true)
+          .setInitialToken(currentToken);
+      
+      CommunicationTokenCredential credential = new CommunicationTokenCredential(refreshOptions);
+
+  - name: create_user_identifier
+    prompt: |
+      Create a CommunicationUserIdentifier for an ACS user.
+    expected_patterns:
+      - "CommunicationUserIdentifier"
+      - "new CommunicationUserIdentifier"
+      - "getId"
+    tags:
+      - identifiers
+    mock_response: |
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      
+      CommunicationUserIdentifier user = new CommunicationUserIdentifier("8:acs:resource-id_user-id");
+      String rawId = user.getId();
+
+  - name: create_phone_identifier
+    prompt: |
+      Create a PhoneNumberIdentifier for a US phone number.
+    expected_patterns:
+      - "PhoneNumberIdentifier"
+      - "\\+1"
+      - "getPhoneNumber"
+    tags:
+      - identifiers
+      - pstn
+    mock_response: |
+      import com.azure.communication.common.PhoneNumberIdentifier;
+      
+      PhoneNumberIdentifier phone = new PhoneNumberIdentifier("+14255551234");
+      String phoneNumber = phone.getPhoneNumber();
+      String rawId = phone.getRawId();
+
+  - name: create_teams_identifier
+    prompt: |
+      Create a MicrosoftTeamsUserIdentifier with the public cloud environment.
+    expected_patterns:
+      - "MicrosoftTeamsUserIdentifier"
+      - "setCloudEnvironment"
+      - "CommunicationCloudEnvironment.PUBLIC"
+    tags:
+      - identifiers
+      - teams
+    mock_response: |
+      import com.azure.communication.common.MicrosoftTeamsUserIdentifier;
+      import com.azure.communication.common.CommunicationCloudEnvironment;
+      
+      MicrosoftTeamsUserIdentifier teamsUser = new MicrosoftTeamsUserIdentifier("<teams-user-id>")
+          .setCloudEnvironment(CommunicationCloudEnvironment.PUBLIC);
+
+  - name: create_anonymous_teams_identifier
+    prompt: |
+      Create a MicrosoftTeamsUserIdentifier for an anonymous Teams user.
+    expected_patterns:
+      - "MicrosoftTeamsUserIdentifier"
+      - "setAnonymous"
+      - "true"
+    tags:
+      - identifiers
+      - teams
+    mock_response: |
+      import com.azure.communication.common.MicrosoftTeamsUserIdentifier;
+      
+      MicrosoftTeamsUserIdentifier anonymousTeamsUser = new MicrosoftTeamsUserIdentifier("<teams-user-id>")
+          .setAnonymous(true);
+
+  - name: type_check_identifier
+    prompt: |
+      Write a method that processes different types of CommunicationIdentifier using instanceof checks.
+    expected_patterns:
+      - "CommunicationIdentifier"
+      - "instanceof"
+      - "CommunicationUserIdentifier"
+      - "PhoneNumberIdentifier"
+      - "MicrosoftTeamsUserIdentifier"
+      - "UnknownIdentifier"
+    tags:
+      - identifiers
+      - type-checking
+    mock_response: |
+      import com.azure.communication.common.*;
+      
+      public void processIdentifier(CommunicationIdentifier identifier) {
+          if (identifier instanceof CommunicationUserIdentifier) {
+              CommunicationUserIdentifier user = (CommunicationUserIdentifier) identifier;
+              System.out.println("ACS User: " + user.getId());
+              
+          } else if (identifier instanceof PhoneNumberIdentifier) {
+              PhoneNumberIdentifier phone = (PhoneNumberIdentifier) identifier;
+              System.out.println("Phone: " + phone.getPhoneNumber());
+              
+          } else if (identifier instanceof MicrosoftTeamsUserIdentifier) {
+              MicrosoftTeamsUserIdentifier teams = (MicrosoftTeamsUserIdentifier) identifier;
+              System.out.println("Teams User: " + teams.getUserId());
+              System.out.println("Anonymous: " + teams.isAnonymous());
+              
+          } else if (identifier instanceof UnknownIdentifier) {
+              UnknownIdentifier unknown = (UnknownIdentifier) identifier;
+              System.out.println("Unknown: " + unknown.getId());
+          }
+      }
+
+  - name: parse_raw_identifier
+    prompt: |
+      Write a method to parse a raw ID string and return the appropriate CommunicationIdentifier type.
+    expected_patterns:
+      - "startsWith"
+      - "8:acs:"
+      - "4:"
+      - "8:orgid:"
+      - "CommunicationUserIdentifier"
+      - "PhoneNumberIdentifier"
+      - "MicrosoftTeamsUserIdentifier"
+      - "UnknownIdentifier"
+    tags:
+      - identifiers
+      - parsing
+    mock_response: |
+      import com.azure.communication.common.*;
+      
+      public CommunicationIdentifier parseIdentifier(String rawId) {
+          if (rawId.startsWith("8:acs:")) {
+              return new CommunicationUserIdentifier(rawId);
+          } else if (rawId.startsWith("4:")) {
+              String phone = rawId.substring(2);
+              return new PhoneNumberIdentifier(phone);
+          } else if (rawId.startsWith("8:orgid:")) {
+              String teamsId = rawId.substring(8);
+              return new MicrosoftTeamsUserIdentifier(teamsId);
+          } else {
+              return new UnknownIdentifier(rawId);
+          }
+      }
+
+  - name: get_token_sync
+    prompt: |
+      Get the current access token synchronously from a CommunicationTokenCredential.
+    expected_patterns:
+      - "getToken"
+      - "AccessToken"
+      - "getExpiresAt"
+    tags:
+      - authentication
+      - token-access
+    mock_response: |
+      import com.azure.core.credential.AccessToken;
+      
+      CommunicationTokenCredential credential = new CommunicationTokenCredential(token);
+      
+      AccessToken accessToken = credential.getToken();
+      System.out.println("Token expires: " + accessToken.getExpiresAt());
+
+  - name: get_token_async
+    prompt: |
+      Get the current access token asynchronously from a CommunicationTokenCredential.
+    expected_patterns:
+      - "getTokenAsync"
+      - "subscribe"
+      - "getExpiresAt"
+    tags:
+      - authentication
+      - async
+    mock_response: |
+      credential.getTokenAsync()
+          .subscribe(token -> {
+              System.out.println("Token: " + token.getToken().substring(0, 20) + "...");
+              System.out.println("Expires: " + token.getExpiresAt());
+          });
+
+  - name: close_credential
+    prompt: |
+      Properly dispose of a CommunicationTokenCredential using try-with-resources.
+    expected_patterns:
+      - "try"
+      - "CommunicationTokenCredential"
+      - "close"
+    tags:
+      - resource-management
+    mock_response: |
+      try (CommunicationTokenCredential cred = new CommunicationTokenCredential(options)) {
+          chatClient.doSomething();
+      }
+
+  - name: create_chat_client_pattern
+    prompt: |
+      Create a method that builds a ChatClient with proper token refresh support.
+    expected_patterns:
+      - "CommunicationTokenRefreshOptions"
+      - "setRefreshProactively"
+      - "setInitialToken"
+      - "CommunicationTokenCredential"
+      - "ChatClientBuilder"
+    tags:
+      - patterns
+      - integration
+    mock_response: |
+      import com.azure.communication.chat.ChatClient;
+      import com.azure.communication.chat.ChatClientBuilder;
+      import com.azure.communication.common.*;
+      
+      public ChatClient createChatClient(String token, String endpoint) {
+          CommunicationTokenRefreshOptions refreshOptions = 
+              new CommunicationTokenRefreshOptions(this::refreshToken)
+                  .setRefreshProactively(true)
+                  .setInitialToken(token);
+          
+          CommunicationTokenCredential credential = 
+              new CommunicationTokenCredential(refreshOptions);
+          
+          return new ChatClientBuilder()
+              .endpoint(endpoint)
+              .credential(credential)
+              .buildClient();
+      }
+      
+      private String refreshToken() {
+          return tokenService.getNewToken();
+      }
+
+  - name: entra_authentication
+    prompt: |
+      Create a CommunicationTokenCredential using Entra ID for Teams Phone Extensibility.
+    expected_patterns:
+      - "EntraCommunicationTokenCredentialOptions"
+      - "InteractiveBrowserCredential"
+      - "setScopes"
+      - "TeamsExtension"
+    tags:
+      - authentication
+      - entra-id
+    mock_response: |
+      import com.azure.identity.InteractiveBrowserCredentialBuilder;
+      import com.azure.communication.common.EntraCommunicationTokenCredentialOptions;
+      import com.azure.communication.common.CommunicationTokenCredential;
+      import java.util.Arrays;
+      import java.util.List;
+      
+      InteractiveBrowserCredential entraCredential = new InteractiveBrowserCredentialBuilder()
+          .clientId("<your-client-id>")
+          .tenantId("<your-tenant-id>")
+          .redirectUrl("<your-redirect-uri>")
+          .build();
+      
+      String resourceEndpoint = "https://<resource>.communication.azure.com";
+      List<String> scopes = Arrays.asList(
+          "https://auth.msft.communication.azure.com/TeamsExtension.ManageCalls"
+      );
+      
+      EntraCommunicationTokenCredentialOptions entraOptions = 
+          new EntraCommunicationTokenCredentialOptions(entraCredential, resourceEndpoint)
+              .setScopes(scopes);
+      
+      CommunicationTokenCredential credential = new CommunicationTokenCredential(entraOptions);

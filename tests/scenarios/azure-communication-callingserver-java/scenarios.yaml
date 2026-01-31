@@ -1,0 +1,186 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-communication-callingserver-java skill evaluation
+# NOTE: This SDK is deprecated - scenarios focus on migration guidance
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: new_project_recommendation
+    prompt: |
+      I want to build a call automation system in Java. Which SDK should I use?
+    expected_patterns:
+      - "azure-communication-callautomation"
+      - "CallAutomationClient"
+      - "deprecated"
+    forbidden_patterns:
+      - "azure-communication-callingserver"
+      - "recommend.*callingserver"
+    tags:
+      - migration
+      - recommendation
+    mock_response: |
+      For new projects, use the **azure-communication-callautomation** SDK. 
+      The azure-communication-callingserver SDK is deprecated.
+      
+      ```xml
+      <dependency>
+          <groupId>com.azure</groupId>
+          <artifactId>azure-communication-callautomation</artifactId>
+          <version>1.6.0</version>
+      </dependency>
+      ```
+      
+      ```java
+      import com.azure.communication.callautomation.CallAutomationClient;
+      import com.azure.communication.callautomation.CallAutomationClientBuilder;
+      
+      CallAutomationClient client = new CallAutomationClientBuilder()
+          .connectionString("<connection-string>")
+          .buildClient();
+      ```
+
+  - name: migration_guidance_client
+    prompt: |
+      How do I migrate from CallingServerClient to the new SDK?
+    expected_patterns:
+      - "CallAutomationClient"
+      - "CallAutomationClientBuilder"
+      - "deprecated"
+      - "migration"
+    forbidden_patterns:
+      - "continue using CallingServerClient"
+    tags:
+      - migration
+    mock_response: |
+      Migrate from CallingServerClient to CallAutomationClient:
+      
+      **OLD (deprecated):**
+      ```java
+      import com.azure.communication.callingserver.CallingServerClient;
+      import com.azure.communication.callingserver.CallingServerClientBuilder;
+      
+      CallingServerClient client = new CallingServerClientBuilder()
+          .connectionString("<connection-string>")
+          .buildClient();
+      ```
+      
+      **NEW (recommended):**
+      ```java
+      import com.azure.communication.callautomation.CallAutomationClient;
+      import com.azure.communication.callautomation.CallAutomationClientBuilder;
+      
+      CallAutomationClient client = new CallAutomationClientBuilder()
+          .connectionString("<connection-string>")
+          .buildClient();
+      ```
+
+  - name: migration_guidance_recording
+    prompt: |
+      How do I migrate call recording code from CallingServer to Call Automation?
+    expected_patterns:
+      - "CallRecording"
+      - "getCallRecording"
+      - "ServerCallLocator"
+      - "deprecated"
+    forbidden_patterns:
+      - "client.startRecording"
+    tags:
+      - migration
+      - recording
+    mock_response: |
+      Migrate recording from CallingServer to Call Automation:
+      
+      **OLD (deprecated):**
+      ```java
+      StartRecordingOptions options = new StartRecordingOptions(serverCallId)
+          .setRecordingStateCallbackUri(callbackUri);
+      
+      StartCallRecordingResult result = client.startRecording(options);
+      ```
+      
+      **NEW (recommended):**
+      ```java
+      CallRecording callRecording = client.getCallRecording();
+      
+      StartRecordingOptions recordingOptions = new StartRecordingOptions(
+          new ServerCallLocator("<server-call-id>"))
+          .setRecordingChannel(RecordingChannel.MIXED)
+          .setRecordingContent(RecordingContent.AUDIO_VIDEO)
+          .setRecordingFormat(RecordingFormat.MP4);
+      
+      RecordingStateResult recordingResult = callRecording.start(recordingOptions);
+      ```
+
+  - name: deprecation_warning
+    prompt: |
+      Show me how to use CallingServerClient for my project.
+    expected_patterns:
+      - "deprecated"
+      - "azure-communication-callautomation"
+      - "CallAutomationClient"
+    forbidden_patterns:
+      - "Here is how to use CallingServerClient"
+    tags:
+      - deprecation
+    mock_response: |
+      ⚠️ **DEPRECATED**: The `azure-communication-callingserver` SDK is deprecated. 
+      For new projects, use `azure-communication-callautomation` instead.
+      
+      ```xml
+      <!-- Use this instead -->
+      <dependency>
+          <groupId>com.azure</groupId>
+          <artifactId>azure-communication-callautomation</artifactId>
+          <version>1.6.0</version>
+      </dependency>
+      ```
+      
+      See the `azure-communication-callautomation-java` skill for full documentation.
+
+  - name: legacy_maintenance_context
+    prompt: |
+      I need to maintain existing CallingServerClient code. What should I know?
+    expected_patterns:
+      - "deprecated"
+      - "migration"
+      - "CallingServerClient"
+      - "CallAutomationClient"
+    tags:
+      - maintenance
+      - legacy
+    mock_response: |
+      When maintaining legacy CallingServerClient code:
+      
+      1. **Deprecation Notice**: This SDK is deprecated and won't receive new features
+      2. **Plan Migration**: Schedule migration to `azure-communication-callautomation`
+      3. **Class Mapping**:
+         - `CallingServerClient` → `CallAutomationClient`
+         - `CallingServerClientBuilder` → `CallAutomationClientBuilder`
+         - `ServerCall` → Removed (use `CallConnection`)
+      
+      For maintenance, existing patterns will work but avoid expanding usage.
+
+  - name: dependency_update
+    prompt: |
+      What Maven dependency should I use for Azure call automation in Java?
+    expected_patterns:
+      - "azure-communication-callautomation"
+      - "com.azure"
+      - "1.6.0"
+    forbidden_patterns:
+      - "azure-communication-callingserver"
+    tags:
+      - dependencies
+    mock_response: |
+      Use the Call Automation SDK (not the deprecated CallingServer):
+      
+      ```xml
+      <dependency>
+          <groupId>com.azure</groupId>
+          <artifactId>azure-communication-callautomation</artifactId>
+          <version>1.6.0</version>
+      </dependency>
+      ```

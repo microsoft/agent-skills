@@ -1,0 +1,333 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-compute-batch-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_client_with_entra
+    prompt: |
+      Create a BatchClient using DefaultAzureCredential and an endpoint from environment variable.
+    expected_patterns:
+      - "BatchClient"
+      - "BatchClientBuilder"
+      - "DefaultAzureCredentialBuilder"
+      - "endpoint"
+      - "buildClient"
+    forbidden_patterns:
+      - "AzureNamedKeyCredential"
+      - "accountKey"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.compute.batch.BatchClient;
+      import com.azure.compute.batch.BatchClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      
+      BatchClient batchClient = new BatchClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint(System.getenv("AZURE_BATCH_ENDPOINT"))
+          .buildClient();
+
+  - name: create_client_with_shared_key
+    prompt: |
+      Create a BatchClient using shared key credentials with account name and access key.
+    expected_patterns:
+      - "BatchClient"
+      - "BatchClientBuilder"
+      - "AzureNamedKeyCredential"
+      - "endpoint"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.compute.batch.BatchClient;
+      import com.azure.compute.batch.BatchClientBuilder;
+      import com.azure.core.credential.AzureNamedKeyCredential;
+      
+      String accountName = System.getenv("AZURE_BATCH_ACCOUNT");
+      String accountKey = System.getenv("AZURE_BATCH_ACCESS_KEY");
+      AzureNamedKeyCredential sharedKeyCreds = new AzureNamedKeyCredential(accountName, accountKey);
+      
+      BatchClient batchClient = new BatchClientBuilder()
+          .credential(sharedKeyCreds)
+          .endpoint(System.getenv("AZURE_BATCH_ENDPOINT"))
+          .buildClient();
+
+  - name: create_pool
+    prompt: |
+      Create a Batch pool with Ubuntu 22.04 VMs and 2 dedicated nodes.
+    expected_patterns:
+      - "createPool"
+      - "BatchPoolCreateParameters"
+      - "VirtualMachineConfiguration"
+      - "BatchVmImageReference"
+      - "setTargetDedicatedNodes"
+      - "Canonical"
+    tags:
+      - pool-operations
+    mock_response: |
+      import com.azure.compute.batch.models.*;
+      
+      batchClient.createPool(new BatchPoolCreateParameters("myPoolId", "STANDARD_DC2s_V2")
+          .setVirtualMachineConfiguration(
+              new VirtualMachineConfiguration(
+                  new BatchVmImageReference()
+                      .setPublisher("Canonical")
+                      .setOffer("UbuntuServer")
+                      .setSku("22_04-lts")
+                      .setVersion("latest"),
+                  "batch.node.ubuntu 22.04"))
+          .setTargetDedicatedNodes(2)
+          .setTargetLowPriorityNodes(0), null);
+
+  - name: resize_pool
+    prompt: |
+      Resize an existing pool to 4 dedicated nodes and 2 low-priority nodes.
+    expected_patterns:
+      - "BatchPoolResizeParameters"
+      - "setTargetDedicatedNodes"
+      - "setTargetLowPriorityNodes"
+      - "beginResizePool"
+      - "SyncPoller"
+      - "waitForCompletion"
+    tags:
+      - pool-operations
+      - lro
+    mock_response: |
+      import com.azure.compute.batch.models.BatchPoolResizeParameters;
+      import com.azure.core.util.polling.SyncPoller;
+      
+      BatchPoolResizeParameters resizeParams = new BatchPoolResizeParameters()
+          .setTargetDedicatedNodes(4)
+          .setTargetLowPriorityNodes(2);
+      
+      SyncPoller<BatchPool, BatchPool> poller = batchClient.beginResizePool("myPoolId", resizeParams);
+      poller.waitForCompletion();
+      BatchPool resizedPool = poller.getFinalResult();
+
+  - name: enable_autoscale
+    prompt: |
+      Enable autoscaling on a pool with a formula that scales based on pending tasks.
+    expected_patterns:
+      - "BatchPoolEnableAutoScaleParameters"
+      - "setAutoScaleFormula"
+      - "setAutoScaleEvaluationInterval"
+      - "enablePoolAutoScale"
+      - "\\$TargetDedicatedNodes"
+    tags:
+      - pool-operations
+      - autoscale
+    mock_response: |
+      import com.azure.compute.batch.models.BatchPoolEnableAutoScaleParameters;
+      import java.time.Duration;
+      
+      BatchPoolEnableAutoScaleParameters autoScaleParams = new BatchPoolEnableAutoScaleParameters()
+          .setAutoScaleEvaluationInterval(Duration.ofMinutes(5))
+          .setAutoScaleFormula("$TargetDedicatedNodes = min(10, $PendingTasks.GetSample(TimeInterval_Minute * 5));");
+      
+      batchClient.enablePoolAutoScale("myPoolId", autoScaleParams);
+
+  - name: create_job
+    prompt: |
+      Create a Batch job with priority 100 and constraints for max runtime and retry count.
+    expected_patterns:
+      - "createJob"
+      - "BatchJobCreateParameters"
+      - "BatchPoolInfo"
+      - "setPriority"
+      - "BatchJobConstraints"
+      - "setMaxWallClockTime"
+      - "setMaxTaskRetryCount"
+    tags:
+      - job-operations
+    mock_response: |
+      import com.azure.compute.batch.models.*;
+      import java.time.Duration;
+      
+      batchClient.createJob(
+          new BatchJobCreateParameters("myJobId", new BatchPoolInfo().setPoolId("myPoolId"))
+              .setPriority(100)
+              .setConstraints(new BatchJobConstraints()
+                  .setMaxWallClockTime(Duration.ofHours(24))
+                  .setMaxTaskRetryCount(3)),
+          null);
+
+  - name: get_task_counts
+    prompt: |
+      Get the task counts for a job to monitor progress.
+    expected_patterns:
+      - "getJobTaskCounts"
+      - "BatchTaskCountsResult"
+      - "getTaskCounts"
+      - "getActive"
+      - "getRunning"
+      - "getCompleted"
+    tags:
+      - job-operations
+      - monitoring
+    mock_response: |
+      import com.azure.compute.batch.models.BatchTaskCountsResult;
+      
+      BatchTaskCountsResult counts = batchClient.getJobTaskCounts("myJobId");
+      System.out.println("Active: " + counts.getTaskCounts().getActive());
+      System.out.println("Running: " + counts.getTaskCounts().getRunning());
+      System.out.println("Completed: " + counts.getTaskCounts().getCompleted());
+
+  - name: create_single_task
+    prompt: |
+      Create a single task that echoes "Hello World".
+    expected_patterns:
+      - "createTask"
+      - "BatchTaskCreateParameters"
+      - "echo"
+    tags:
+      - task-operations
+    mock_response: |
+      import com.azure.compute.batch.models.BatchTaskCreateParameters;
+      
+      BatchTaskCreateParameters task = new BatchTaskCreateParameters("task1", "echo 'Hello World'");
+      batchClient.createTask("myJobId", task);
+
+  - name: create_task_collection
+    prompt: |
+      Create multiple tasks (up to 100) in a single API call.
+    expected_patterns:
+      - "createTaskCollection"
+      - "BatchTaskGroup"
+      - "BatchTaskCreateParameters"
+      - "BatchCreateTaskCollectionResult"
+    tags:
+      - task-operations
+      - batch
+    mock_response: |
+      import com.azure.compute.batch.models.*;
+      import java.util.Arrays;
+      import java.util.List;
+      
+      List<BatchTaskCreateParameters> taskList = Arrays.asList(
+          new BatchTaskCreateParameters("task1", "echo Task 1"),
+          new BatchTaskCreateParameters("task2", "echo Task 2"),
+          new BatchTaskCreateParameters("task3", "echo Task 3")
+      );
+      BatchTaskGroup taskGroup = new BatchTaskGroup(taskList);
+      BatchCreateTaskCollectionResult result = batchClient.createTaskCollection("myJobId", taskGroup);
+
+  - name: create_many_tasks
+    prompt: |
+      Create 1000 tasks without the 100 task limit of createTaskCollection.
+    expected_patterns:
+      - "createTasks"
+      - "BatchTaskCreateParameters"
+      - "ArrayList"
+      - "1000"
+    tags:
+      - task-operations
+      - batch
+    mock_response: |
+      import com.azure.compute.batch.models.BatchTaskCreateParameters;
+      import java.util.ArrayList;
+      import java.util.List;
+      
+      List<BatchTaskCreateParameters> tasks = new ArrayList<>();
+      for (int i = 0; i < 1000; i++) {
+          tasks.add(new BatchTaskCreateParameters("task" + i, "echo Task " + i));
+      }
+      batchClient.createTasks("myJobId", tasks);
+
+  - name: get_task_output
+    prompt: |
+      Read the stdout output from a completed task.
+    expected_patterns:
+      - "getTaskFile"
+      - "BinaryData"
+      - "stdout.txt"
+      - "toBytes"
+      - "StandardCharsets"
+    tags:
+      - task-operations
+      - output
+    mock_response: |
+      import com.azure.core.util.BinaryData;
+      import java.nio.charset.StandardCharsets;
+      
+      BinaryData stdout = batchClient.getTaskFile("myJobId", "task1", "stdout.txt");
+      System.out.println(new String(stdout.toBytes(), StandardCharsets.UTF_8));
+
+  - name: list_nodes
+    prompt: |
+      List all compute nodes in a pool.
+    expected_patterns:
+      - "listNodes"
+      - "PagedIterable"
+      - "BatchNode"
+      - "BatchNodesListOptions"
+      - "getId"
+      - "getState"
+    tags:
+      - node-operations
+    mock_response: |
+      import com.azure.compute.batch.models.*;
+      import com.azure.core.http.rest.PagedIterable;
+      
+      PagedIterable<BatchNode> nodes = batchClient.listNodes("myPoolId", new BatchNodesListOptions());
+      for (BatchNode node : nodes) {
+          System.out.println("Node: " + node.getId() + ", State: " + node.getState());
+      }
+
+  - name: error_handling
+    prompt: |
+      Handle a BatchErrorException when trying to get a non-existent pool.
+    expected_patterns:
+      - "BatchErrorException"
+      - "BatchError"
+      - "getCode"
+      - "getMessage"
+      - "PoolNotFound"
+    forbidden_patterns:
+      - "catch \\(Exception e\\)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.compute.batch.models.BatchErrorException;
+      import com.azure.compute.batch.models.BatchError;
+      
+      try {
+          batchClient.getPool("nonexistent-pool");
+      } catch (BatchErrorException e) {
+          BatchError error = e.getValue();
+          System.err.println("Error code: " + error.getCode());
+          System.err.println("Message: " + error.getMessage().getValue());
+          
+          if ("PoolNotFound".equals(error.getCode())) {
+              System.err.println("The specified pool does not exist.");
+          }
+      }
+
+  - name: create_job_schedule
+    prompt: |
+      Create a job schedule that runs every 6 hours starting tomorrow.
+    expected_patterns:
+      - "createJobSchedule"
+      - "BatchJobScheduleCreateParameters"
+      - "BatchJobScheduleConfiguration"
+      - "setRecurrenceInterval"
+      - "setDoNotRunUntil"
+      - "BatchJobSpecification"
+    tags:
+      - schedule-operations
+    mock_response: |
+      import com.azure.compute.batch.models.*;
+      import java.time.Duration;
+      import java.time.OffsetDateTime;
+      
+      batchClient.createJobSchedule(new BatchJobScheduleCreateParameters("myScheduleId",
+          new BatchJobScheduleConfiguration()
+              .setRecurrenceInterval(Duration.ofHours(6))
+              .setDoNotRunUntil(OffsetDateTime.now().plusDays(1)),
+          new BatchJobSpecification(new BatchPoolInfo().setPoolId("myPoolId"))
+              .setPriority(50)),
+          null);

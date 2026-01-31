@@ -1,0 +1,326 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-communication-chat-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_chat_client
+    prompt: |
+      Create a ChatClient using a user access token and endpoint.
+    expected_patterns:
+      - "ChatClient"
+      - "ChatClientBuilder"
+      - "CommunicationTokenCredential"
+      - "endpoint"
+      - "buildClient"
+    forbidden_patterns:
+      - "DefaultAzureCredential"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.communication.chat.ChatClient;
+      import com.azure.communication.chat.ChatClientBuilder;
+      import com.azure.communication.common.CommunicationTokenCredential;
+      
+      String endpoint = "https://<resource>.communication.azure.com";
+      String userAccessToken = "<user-access-token>";
+      
+      CommunicationTokenCredential credential = new CommunicationTokenCredential(userAccessToken);
+      
+      ChatClient chatClient = new ChatClientBuilder()
+          .endpoint(endpoint)
+          .credential(credential)
+          .buildClient();
+
+  - name: create_chat_thread
+    prompt: |
+      Create a new chat thread with two participants named Alice and Bob.
+    expected_patterns:
+      - "CreateChatThreadOptions"
+      - "ChatParticipant"
+      - "setCommunicationIdentifier"
+      - "setDisplayName"
+      - "createChatThread"
+      - "getChatThreadClient"
+    forbidden_patterns:
+      - "deprecated"
+    tags:
+      - thread-operations
+    mock_response: |
+      import com.azure.communication.chat.models.*;
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      import java.util.ArrayList;
+      import java.util.List;
+      
+      List<ChatParticipant> participants = new ArrayList<>();
+      
+      ChatParticipant participant1 = new ChatParticipant()
+          .setCommunicationIdentifier(new CommunicationUserIdentifier("<user-id-1>"))
+          .setDisplayName("Alice");
+      
+      ChatParticipant participant2 = new ChatParticipant()
+          .setCommunicationIdentifier(new CommunicationUserIdentifier("<user-id-2>"))
+          .setDisplayName("Bob");
+      
+      participants.add(participant1);
+      participants.add(participant2);
+      
+      CreateChatThreadOptions options = new CreateChatThreadOptions("Project Discussion")
+          .setParticipants(participants);
+      
+      CreateChatThreadResult result = chatClient.createChatThread(options);
+      String threadId = result.getChatThread().getId();
+      
+      ChatThreadClient threadClient = chatClient.getChatThreadClient(threadId);
+
+  - name: send_chat_message
+    prompt: |
+      Send a text message in a chat thread with a sender display name.
+    expected_patterns:
+      - "SendChatMessageOptions"
+      - "setContent"
+      - "setSenderDisplayName"
+      - "ChatMessageType.TEXT"
+      - "sendMessage"
+      - "SendChatMessageResult"
+    forbidden_patterns:
+      - "sendMessage\\(\".*\"\\)"
+    tags:
+      - messaging
+    mock_response: |
+      import com.azure.communication.chat.models.*;
+      
+      SendChatMessageOptions messageOptions = new SendChatMessageOptions()
+          .setContent("Hello, team!")
+          .setSenderDisplayName("Alice")
+          .setType(ChatMessageType.TEXT);
+      
+      SendChatMessageResult sendResult = threadClient.sendMessage(messageOptions);
+      String messageId = sendResult.getId();
+
+  - name: list_messages
+    prompt: |
+      List all messages in a chat thread and print their content.
+    expected_patterns:
+      - "listMessages"
+      - "PagedIterable"
+      - "ChatMessage"
+      - "getContent"
+      - "getMessage"
+    forbidden_patterns:
+      - "deprecated"
+    tags:
+      - messaging
+      - pagination
+    mock_response: |
+      import com.azure.core.util.paging.PagedIterable;
+      import com.azure.communication.chat.models.ChatMessage;
+      
+      PagedIterable<ChatMessage> messages = threadClient.listMessages();
+      
+      for (ChatMessage message : messages) {
+          System.out.println("ID: " + message.getId());
+          System.out.println("Type: " + message.getType());
+          System.out.println("Content: " + message.getContent().getMessage());
+          System.out.println("Sender: " + message.getSenderDisplayName());
+          System.out.println("Created: " + message.getCreatedOn());
+      }
+
+  - name: update_and_delete_message
+    prompt: |
+      Update a chat message content and then delete another message.
+    expected_patterns:
+      - "UpdateChatMessageOptions"
+      - "setContent"
+      - "updateMessage"
+      - "deleteMessage"
+    tags:
+      - messaging
+      - crud
+    mock_response: |
+      import com.azure.communication.chat.models.UpdateChatMessageOptions;
+      
+      // Update message
+      UpdateChatMessageOptions updateOptions = new UpdateChatMessageOptions()
+          .setContent("Updated message content");
+      
+      threadClient.updateMessage(messageId, updateOptions);
+      
+      // Delete message
+      threadClient.deleteMessage(anotherMessageId);
+
+  - name: add_participant_with_history
+    prompt: |
+      Add a new participant to a chat thread and share the last 7 days of message history.
+    expected_patterns:
+      - "ChatParticipant"
+      - "setShareHistoryTime"
+      - "OffsetDateTime"
+      - "minusDays"
+      - "addParticipants"
+    forbidden_patterns:
+      - "deprecated"
+    tags:
+      - participants
+    mock_response: |
+      import com.azure.communication.chat.models.ChatParticipant;
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      import java.time.OffsetDateTime;
+      import java.util.ArrayList;
+      import java.util.List;
+      
+      List<ChatParticipant> newParticipants = new ArrayList<>();
+      newParticipants.add(new ChatParticipant()
+          .setCommunicationIdentifier(new CommunicationUserIdentifier("<new-user-id>"))
+          .setDisplayName("Charlie")
+          .setShareHistoryTime(OffsetDateTime.now().minusDays(7)));
+      
+      threadClient.addParticipants(newParticipants);
+
+  - name: remove_participant
+    prompt: |
+      Remove a participant from a chat thread by their user identifier.
+    expected_patterns:
+      - "CommunicationUserIdentifier"
+      - "removeParticipant"
+    tags:
+      - participants
+    mock_response: |
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      
+      CommunicationUserIdentifier userToRemove = new CommunicationUserIdentifier("<user-id>");
+      threadClient.removeParticipant(userToRemove);
+
+  - name: send_read_receipt
+    prompt: |
+      Send a read receipt for a message and list all read receipts in the thread.
+    expected_patterns:
+      - "sendReadReceipt"
+      - "listReadReceipts"
+      - "ChatMessageReadReceipt"
+      - "getChatMessageId"
+      - "getReadOn"
+    tags:
+      - read-receipts
+    mock_response: |
+      import com.azure.communication.chat.models.ChatMessageReadReceipt;
+      import com.azure.core.util.paging.PagedIterable;
+      
+      // Send read receipt
+      threadClient.sendReadReceipt(messageId);
+      
+      // List read receipts
+      PagedIterable<ChatMessageReadReceipt> receipts = threadClient.listReadReceipts();
+      
+      for (ChatMessageReadReceipt receipt : receipts) {
+          System.out.println("Message ID: " + receipt.getChatMessageId());
+          System.out.println("Read by: " + receipt.getSenderCommunicationIdentifier());
+          System.out.println("Read at: " + receipt.getReadOn());
+      }
+
+  - name: send_typing_notification
+    prompt: |
+      Send a typing notification with the sender's display name.
+    expected_patterns:
+      - "TypingNotificationOptions"
+      - "setSenderDisplayName"
+      - "sendTypingNotificationWithResponse"
+    tags:
+      - typing-notifications
+    mock_response: |
+      import com.azure.communication.chat.models.TypingNotificationOptions;
+      import com.azure.core.util.Context;
+      
+      TypingNotificationOptions typingOptions = new TypingNotificationOptions()
+          .setSenderDisplayName("Alice");
+      
+      threadClient.sendTypingNotificationWithResponse(typingOptions, Context.NONE);
+
+  - name: paginate_messages
+    prompt: |
+      List chat messages with pagination, 10 messages per page.
+    expected_patterns:
+      - "ListChatMessagesOptions"
+      - "setMaxPageSize"
+      - "iterableByPage"
+      - "PagedIterable"
+    tags:
+      - pagination
+    mock_response: |
+      import com.azure.communication.chat.models.*;
+      import com.azure.core.http.rest.PagedResponse;
+      import com.azure.core.util.paging.PagedIterable;
+      
+      int maxPageSize = 10;
+      ListChatMessagesOptions listOptions = new ListChatMessagesOptions()
+          .setMaxPageSize(maxPageSize);
+      
+      PagedIterable<ChatMessage> pagedMessages = threadClient.listMessages(listOptions);
+      
+      pagedMessages.iterableByPage().forEach(page -> {
+          System.out.println("Page status code: " + page.getStatusCode());
+          page.getElements().forEach(msg -> 
+              System.out.println("Message: " + msg.getContent().getMessage()));
+      });
+
+  - name: error_handling
+    prompt: |
+      Implement error handling for chat operations with specific HTTP status codes.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse"
+      - "getStatusCode"
+      - "401"
+      - "403"
+      - "404"
+    forbidden_patterns:
+      - "catch \\(Exception e\\)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      
+      try {
+          threadClient.sendMessage(messageOptions);
+      } catch (HttpResponseException e) {
+          switch (e.getResponse().getStatusCode()) {
+              case 401:
+                  System.out.println("Unauthorized - check token");
+                  break;
+              case 403:
+                  System.out.println("Forbidden - user not in thread");
+                  break;
+              case 404:
+                  System.out.println("Thread not found");
+                  break;
+              default:
+                  System.out.println("Error: " + e.getMessage());
+          }
+      }
+
+  - name: list_threads
+    prompt: |
+      List all chat threads for the current user.
+    expected_patterns:
+      - "listChatThreads"
+      - "ChatThreadItem"
+      - "PagedIterable"
+      - "getId"
+      - "getTopic"
+    tags:
+      - thread-operations
+    mock_response: |
+      import com.azure.communication.chat.models.ChatThreadItem;
+      import com.azure.core.util.paging.PagedIterable;
+      
+      PagedIterable<ChatThreadItem> threads = chatClient.listChatThreads();
+      
+      for (ChatThreadItem thread : threads) {
+          System.out.println("Thread ID: " + thread.getId());
+          System.out.println("Topic: " + thread.getTopic());
+          System.out.println("Last message: " + thread.getLastMessageReceivedOn());
+      }

@@ -1,0 +1,389 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-eventgrid-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_eventgrid_publisher_client
+    prompt: |
+      Create an EventGridPublisherClient for EventGridEvent using an API key.
+    expected_patterns:
+      - "EventGridPublisherClient"
+      - "EventGridPublisherClientBuilder"
+      - "AzureKeyCredential"
+      - "endpoint"
+      - "buildEventGridEventPublisherClient"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridPublisherClient;
+      import com.azure.messaging.eventgrid.EventGridPublisherClientBuilder;
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.core.credential.AzureKeyCredential;
+      
+      EventGridPublisherClient<EventGridEvent> client = new EventGridPublisherClientBuilder()
+          .endpoint("<topic-endpoint>")
+          .credential(new AzureKeyCredential("<access-key>"))
+          .buildEventGridEventPublisherClient();
+
+  - name: create_cloudevent_publisher_client
+    prompt: |
+      Create an EventGridPublisherClient for CloudEvent using an API key.
+    expected_patterns:
+      - "EventGridPublisherClient"
+      - "EventGridPublisherClientBuilder"
+      - "CloudEvent"
+      - "buildCloudEventPublisherClient"
+    tags:
+      - client-creation
+      - cloudevent
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridPublisherClient;
+      import com.azure.messaging.eventgrid.EventGridPublisherClientBuilder;
+      import com.azure.core.models.CloudEvent;
+      import com.azure.core.credential.AzureKeyCredential;
+      
+      EventGridPublisherClient<CloudEvent> cloudClient = new EventGridPublisherClientBuilder()
+          .endpoint("<topic-endpoint>")
+          .credential(new AzureKeyCredential("<access-key>"))
+          .buildCloudEventPublisherClient();
+
+  - name: create_client_with_default_credential
+    prompt: |
+      Create an EventGridPublisherClient using DefaultAzureCredential.
+    expected_patterns:
+      - "EventGridPublisherClient"
+      - "EventGridPublisherClientBuilder"
+      - "DefaultAzureCredentialBuilder"
+    forbidden_patterns:
+      - "AzureKeyCredential"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridPublisherClient;
+      import com.azure.messaging.eventgrid.EventGridPublisherClientBuilder;
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      
+      EventGridPublisherClient<EventGridEvent> client = new EventGridPublisherClientBuilder()
+          .endpoint("<topic-endpoint>")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildEventGridEventPublisherClient();
+
+  - name: publish_single_eventgrid_event
+    prompt: |
+      Publish a single EventGridEvent with order data.
+    expected_patterns:
+      - "EventGridEvent"
+      - "BinaryData.fromObject"
+      - "sendEvent"
+    tags:
+      - publishing
+      - eventgrid-event
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.core.util.BinaryData;
+      
+      EventGridEvent event = new EventGridEvent(
+          "resource/path",
+          "MyApp.Events.OrderCreated",
+          BinaryData.fromObject(new OrderData("order-123", 99.99)),
+          "1.0"
+      );
+      
+      client.sendEvent(event);
+
+  - name: publish_multiple_events
+    prompt: |
+      Publish multiple EventGridEvents in a batch.
+    expected_patterns:
+      - "EventGridEvent"
+      - "Arrays.asList"
+      - "sendEvents"
+      - "List"
+    tags:
+      - publishing
+      - batch
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.core.util.BinaryData;
+      import java.util.Arrays;
+      import java.util.List;
+      
+      List<EventGridEvent> events = Arrays.asList(
+          new EventGridEvent("orders/1", "Order.Created", 
+              BinaryData.fromObject(order1), "1.0"),
+          new EventGridEvent("orders/2", "Order.Created", 
+              BinaryData.fromObject(order2), "1.0")
+      );
+      
+      client.sendEvents(events);
+
+  - name: publish_cloud_event
+    prompt: |
+      Publish a CloudEvent with a unique ID and subject.
+    expected_patterns:
+      - "CloudEvent"
+      - "CloudEventDataFormat.JSON"
+      - "setSubject"
+      - "setId"
+      - "sendEvent"
+    tags:
+      - publishing
+      - cloudevent
+    mock_response: |
+      import com.azure.core.models.CloudEvent;
+      import com.azure.core.models.CloudEventDataFormat;
+      import com.azure.core.util.BinaryData;
+      import java.util.UUID;
+      
+      CloudEvent cloudEvent = new CloudEvent(
+          "/myapp/orders",
+          "order.created",
+          BinaryData.fromObject(orderData),
+          CloudEventDataFormat.JSON
+      );
+      cloudEvent.setSubject("orders/12345");
+      cloudEvent.setId(UUID.randomUUID().toString());
+      
+      cloudClient.sendEvent(cloudEvent);
+
+  - name: async_publishing
+    prompt: |
+      Publish events asynchronously with success and error handling.
+    expected_patterns:
+      - "EventGridPublisherAsyncClient"
+      - "subscribe"
+      - "doOnSuccess"
+      - "doOnError"
+    tags:
+      - publishing
+      - async
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridPublisherAsyncClient;
+      
+      EventGridPublisherAsyncClient<EventGridEvent> asyncClient = new EventGridPublisherClientBuilder()
+          .endpoint("<topic-endpoint>")
+          .credential(new AzureKeyCredential("<access-key>"))
+          .buildEventGridEventPublisherAsyncClient();
+      
+      asyncClient.sendEvent(event)
+          .subscribe(
+              unused -> System.out.println("Event sent successfully"),
+              error -> System.err.println("Error: " + error.getMessage())
+          );
+      
+      asyncClient.sendEvents(events)
+          .doOnSuccess(unused -> System.out.println("All events sent"))
+          .doOnError(error -> System.err.println("Failed: " + error))
+          .block();
+
+  - name: parse_eventgrid_events
+    prompt: |
+      Parse EventGridEvent from a JSON webhook payload.
+    expected_patterns:
+      - "EventGridEvent.fromString"
+      - "getEventType"
+      - "getSubject"
+      - "getData"
+      - "toObject"
+    tags:
+      - receiving
+      - parsing
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.core.util.BinaryData;
+      import java.util.List;
+      
+      String jsonPayload = "[{\"id\": \"...\", ...}]";
+      List<EventGridEvent> events = EventGridEvent.fromString(jsonPayload);
+      
+      for (EventGridEvent event : events) {
+          System.out.println("Event Type: " + event.getEventType());
+          System.out.println("Subject: " + event.getSubject());
+          System.out.println("Event Time: " + event.getEventTime());
+          
+          BinaryData data = event.getData();
+          OrderData orderData = data.toObject(OrderData.class);
+      }
+
+  - name: parse_cloud_events
+    prompt: |
+      Parse CloudEvent from a JSON webhook payload.
+    expected_patterns:
+      - "CloudEvent.fromString"
+      - "getType"
+      - "getSource"
+      - "getId"
+      - "getData"
+    tags:
+      - receiving
+      - parsing
+      - cloudevent
+    mock_response: |
+      import com.azure.core.models.CloudEvent;
+      import java.util.List;
+      
+      String cloudEventJson = "[{\"specversion\": \"1.0\", ...}]";
+      List<CloudEvent> cloudEvents = CloudEvent.fromString(cloudEventJson);
+      
+      for (CloudEvent event : cloudEvents) {
+          System.out.println("Type: " + event.getType());
+          System.out.println("Source: " + event.getSource());
+          System.out.println("ID: " + event.getId());
+          
+          MyEventData data = event.getData().toObject(MyEventData.class);
+      }
+
+  - name: handle_system_events
+    prompt: |
+      Handle Azure system events like StorageBlobCreated.
+    expected_patterns:
+      - "systemevents"
+      - "StorageBlobCreatedEventData"
+      - "Microsoft.Storage.BlobCreated"
+      - "getUrl"
+    tags:
+      - receiving
+      - system-events
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.messaging.eventgrid.systemevents.*;
+      
+      for (EventGridEvent event : events) {
+          if (event.getEventType().equals("Microsoft.Storage.BlobCreated")) {
+              StorageBlobCreatedEventData blobData = 
+                  event.getData().toObject(StorageBlobCreatedEventData.class);
+              System.out.println("Blob URL: " + blobData.getUrl());
+          }
+      }
+
+  - name: receive_from_namespace
+    prompt: |
+      Receive and acknowledge events from an Event Grid Namespace using pull delivery.
+    expected_patterns:
+      - "EventGridReceiverClient"
+      - "EventGridReceiverClientBuilder"
+      - "topicName"
+      - "subscriptionName"
+      - "receive"
+      - "acknowledge"
+      - "getLockToken"
+    tags:
+      - receiving
+      - namespace
+      - pull-delivery
+    mock_response: |
+      import com.azure.messaging.eventgrid.namespaces.EventGridReceiverClient;
+      import com.azure.messaging.eventgrid.namespaces.EventGridReceiverClientBuilder;
+      import com.azure.messaging.eventgrid.namespaces.models.*;
+      import com.azure.core.credential.AzureKeyCredential;
+      import java.time.Duration;
+      import java.util.Arrays;
+      
+      EventGridReceiverClient receiverClient = new EventGridReceiverClientBuilder()
+          .endpoint("<namespace-endpoint>")
+          .credential(new AzureKeyCredential("<key>"))
+          .topicName("my-topic")
+          .subscriptionName("my-subscription")
+          .buildClient();
+      
+      ReceiveResult result = receiverClient.receive(10, Duration.ofSeconds(30));
+      
+      for (ReceiveDetails detail : result.getValue()) {
+          CloudEvent event = detail.getEvent();
+          System.out.println("Event: " + event.getType());
+          
+          receiverClient.acknowledge(Arrays.asList(detail.getBrokerProperties().getLockToken()));
+      }
+
+  - name: release_and_reject_events
+    prompt: |
+      Reject and release events with different dispositions.
+    expected_patterns:
+      - "reject"
+      - "release"
+      - "ReleaseOptions"
+      - "ReleaseDelay"
+    tags:
+      - receiving
+      - namespace
+      - disposition
+    mock_response: |
+      import com.azure.messaging.eventgrid.namespaces.models.*;
+      import java.util.Arrays;
+      
+      // Reject (don't retry)
+      receiverClient.reject(Arrays.asList(lockToken));
+      
+      // Release (retry later)
+      receiverClient.release(Arrays.asList(lockToken));
+      
+      // Release with delay
+      receiverClient.release(Arrays.asList(lockToken), 
+          new ReleaseOptions().setDelay(ReleaseDelay.BY_60_SECONDS));
+
+  - name: error_handling
+    prompt: |
+      Handle errors when publishing events to Event Grid.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse"
+      - "getStatusCode"
+      - "getMessage"
+    forbidden_patterns:
+      - "catch \\(Exception e\\)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      
+      try {
+          client.sendEvent(event);
+      } catch (HttpResponseException e) {
+          System.out.println("Status: " + e.getResponse().getStatusCode());
+          System.out.println("Error: " + e.getMessage());
+      }
+
+  - name: custom_event_data_class
+    prompt: |
+      Create a custom event data class and use it with EventGridEvent.
+    expected_patterns:
+      - "class"
+      - "private"
+      - "BinaryData.fromObject"
+      - "EventGridEvent"
+    tags:
+      - event-data
+      - patterns
+    mock_response: |
+      import com.azure.messaging.eventgrid.EventGridEvent;
+      import com.azure.core.util.BinaryData;
+      
+      public class OrderData {
+          private String orderId;
+          private double amount;
+          private String customerId;
+          
+          public OrderData(String orderId, double amount) {
+              this.orderId = orderId;
+              this.amount = amount;
+          }
+          
+          public String getOrderId() { return orderId; }
+          public double getAmount() { return amount; }
+      }
+      
+      // Usage
+      OrderData order = new OrderData("ORD-123", 150.00);
+      EventGridEvent event = new EventGridEvent(
+          "orders/" + order.getOrderId(),
+          "MyApp.Order.Created",
+          BinaryData.fromObject(order),
+          "1.0"
+      );

@@ -1,0 +1,286 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-communication-callautomation-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_client_with_credential
+    prompt: |
+      Create a CallAutomationClient using DefaultAzureCredential and an endpoint from environment variable.
+    expected_patterns:
+      - "CallAutomationClient"
+      - "CallAutomationClientBuilder"
+      - "DefaultAzureCredentialBuilder"
+      - "endpoint"
+      - "buildClient"
+    forbidden_patterns:
+      - "CallingServerClient"
+      - "CallingServerClientBuilder"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.communication.callautomation.CallAutomationClient;
+      import com.azure.communication.callautomation.CallAutomationClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      
+      CallAutomationClient client = new CallAutomationClientBuilder()
+          .endpoint(System.getenv("AZURE_COMMUNICATION_ENDPOINT"))
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: create_client_with_connection_string
+    prompt: |
+      Create a CallAutomationClient using a connection string.
+    expected_patterns:
+      - "CallAutomationClient"
+      - "CallAutomationClientBuilder"
+      - "connectionString"
+      - "buildClient"
+    forbidden_patterns:
+      - "endpoint"
+      - "credential"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.communication.callautomation.CallAutomationClient;
+      import com.azure.communication.callautomation.CallAutomationClientBuilder;
+      
+      CallAutomationClient client = new CallAutomationClientBuilder()
+          .connectionString("<connection-string>")
+          .buildClient();
+
+  - name: create_outbound_call
+    prompt: |
+      Create an outbound call to a phone number with a callback URL using CallAutomationClient.
+    expected_patterns:
+      - "CreateCallOptions"
+      - "PhoneNumberIdentifier"
+      - "setCallbackUrl"
+      - "createCall"
+      - "CreateCallResult"
+    forbidden_patterns:
+      - "CallingServerClient"
+    tags:
+      - outbound-call
+      - pstn
+    mock_response: |
+      import com.azure.communication.callautomation.models.*;
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      import com.azure.communication.common.PhoneNumberIdentifier;
+      
+      PhoneNumberIdentifier target = new PhoneNumberIdentifier("+14255551234");
+      PhoneNumberIdentifier caller = new PhoneNumberIdentifier("+14255550100");
+      
+      CreateCallOptions options = new CreateCallOptions(
+          new CommunicationUserIdentifier("<user-id>"),
+          List.of(target))
+          .setSourceCallerId(caller)
+          .setCallbackUrl("https://your-app.com/api/callbacks");
+      
+      CreateCallResult result = client.createCall(options);
+      String callConnectionId = result.getCallConnectionProperties().getCallConnectionId();
+
+  - name: answer_incoming_call
+    prompt: |
+      Answer an incoming call using the incoming call context from an Event Grid webhook.
+    expected_patterns:
+      - "AnswerCallOptions"
+      - "answerCall"
+      - "AnswerCallResult"
+      - "getCallConnection"
+    forbidden_patterns:
+      - "CallingServerClient"
+    tags:
+      - incoming-call
+    mock_response: |
+      import com.azure.communication.callautomation.models.*;
+      
+      String incomingCallContext = "<incoming-call-context-from-event>";
+      
+      AnswerCallOptions options = new AnswerCallOptions(
+          incomingCallContext,
+          "https://your-app.com/api/callbacks");
+      
+      AnswerCallResult result = client.answerCall(options);
+      CallConnection callConnection = result.getCallConnection();
+
+  - name: play_text_to_speech
+    prompt: |
+      Play text-to-speech audio in an active call with a specific voice.
+    expected_patterns:
+      - "CallMedia"
+      - "TextSource"
+      - "setVoiceName"
+      - "PlayOptions"
+      - "play"
+    forbidden_patterns:
+      - "deprecated"
+    tags:
+      - media
+      - tts
+    mock_response: |
+      import com.azure.communication.callautomation.models.*;
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      
+      CallConnection callConnection = client.getCallConnection(callConnectionId);
+      CallMedia callMedia = callConnection.getCallMedia();
+      
+      TextSource textSource = new TextSource()
+          .setText("Welcome to Contoso. Press 1 for sales, 2 for support.")
+          .setVoiceName("en-US-JennyNeural");
+      
+      PlayOptions playOptions = new PlayOptions(
+          List.of(textSource),
+          List.of(new CommunicationUserIdentifier("<target-user>")));
+      
+      callMedia.play(playOptions);
+
+  - name: recognize_dtmf_input
+    prompt: |
+      Set up DTMF recognition to collect up to 5 digits with a pound key stop tone.
+    expected_patterns:
+      - "CallMediaRecognizeDtmfOptions"
+      - "setStopTones"
+      - "DtmfTone"
+      - "startRecognizing"
+    forbidden_patterns:
+      - "deprecated"
+    tags:
+      - media
+      - dtmf
+      - recognition
+    mock_response: |
+      import com.azure.communication.callautomation.models.*;
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      import java.time.Duration;
+      
+      CallMedia callMedia = callConnection.getCallMedia();
+      
+      CallMediaRecognizeDtmfOptions recognizeOptions = new CallMediaRecognizeDtmfOptions(
+          new CommunicationUserIdentifier("<target-user>"),
+          5)
+          .setInterToneTimeout(Duration.ofSeconds(5))
+          .setStopTones(List.of(DtmfTone.POUND))
+          .setInitialSilenceTimeout(Duration.ofSeconds(15))
+          .setPlayPrompt(new TextSource().setText("Enter your account number followed by pound."));
+      
+      callMedia.startRecognizing(recognizeOptions);
+
+  - name: start_call_recording
+    prompt: |
+      Start recording a call with mixed channel audio/video in MP4 format.
+    expected_patterns:
+      - "CallRecording"
+      - "StartRecordingOptions"
+      - "ServerCallLocator"
+      - "RecordingChannel.MIXED"
+      - "RecordingFormat.MP4"
+    forbidden_patterns:
+      - "startRecording"
+    tags:
+      - recording
+    mock_response: |
+      import com.azure.communication.callautomation.models.*;
+      
+      CallRecording callRecording = client.getCallRecording();
+      
+      StartRecordingOptions recordingOptions = new StartRecordingOptions(
+          new ServerCallLocator("<server-call-id>"))
+          .setRecordingChannel(RecordingChannel.MIXED)
+          .setRecordingContent(RecordingContent.AUDIO_VIDEO)
+          .setRecordingFormat(RecordingFormat.MP4);
+      
+      RecordingStateResult recordingResult = callRecording.start(recordingOptions);
+      String recordingId = recordingResult.getRecordingId();
+
+  - name: handle_webhook_events
+    prompt: |
+      Parse and handle call automation webhook events including CallConnected and RecognizeCompleted.
+    expected_patterns:
+      - "CallAutomationEventParser"
+      - "parseEvents"
+      - "CallAutomationEventBase"
+      - "instanceof"
+      - "CallConnected"
+      - "RecognizeCompleted"
+    forbidden_patterns:
+      - "JsonParser"
+      - "JSONObject"
+    tags:
+      - events
+      - webhooks
+    mock_response: |
+      import com.azure.communication.callautomation.CallAutomationEventParser;
+      import com.azure.communication.callautomation.models.events.*;
+      
+      public void handleCallback(String requestBody) {
+          List<CallAutomationEventBase> events = CallAutomationEventParser.parseEvents(requestBody);
+          
+          for (CallAutomationEventBase event : events) {
+              if (event instanceof CallConnected) {
+                  CallConnected connected = (CallConnected) event;
+                  System.out.println("Call connected: " + connected.getCallConnectionId());
+              } else if (event instanceof RecognizeCompleted) {
+                  RecognizeCompleted recognized = (RecognizeCompleted) event;
+                  DtmfResult dtmfResult = (DtmfResult) recognized.getRecognizeResult();
+                  String tones = dtmfResult.getTones().stream()
+                      .map(DtmfTone::toString)
+                      .collect(Collectors.joining());
+              }
+          }
+      }
+
+  - name: add_participant_to_call
+    prompt: |
+      Add a new participant to an active call with a 30-second invitation timeout.
+    expected_patterns:
+      - "AddParticipantOptions"
+      - "setInvitationTimeout"
+      - "Duration"
+      - "addParticipant"
+    forbidden_patterns:
+      - "deprecated"
+    tags:
+      - participants
+    mock_response: |
+      import com.azure.communication.callautomation.models.*;
+      import com.azure.communication.common.CommunicationUserIdentifier;
+      import java.time.Duration;
+      
+      CallConnection callConnection = client.getCallConnection(callConnectionId);
+      
+      CommunicationUserIdentifier participant = new CommunicationUserIdentifier("<user-id>");
+      AddParticipantOptions addOptions = new AddParticipantOptions(participant)
+          .setInvitationTimeout(Duration.ofSeconds(30));
+      
+      AddParticipantResult result = callConnection.addParticipant(addOptions);
+
+  - name: error_handling
+    prompt: |
+      Implement proper error handling for call automation operations with specific HTTP status code handling.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse"
+      - "getStatusCode"
+      - "404"
+      - "400"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      
+      try {
+          client.answerCall(options);
+      } catch (HttpResponseException e) {
+          if (e.getResponse().getStatusCode() == 404) {
+              System.out.println("Call not found or already ended");
+          } else if (e.getResponse().getStatusCode() == 400) {
+              System.out.println("Invalid request: " + e.getMessage());
+          }
+      }

@@ -1,0 +1,328 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-communication-sms-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_client_with_credential
+    prompt: |
+      Create an SmsClient using DefaultAzureCredential and an endpoint.
+    expected_patterns:
+      - "SmsClient"
+      - "SmsClientBuilder"
+      - "DefaultAzureCredentialBuilder"
+      - "endpoint"
+      - "buildClient"
+    forbidden_patterns:
+      - "connectionString"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.communication.sms.SmsClient;
+      import com.azure.communication.sms.SmsClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      
+      SmsClient smsClient = new SmsClientBuilder()
+          .endpoint("https://<resource>.communication.azure.com")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: create_client_with_connection_string
+    prompt: |
+      Create an SmsClient using a connection string.
+    expected_patterns:
+      - "SmsClient"
+      - "SmsClientBuilder"
+      - "connectionString"
+      - "buildClient"
+    forbidden_patterns:
+      - "DefaultAzureCredential"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.communication.sms.SmsClient;
+      import com.azure.communication.sms.SmsClientBuilder;
+      
+      SmsClient smsClient = new SmsClientBuilder()
+          .connectionString("<connection-string>")
+          .buildClient();
+
+  - name: send_single_sms
+    prompt: |
+      Send an SMS message to a single recipient and check the result.
+    expected_patterns:
+      - "SmsSendResult"
+      - "send"
+      - "getMessageId"
+      - "isSuccessful"
+      - "\\+1"
+    forbidden_patterns:
+      - "sendWithResponse"
+    tags:
+      - messaging
+      - single-recipient
+    mock_response: |
+      import com.azure.communication.sms.models.SmsSendResult;
+      
+      SmsSendResult result = smsClient.send(
+          "+14255550100",
+          "+14255551234",
+          "Your verification code is 123456");
+      
+      System.out.println("Message ID: " + result.getMessageId());
+      System.out.println("To: " + result.getTo());
+      System.out.println("Success: " + result.isSuccessful());
+      
+      if (!result.isSuccessful()) {
+          System.out.println("Error: " + result.getErrorMessage());
+          System.out.println("Status: " + result.getHttpStatusCode());
+      }
+
+  - name: send_bulk_sms_with_options
+    prompt: |
+      Send SMS messages to multiple recipients with delivery reports enabled and a tracking tag.
+    expected_patterns:
+      - "SmsSendOptions"
+      - "setDeliveryReportEnabled"
+      - "setTag"
+      - "sendWithResponse"
+      - "List"
+      - "Arrays.asList"
+    tags:
+      - messaging
+      - bulk
+      - delivery-reports
+    mock_response: |
+      import com.azure.communication.sms.models.SmsSendOptions;
+      import com.azure.communication.sms.models.SmsSendResult;
+      import com.azure.core.util.Context;
+      import java.util.Arrays;
+      import java.util.List;
+      
+      List<String> recipients = Arrays.asList(
+          "+14255551111",
+          "+14255552222",
+          "+14255553333"
+      );
+      
+      SmsSendOptions options = new SmsSendOptions()
+          .setDeliveryReportEnabled(true)
+          .setTag("marketing-campaign-001");
+      
+      Iterable<SmsSendResult> results = smsClient.sendWithResponse(
+          "+14255550100",
+          recipients,
+          "Flash sale! 50% off today only.",
+          options,
+          Context.NONE
+      ).getValue();
+      
+      for (SmsSendResult result : results) {
+          if (result.isSuccessful()) {
+              System.out.println("Sent to " + result.getTo() + ": " + result.getMessageId());
+          } else {
+              System.out.println("Failed to " + result.getTo() + ": " + result.getErrorMessage());
+          }
+      }
+
+  - name: send_async_sms
+    prompt: |
+      Send an SMS message asynchronously using SmsAsyncClient.
+    expected_patterns:
+      - "SmsAsyncClient"
+      - "buildAsyncClient"
+      - "subscribe"
+    tags:
+      - messaging
+      - async
+    mock_response: |
+      import com.azure.communication.sms.SmsAsyncClient;
+      import com.azure.communication.sms.SmsClientBuilder;
+      
+      SmsAsyncClient asyncClient = new SmsClientBuilder()
+          .connectionString("<connection-string>")
+          .buildAsyncClient();
+      
+      asyncClient.send("+14255550100", "+14255551234", "Async message!")
+          .subscribe(
+              result -> System.out.println("Sent: " + result.getMessageId()),
+              error -> System.out.println("Error: " + error.getMessage())
+          );
+
+  - name: send_bulk_async_sms
+    prompt: |
+      Send SMS messages to multiple recipients asynchronously with delivery reports.
+    expected_patterns:
+      - "SmsAsyncClient"
+      - "sendWithResponse"
+      - "SmsSendOptions"
+      - "subscribe"
+      - "setDeliveryReportEnabled"
+    tags:
+      - messaging
+      - async
+      - bulk
+    mock_response: |
+      import com.azure.communication.sms.SmsAsyncClient;
+      import com.azure.communication.sms.models.SmsSendOptions;
+      import java.util.Arrays;
+      
+      SmsSendOptions options = new SmsSendOptions()
+          .setDeliveryReportEnabled(true);
+      
+      asyncClient.sendWithResponse(
+          "+14255550100",
+          Arrays.asList("+14255551111", "+14255552222"),
+          "Bulk async message",
+          options)
+          .subscribe(response -> {
+              for (SmsSendResult result : response.getValue()) {
+                  System.out.println("Result: " + result.getTo() + " - " + result.isSuccessful());
+              }
+          });
+
+  - name: handle_response_details
+    prompt: |
+      Send an SMS and handle the full HTTP response including status code and headers.
+    expected_patterns:
+      - "Response"
+      - "sendWithResponse"
+      - "getStatusCode"
+      - "getHeaders"
+      - "getValue"
+    tags:
+      - messaging
+      - response-handling
+    mock_response: |
+      import com.azure.core.http.rest.Response;
+      import com.azure.communication.sms.models.*;
+      import com.azure.core.util.Context;
+      import java.util.Arrays;
+      
+      Response<Iterable<SmsSendResult>> response = smsClient.sendWithResponse(
+          "+14255550100",
+          Arrays.asList("+14255551234"),
+          "Hello!",
+          new SmsSendOptions().setDeliveryReportEnabled(true),
+          Context.NONE
+      );
+      
+      System.out.println("Status code: " + response.getStatusCode());
+      System.out.println("Headers: " + response.getHeaders());
+      
+      for (SmsSendResult result : response.getValue()) {
+          System.out.println("Message ID: " + result.getMessageId());
+          System.out.println("Successful: " + result.isSuccessful());
+          
+          if (!result.isSuccessful()) {
+              System.out.println("HTTP Status: " + result.getHttpStatusCode());
+              System.out.println("Error: " + result.getErrorMessage());
+          }
+      }
+
+  - name: error_handling
+    prompt: |
+      Implement comprehensive error handling for SMS sending with specific HTTP status code handling.
+    expected_patterns:
+      - "HttpResponseException"
+      - "getResponse"
+      - "getStatusCode"
+      - "isSuccessful"
+      - "400"
+      - "429"
+    forbidden_patterns:
+      - "catch \\(Exception e\\)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      import com.azure.communication.sms.models.SmsSendResult;
+      
+      try {
+          SmsSendResult result = smsClient.send(
+              "+14255550100",
+              "+14255551234",
+              "Test message"
+          );
+          
+          if (!result.isSuccessful()) {
+              handleMessageError(result);
+          }
+          
+      } catch (HttpResponseException e) {
+          System.out.println("Request failed: " + e.getMessage());
+          System.out.println("Status: " + e.getResponse().getStatusCode());
+      } catch (RuntimeException e) {
+          System.out.println("Unexpected error: " + e.getMessage());
+      }
+      
+      private void handleMessageError(SmsSendResult result) {
+          int status = result.getHttpStatusCode();
+          String error = result.getErrorMessage();
+          
+          if (status == 400) {
+              System.out.println("Invalid phone number: " + result.getTo());
+          } else if (status == 429) {
+              System.out.println("Rate limited - retry later");
+          } else {
+              System.out.println("Error " + status + ": " + error);
+          }
+      }
+
+  - name: create_client_with_key_credential
+    prompt: |
+      Create an SmsClient using AzureKeyCredential with an endpoint.
+    expected_patterns:
+      - "SmsClient"
+      - "SmsClientBuilder"
+      - "AzureKeyCredential"
+      - "endpoint"
+    forbidden_patterns:
+      - "connectionString"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.communication.sms.SmsClient;
+      import com.azure.communication.sms.SmsClientBuilder;
+      import com.azure.core.credential.AzureKeyCredential;
+      
+      SmsClient smsClient = new SmsClientBuilder()
+          .endpoint("https://<resource>.communication.azure.com")
+          .credential(new AzureKeyCredential("<access-key>"))
+          .buildClient();
+
+  - name: delivery_report_handler
+    prompt: |
+      Describe how to handle SMS delivery reports from Event Grid webhooks.
+    expected_patterns:
+      - "Event Grid"
+      - "SMSDeliveryReportReceived"
+      - "messageId"
+      - "deliveryStatus"
+      - "tag"
+    tags:
+      - delivery-reports
+      - webhooks
+    mock_response: |
+      // Delivery reports are sent via Azure Event Grid. 
+      // Configure an Event Grid subscription for your ACS resource.
+      
+      // Event Grid webhook handler (in your endpoint)
+      public void handleDeliveryReport(String eventJson) {
+          // Parse Event Grid event
+          // Event type: Microsoft.Communication.SMSDeliveryReportReceived
+          
+          // Event data contains:
+          // - messageId: correlates to SmsSendResult.getMessageId()
+          // - from: sender number
+          // - to: recipient number
+          // - deliveryStatus: "Delivered", "Failed", etc.
+          // - deliveryStatusDetails: detailed status
+          // - receivedTimestamp: when status was received
+          // - tag: your custom tag from SmsSendOptions
+      }
