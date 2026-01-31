@@ -12,7 +12,7 @@ Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding
 
 | Resource | Description |
 |----------|-------------|
-| **[127 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
+| **[134 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
@@ -57,7 +57,7 @@ ln -s ../.github/skills .claude/skills
 
 ## Skill Catalog
 
-> 127 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
+> 134 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
 
 | Language | Count | Suffix | 
 |----------|-------|--------|
@@ -66,6 +66,7 @@ ln -s ../.github/skills .claude/skills
 | [.NET](#net) | 29 | `-dotnet` |
 | [TypeScript](#typescript) | 24 | `-ts` |
 | [Java](#java) | 28 | `-java` |
+| [Rust](#rust) | 7 | `-rust` |
 
 ---
 
@@ -429,13 +430,58 @@ ln -s ../.github/skills .claude/skills
 
 ---
 
+### Rust
+
+> 7 skills • suffix: `-rust`
+
+<details>
+<summary><strong>Identity</strong> (1 skill)</summary>
+
+| Skill | Description |
+|-------|-------------|
+| [azure-identity-rust](.github/skills/azure-identity-rust/) | Identity SDK — DeveloperToolsCredential, ManagedIdentityCredential, ClientSecretCredential. |
+
+</details>
+
+<details>
+<summary><strong>Data & Storage</strong> (2 skills)</summary>
+
+| Skill | Description |
+|-------|-------------|
+| [azure-cosmos-rust](.github/skills/azure-cosmos-rust/) | Cosmos DB SDK — document CRUD, queries, containers, partitions. |
+| [azure-storage-blob-rust](.github/skills/azure-storage-blob-rust/) | Blob Storage — upload, download, containers, streaming. |
+
+</details>
+
+<details>
+<summary><strong>Messaging</strong> (1 skill)</summary>
+
+| Skill | Description |
+|-------|-------------|
+| [azure-eventhub-rust](.github/skills/azure-eventhub-rust/) | Event Hubs — high-throughput streaming, producers, consumers, batching. |
+
+</details>
+
+<details>
+<summary><strong>Security</strong> (3 skills)</summary>
+
+| Skill | Description |
+|-------|-------------|
+| [azure-keyvault-certificates-rust](.github/skills/azure-keyvault-certificates-rust/) | Key Vault Certificates — create, import, manage certificates. |
+| [azure-keyvault-keys-rust](.github/skills/azure-keyvault-keys-rust/) | Key Vault Keys — RSA/EC keys, encrypt/decrypt, sign/verify. |
+| [azure-keyvault-secrets-rust](.github/skills/azure-keyvault-secrets-rust/) | Key Vault Secrets — passwords, API keys, connection strings. |
+
+</details>
+
+---
+
 ## Repository Structure
 
 ```
 AGENTS.md                # Agent configuration template
 
 .github/
-├── skills/              # All 127 skills (flat structure)
+├── skills/              # All 134 skills (flat structure)
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions
 ├── scripts/             # Automation scripts (doc scraping)
@@ -450,7 +496,8 @@ skills/                  # Symlinks for backward compatibility
 ├── python/              # -> ../.github/skills/*-py
 ├── dotnet/              # -> ../.github/skills/*-dotnet
 ├── typescript/          # -> ../.github/skills/*-ts
-└── java/                # -> ../.github/skills/*-java
+├── java/                # -> ../.github/skills/*-java
+└── rust/                # -> ../.github/skills/*-rust
 
 .vscode/
 └── mcp.json             # MCP server configurations
