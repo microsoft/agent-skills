@@ -1,0 +1,463 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-security-keyvault-secrets-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_secret_client
+    prompt: |
+      Create a SecretClient using DefaultAzureCredential to connect to an Azure Key Vault.
+    expected_patterns:
+      - "SecretClientBuilder"
+      - "SecretClient"
+      - "vaultUrl"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+      - "buildClient()"
+    forbidden_patterns:
+      - "endpoint"
+      - "SecretsClient"
+      - "KeyVaultSecretClient"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.security.keyvault.secrets.SecretClient;
+      import com.azure.security.keyvault.secrets.SecretClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      SecretClient secretClient = new SecretClientBuilder()
+          .vaultUrl("https://my-vault.vault.azure.net")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: create_async_client
+    prompt: |
+      Create a SecretAsyncClient for asynchronous secret operations.
+    expected_patterns:
+      - "SecretAsyncClient"
+      - "SecretClientBuilder"
+      - "buildAsyncClient()"
+      - "vaultUrl"
+    forbidden_patterns:
+      - "buildClient()"
+    tags:
+      - client-creation
+      - async
+    mock_response: |
+      import com.azure.security.keyvault.secrets.SecretAsyncClient;
+      import com.azure.security.keyvault.secrets.SecretClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      SecretAsyncClient secretAsyncClient = new SecretClientBuilder()
+          .vaultUrl("https://my-vault.vault.azure.net")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildAsyncClient();
+
+  - name: set_simple_secret
+    prompt: |
+      Store a simple password secret in Azure Key Vault.
+    expected_patterns:
+      - "setSecret"
+      - "KeyVaultSecret"
+      - '"database-password"'
+      - "getName()"
+      - "getId()"
+    forbidden_patterns:
+      - "createSecret"
+      - "addSecret"
+    tags:
+      - secret-management
+      - create
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+
+      KeyVaultSecret secret = secretClient.setSecret("database-password", "P@ssw0rd123!");
+      System.out.println("Secret name: " + secret.getName());
+      System.out.println("Secret ID: " + secret.getId());
+
+  - name: set_secret_with_options
+    prompt: |
+      Create a secret with content type, expiration, and tags.
+    expected_patterns:
+      - "KeyVaultSecret"
+      - "setProperties"
+      - "SecretProperties"
+      - "setContentType"
+      - "setExpiresOn"
+      - "setTags"
+    tags:
+      - secret-management
+      - create
+      - options
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+      import com.azure.security.keyvault.secrets.models.SecretProperties;
+      import java.time.OffsetDateTime;
+      import java.util.Map;
+
+      KeyVaultSecret secretWithOptions = secretClient.setSecret(
+          new KeyVaultSecret("api-key", "sk_live_abc123xyz")
+              .setProperties(new SecretProperties()
+                  .setContentType("application/json")
+                  .setExpiresOn(OffsetDateTime.now().plusYears(1))
+                  .setNotBefore(OffsetDateTime.now())
+                  .setEnabled(true)
+                  .setTags(Map.of(
+                      "environment", "production",
+                      "service", "payment-api"
+                  ))
+              )
+      );
+
+  - name: get_secret
+    prompt: |
+      Retrieve a secret value from Key Vault.
+    expected_patterns:
+      - "getSecret"
+      - "KeyVaultSecret"
+      - "getValue()"
+    tags:
+      - secret-management
+      - get
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+
+      KeyVaultSecret secret = secretClient.getSecret("database-password");
+      String value = secret.getValue();
+      System.out.println("Secret value: " + value);
+
+      // Get specific version
+      KeyVaultSecret specificVersion = secretClient.getSecret("database-password", "<version-id>");
+
+  - name: update_secret_properties
+    prompt: |
+      Update a secret's properties to disable it and change the expiration.
+    expected_patterns:
+      - "getSecret"
+      - "getProperties()"
+      - "setEnabled"
+      - "setExpiresOn"
+      - "updateSecretProperties"
+    forbidden_patterns:
+      - "setValue"
+      - "updateSecret"
+    tags:
+      - secret-management
+      - update
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+      import com.azure.security.keyvault.secrets.models.SecretProperties;
+      import java.time.OffsetDateTime;
+      import java.util.Map;
+
+      KeyVaultSecret secret = secretClient.getSecret("api-key");
+
+      secret.getProperties()
+          .setEnabled(false)
+          .setExpiresOn(OffsetDateTime.now().plusMonths(6))
+          .setTags(Map.of("status", "rotating"));
+
+      SecretProperties updated = secretClient.updateSecretProperties(secret.getProperties());
+      System.out.println("Updated: " + updated.getUpdatedOn());
+
+  - name: list_secrets
+    prompt: |
+      List all secrets in the Key Vault.
+    expected_patterns:
+      - "listPropertiesOfSecrets"
+      - "SecretProperties"
+      - "for"
+      - "getName()"
+      - "isEnabled()"
+    forbidden_patterns:
+      - "listSecrets"
+    tags:
+      - secret-management
+      - list
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.SecretProperties;
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+
+      for (SecretProperties secretProps : secretClient.listPropertiesOfSecrets()) {
+          System.out.println("Secret: " + secretProps.getName());
+          System.out.println("  Enabled: " + secretProps.isEnabled());
+          System.out.println("  Created: " + secretProps.getCreatedOn());
+          System.out.println("  Content-Type: " + secretProps.getContentType());
+          
+          if (secretProps.isEnabled()) {
+              KeyVaultSecret fullSecret = secretClient.getSecret(secretProps.getName());
+              System.out.println("  Value: " + fullSecret.getValue().substring(0, 5) + "...");
+          }
+      }
+
+  - name: list_secret_versions
+    prompt: |
+      List all versions of a specific secret.
+    expected_patterns:
+      - "listPropertiesOfSecretVersions"
+      - "SecretProperties"
+      - "getVersion()"
+      - "getCreatedOn()"
+    tags:
+      - secret-management
+      - list
+      - versions
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.SecretProperties;
+
+      for (SecretProperties version : secretClient.listPropertiesOfSecretVersions("database-password")) {
+          System.out.println("Version: " + version.getVersion());
+          System.out.println("Created: " + version.getCreatedOn());
+          System.out.println("Enabled: " + version.isEnabled());
+      }
+
+  - name: delete_secret
+    prompt: |
+      Delete a secret using the proper poller pattern.
+    expected_patterns:
+      - "beginDeleteSecret"
+      - "SyncPoller"
+      - "DeletedSecret"
+      - "poll()"
+      - "waitForCompletion()"
+    forbidden_patterns:
+      - "deleteSecret("
+    tags:
+      - secret-management
+      - delete
+    mock_response: |
+      import com.azure.core.util.polling.SyncPoller;
+      import com.azure.security.keyvault.secrets.models.DeletedSecret;
+
+      SyncPoller<DeletedSecret, Void> deletePoller = secretClient.beginDeleteSecret("old-secret");
+
+      DeletedSecret deletedSecret = deletePoller.poll().getValue();
+      System.out.println("Deleted on: " + deletedSecret.getDeletedOn());
+      System.out.println("Scheduled purge: " + deletedSecret.getScheduledPurgeDate());
+
+      deletePoller.waitForCompletion();
+
+  - name: recover_deleted_secret
+    prompt: |
+      Recover a deleted secret from soft-delete.
+    expected_patterns:
+      - "beginRecoverDeletedSecret"
+      - "SyncPoller"
+      - "KeyVaultSecret"
+      - "waitForCompletion()"
+    tags:
+      - secret-management
+      - recovery
+    mock_response: |
+      import com.azure.core.util.polling.SyncPoller;
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+
+      SyncPoller<KeyVaultSecret, Void> recoverPoller = secretClient.beginRecoverDeletedSecret("old-secret");
+      recoverPoller.waitForCompletion();
+
+      KeyVaultSecret recovered = recoverPoller.getFinalResult();
+      System.out.println("Recovered: " + recovered.getName());
+
+  - name: purge_deleted_secret
+    prompt: |
+      Permanently delete a soft-deleted secret.
+    expected_patterns:
+      - "getDeletedSecret"
+      - "purgeDeletedSecret"
+    tags:
+      - secret-management
+      - purge
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.DeletedSecret;
+
+      DeletedSecret deleted = secretClient.getDeletedSecret("old-secret");
+      System.out.println("Will purge: " + deleted.getName());
+      secretClient.purgeDeletedSecret("old-secret");
+
+  - name: backup_restore_secret
+    prompt: |
+      Backup a secret and restore it from the backup.
+    expected_patterns:
+      - "backupSecret"
+      - "restoreSecretBackup"
+      - "byte[]"
+      - "Files.write"
+      - "Files.readAllBytes"
+    tags:
+      - secret-management
+      - backup-restore
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+      import java.nio.file.Files;
+      import java.nio.file.Paths;
+
+      // Backup secret
+      byte[] backup = secretClient.backupSecret("important-secret");
+      Files.write(Paths.get("secret-backup.blob"), backup);
+
+      // Restore from backup
+      byte[] backupData = Files.readAllBytes(Paths.get("secret-backup.blob"));
+      KeyVaultSecret restored = secretClient.restoreSecretBackup(backupData);
+      System.out.println("Restored: " + restored.getName());
+
+  - name: async_operations
+    prompt: |
+      Perform async secret operations using SecretAsyncClient.
+    expected_patterns:
+      - "asyncClient"
+      - "setSecret"
+      - "getSecret"
+      - "subscribe"
+    forbidden_patterns:
+      - ".block()"
+    tags:
+      - async
+    mock_response: |
+      import com.azure.security.keyvault.secrets.SecretAsyncClient;
+
+      // Set secret async
+      asyncClient.setSecret("async-secret", "async-value")
+          .subscribe(
+              secret -> System.out.println("Created: " + secret.getName()),
+              error -> System.out.println("Error: " + error.getMessage())
+          );
+
+      // Get secret async
+      asyncClient.getSecret("async-secret")
+          .subscribe(secret -> System.out.println("Value: " + secret.getValue()));
+
+      // List secrets async
+      asyncClient.listPropertiesOfSecrets()
+          .doOnNext(props -> System.out.println("Found: " + props.getName()))
+          .subscribe();
+
+  - name: secret_rotation_pattern
+    prompt: |
+      Implement a secret rotation pattern that disables the old version.
+    expected_patterns:
+      - "getSecret"
+      - "setEnabled(false)"
+      - "updateSecretProperties"
+      - "setSecret"
+    tags:
+      - secret-management
+      - rotation
+      - patterns
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+
+      public void rotateSecret(String secretName, String newValue) {
+          // Get current secret
+          KeyVaultSecret current = secretClient.getSecret(secretName);
+          
+          // Disable old version
+          current.getProperties().setEnabled(false);
+          secretClient.updateSecretProperties(current.getProperties());
+          
+          // Create new version with new value
+          KeyVaultSecret newSecret = secretClient.setSecret(secretName, newValue);
+          System.out.println("Rotated to version: " + newSecret.getProperties().getVersion());
+      }
+
+  - name: config_loader_pattern
+    prompt: |
+      Create a reusable configuration loader service that loads multiple secrets.
+    expected_patterns:
+      - "class"
+      - "private final SecretClient"
+      - "loadSecrets"
+      - "Map<String, String>"
+      - "ResourceNotFoundException"
+    tags:
+      - patterns
+      - service
+    mock_response: |
+      import com.azure.security.keyvault.secrets.SecretClient;
+      import com.azure.security.keyvault.secrets.SecretClientBuilder;
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import com.azure.core.exception.ResourceNotFoundException;
+      import java.util.HashMap;
+      import java.util.List;
+      import java.util.Map;
+
+      public class ConfigLoader {
+          private final SecretClient client;
+          
+          public ConfigLoader(String vaultUrl) {
+              this.client = new SecretClientBuilder()
+                  .vaultUrl(vaultUrl)
+                  .credential(new DefaultAzureCredentialBuilder().build())
+                  .buildClient();
+          }
+          
+          public Map<String, String> loadSecrets(List<String> secretNames) {
+              Map<String, String> secrets = new HashMap<>();
+              for (String name : secretNames) {
+                  try {
+                      KeyVaultSecret secret = client.getSecret(name);
+                      secrets.put(name, secret.getValue());
+                  } catch (ResourceNotFoundException e) {
+                      System.out.println("Secret not found: " + name);
+                  }
+              }
+              return secrets;
+          }
+      }
+
+  - name: error_handling
+    prompt: |
+      Handle errors when getting a secret, including 403 and 429 responses.
+    expected_patterns:
+      - "ResourceNotFoundException"
+      - "HttpResponseException"
+      - "try"
+      - "catch"
+      - "getStatusCode()"
+      - "403"
+      - "429"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      import com.azure.core.exception.ResourceNotFoundException;
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+
+      try {
+          KeyVaultSecret secret = secretClient.getSecret("my-secret");
+          System.out.println("Value: " + secret.getValue());
+      } catch (ResourceNotFoundException e) {
+          System.out.println("Secret not found");
+      } catch (HttpResponseException e) {
+          int status = e.getResponse().getStatusCode();
+          if (status == 403) {
+              System.out.println("Access denied - check permissions");
+          } else if (status == 429) {
+              System.out.println("Rate limited - retry later");
+          } else {
+              System.out.println("HTTP error: " + status);
+          }
+      }
+
+  - name: store_json_secret
+    prompt: |
+      Store a JSON configuration as a secret with proper content type.
+    expected_patterns:
+      - "KeyVaultSecret"
+      - "setProperties"
+      - 'setContentType("application/json")'
+      - "setSecret"
+    tags:
+      - secret-management
+      - json
+    mock_response: |
+      import com.azure.security.keyvault.secrets.models.KeyVaultSecret;
+      import com.azure.security.keyvault.secrets.models.SecretProperties;
+
+      secretClient.setSecret(new KeyVaultSecret("app-config", 
+          "{\"endpoint\":\"https://api.example.com\",\"key\":\"abc123\"}")
+          .setProperties(new SecretProperties()
+              .setContentType("application/json")));

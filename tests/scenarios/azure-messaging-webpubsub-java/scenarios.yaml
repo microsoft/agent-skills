@@ -1,0 +1,290 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-messaging-webpubsub-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_sync_client_connection_string
+    prompt: |
+      Create a WebPubSubServiceClient using a connection string for a hub named "chat".
+    expected_patterns:
+      - "WebPubSubServiceClientBuilder"
+      - "connectionString"
+      - 'hub("chat")'
+      - "buildClient()"
+    forbidden_patterns:
+      - "WebPubSubClient"
+      - "hubName"
+      - "buildAsyncClient"
+    tags:
+      - client-creation
+      - connection-string
+    mock_response: |
+      import com.azure.messaging.webpubsub.WebPubSubServiceClient;
+      import com.azure.messaging.webpubsub.WebPubSubServiceClientBuilder;
+
+      WebPubSubServiceClient client = new WebPubSubServiceClientBuilder()
+          .connectionString("<connection-string>")
+          .hub("chat")
+          .buildClient();
+
+  - name: create_client_with_default_credential
+    prompt: |
+      Create a WebPubSubServiceClient using DefaultAzureCredential with an endpoint and hub.
+    expected_patterns:
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+      - "endpoint"
+      - "hub"
+      - "buildClient()"
+    forbidden_patterns:
+      - "connectionString"
+      - "new DefaultAzureCredential()"
+    tags:
+      - client-creation
+      - authentication
+    mock_response: |
+      import com.azure.messaging.webpubsub.WebPubSubServiceClient;
+      import com.azure.messaging.webpubsub.WebPubSubServiceClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      WebPubSubServiceClient client = new WebPubSubServiceClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint("https://my-webpubsub.webpubsub.azure.com")
+          .hub("chat")
+          .buildClient();
+
+  - name: create_async_client
+    prompt: |
+      Create an async WebPubSubServiceAsyncClient using a connection string.
+    expected_patterns:
+      - "WebPubSubServiceAsyncClient"
+      - "WebPubSubServiceClientBuilder"
+      - "buildAsyncClient()"
+      - "connectionString"
+      - "hub"
+    forbidden_patterns:
+      - "buildClient()"
+    tags:
+      - client-creation
+      - async
+    mock_response: |
+      import com.azure.messaging.webpubsub.WebPubSubServiceAsyncClient;
+      import com.azure.messaging.webpubsub.WebPubSubServiceClientBuilder;
+
+      WebPubSubServiceAsyncClient asyncClient = new WebPubSubServiceClientBuilder()
+          .connectionString("<connection-string>")
+          .hub("chat")
+          .buildAsyncClient();
+
+  - name: send_to_all_connections
+    prompt: |
+      Send a text message to all connected clients using WebPubSubServiceClient.
+    expected_patterns:
+      - "sendToAll"
+      - "WebPubSubContentType.TEXT_PLAIN"
+    forbidden_patterns:
+      - 'sendToAll("message")'
+      - "text/plain"
+    tags:
+      - messaging
+      - broadcast
+    mock_response: |
+      import com.azure.messaging.webpubsub.models.WebPubSubContentType;
+
+      client.sendToAll("Hello everyone!", WebPubSubContentType.TEXT_PLAIN);
+
+  - name: send_json_to_group
+    prompt: |
+      Send a JSON message to a specific group named "developers".
+    expected_patterns:
+      - "sendToGroup"
+      - "developers"
+      - "WebPubSubContentType.APPLICATION_JSON"
+    forbidden_patterns:
+      - "application/json"
+    tags:
+      - messaging
+      - groups
+    mock_response: |
+      import com.azure.messaging.webpubsub.models.WebPubSubContentType;
+
+      String json = "{\"event\": \"update\", \"data\": {\"version\": \"2.0\"}}";
+      client.sendToGroup("developers", json, WebPubSubContentType.APPLICATION_JSON);
+
+  - name: send_to_user
+    prompt: |
+      Send a private message to a specific user with ID "user123".
+    expected_patterns:
+      - "sendToUser"
+      - "user123"
+      - "WebPubSubContentType"
+    tags:
+      - messaging
+      - user-targeting
+    mock_response: |
+      import com.azure.messaging.webpubsub.models.WebPubSubContentType;
+
+      client.sendToUser("user123", "Hello user!", WebPubSubContentType.TEXT_PLAIN);
+
+  - name: manage_group_membership
+    prompt: |
+      Add a connection to a group named "premium-users", then remove it later.
+    expected_patterns:
+      - "addConnectionToGroup"
+      - "removeConnectionFromGroup"
+      - "premium-users"
+    forbidden_patterns:
+      - "addToGroup"
+      - "removeFromGroup"
+    tags:
+      - groups
+      - connection-management
+    mock_response: |
+      // Add connection to group
+      client.addConnectionToGroup("premium-users", "connectionId123");
+
+      // Remove connection from group
+      client.removeConnectionFromGroup("premium-users", "connectionId123");
+
+  - name: generate_client_access_token
+    prompt: |
+      Generate a client access token with a user ID, roles for joining groups, and 2-hour expiration.
+    expected_patterns:
+      - "GetClientAccessTokenOptions"
+      - "setUserId"
+      - "addRole"
+      - "setExpiresAfter"
+      - "Duration"
+      - "getClientAccessToken"
+    forbidden_patterns:
+      - "generateToken"
+      - "createToken"
+    tags:
+      - authentication
+      - tokens
+    mock_response: |
+      import com.azure.messaging.webpubsub.models.GetClientAccessTokenOptions;
+      import com.azure.messaging.webpubsub.models.WebPubSubClientAccessToken;
+      import java.time.Duration;
+
+      WebPubSubClientAccessToken token = client.getClientAccessToken(
+          new GetClientAccessTokenOptions()
+              .setUserId("user123")
+              .addRole("webpubsub.joinLeaveGroup")
+              .addRole("webpubsub.sendToGroup")
+              .setExpiresAfter(Duration.ofHours(2)));
+
+      System.out.println("URL: " + token.getUrl());
+
+  - name: check_connection_exists
+    prompt: |
+      Check if a connection exists and close it if it does.
+    expected_patterns:
+      - "connectionExists"
+      - "closeConnection"
+    tags:
+      - connection-management
+    mock_response: |
+      boolean connected = client.connectionExists("connectionId123");
+
+      if (connected) {
+          client.closeConnection("connectionId123", "Session cleanup");
+      }
+
+  - name: grant_permission
+    prompt: |
+      Grant permission to a connection to send messages to a specific group.
+    expected_patterns:
+      - "grantPermission"
+      - "WebPubSubPermission.SEND_TO_GROUP"
+      - "RequestOptions"
+      - "targetName"
+    forbidden_patterns:
+      - "addPermission"
+      - '"sendToGroup"'
+    tags:
+      - permissions
+    mock_response: |
+      import com.azure.messaging.webpubsub.models.WebPubSubPermission;
+      import com.azure.core.http.rest.RequestOptions;
+
+      client.grantPermission(
+          WebPubSubPermission.SEND_TO_GROUP,
+          "connectionId123",
+          new RequestOptions().addQueryParam("targetName", "chat-room"));
+
+  - name: async_send_with_error_handling
+    prompt: |
+      Send a message asynchronously to all connections with proper error handling using reactive patterns.
+    expected_patterns:
+      - "asyncClient"
+      - "sendToAll"
+      - "subscribe"
+      - "doOnSuccess"
+      - "doOnError"
+    forbidden_patterns:
+      - ".block()"
+    tags:
+      - async
+      - error-handling
+    mock_response: |
+      import com.azure.messaging.webpubsub.models.WebPubSubContentType;
+
+      asyncClient.sendToAll("Async message!", WebPubSubContentType.TEXT_PLAIN)
+          .doOnSuccess(v -> System.out.println("Message sent successfully"))
+          .doOnError(e -> System.err.println("Error: " + e.getMessage()))
+          .subscribe();
+
+  - name: send_with_filter
+    prompt: |
+      Send a message to all connections except a specific user using an OData filter.
+    expected_patterns:
+      - "sendToAllWithResponse"
+      - "RequestOptions"
+      - "addQueryParam"
+      - "filter"
+      - "BinaryData"
+    forbidden_patterns:
+      - 'sendToAll("message",'
+    tags:
+      - messaging
+      - filtering
+    mock_response: |
+      import com.azure.core.http.rest.RequestOptions;
+      import com.azure.core.util.BinaryData;
+      import com.azure.messaging.webpubsub.models.WebPubSubContentType;
+
+      BinaryData message = BinaryData.fromString("Filtered message");
+
+      client.sendToAllWithResponse(
+          message,
+          WebPubSubContentType.TEXT_PLAIN,
+          message.getLength(),
+          new RequestOptions().addQueryParam("filter", "userId ne 'excludedUser'"));
+
+  - name: error_handling
+    prompt: |
+      Handle errors when sending a message to an invalid connection.
+    expected_patterns:
+      - "HttpResponseException"
+      - "try"
+      - "catch"
+      - "getResponse().getStatusCode()"
+    forbidden_patterns:
+      - "catch (Exception e)"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      import com.azure.messaging.webpubsub.models.WebPubSubContentType;
+
+      try {
+          client.sendToConnection("invalid-id", "test", WebPubSubContentType.TEXT_PLAIN);
+      } catch (HttpResponseException e) {
+          System.out.println("Status: " + e.getResponse().getStatusCode());
+          System.out.println("Error: " + e.getMessage());
+      }

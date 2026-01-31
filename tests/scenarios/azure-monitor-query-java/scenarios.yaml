@@ -1,0 +1,375 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-monitor-query-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_logs_query_client
+    prompt: |
+      Create a LogsQueryClient using DefaultAzureCredential.
+    expected_patterns:
+      - "LogsQueryClientBuilder"
+      - "LogsQueryClient"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+      - "buildClient()"
+    forbidden_patterns:
+      - "LogAnalyticsClient"
+      - "LogsClient"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import com.azure.monitor.query.LogsQueryClient;
+      import com.azure.monitor.query.LogsQueryClientBuilder;
+
+      LogsQueryClient logsClient = new LogsQueryClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: create_metrics_query_client
+    prompt: |
+      Create a MetricsQueryClient using DefaultAzureCredential.
+    expected_patterns:
+      - "MetricsQueryClientBuilder"
+      - "MetricsQueryClient"
+      - "DefaultAzureCredentialBuilder"
+      - "buildClient()"
+    forbidden_patterns:
+      - "MetricQueryClient"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import com.azure.monitor.query.MetricsQueryClient;
+      import com.azure.monitor.query.MetricsQueryClientBuilder;
+
+      MetricsQueryClient metricsClient = new MetricsQueryClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: basic_logs_query
+    prompt: |
+      Query AzureActivity logs from a Log Analytics workspace for the last 7 days.
+    expected_patterns:
+      - "queryWorkspace"
+      - "LogsQueryResult"
+      - "QueryTimeInterval"
+      - "Duration.ofDays(7)"
+      - "getTable().getRows()"
+      - "getColumnValue"
+    forbidden_patterns:
+      - "query("
+    tags:
+      - logs
+      - query
+    mock_response: |
+      import com.azure.monitor.query.models.LogsQueryResult;
+      import com.azure.monitor.query.models.LogsTableRow;
+      import com.azure.monitor.query.models.QueryTimeInterval;
+      import java.time.Duration;
+
+      LogsQueryResult result = logsClient.queryWorkspace(
+          "{workspace-id}",
+          "AzureActivity | summarize count() by ResourceGroup | top 10 by count_",
+          new QueryTimeInterval(Duration.ofDays(7))
+      );
+
+      for (LogsTableRow row : result.getTable().getRows()) {
+          System.out.println(row.getColumnValue("ResourceGroup") + ": " + row.getColumnValue("count_"));
+      }
+
+  - name: query_with_model_mapping
+    prompt: |
+      Query logs and map results to a custom ActivityLog class.
+    expected_patterns:
+      - "queryWorkspace"
+      - "ActivityLog.class"
+      - "List<ActivityLog>"
+      - "QueryTimeInterval"
+    tags:
+      - logs
+      - model-mapping
+    mock_response: |
+      import com.azure.monitor.query.models.QueryTimeInterval;
+      import java.time.Duration;
+      import java.util.List;
+
+      public class ActivityLog {
+          private String resourceGroup;
+          private String operationName;
+          
+          public String getResourceGroup() { return resourceGroup; }
+          public String getOperationName() { return operationName; }
+      }
+
+      List<ActivityLog> logs = logsClient.queryWorkspace(
+          "{workspace-id}",
+          "AzureActivity | project ResourceGroup, OperationName | take 100",
+          new QueryTimeInterval(Duration.ofDays(2)),
+          ActivityLog.class
+      );
+
+      for (ActivityLog log : logs) {
+          System.out.println(log.getOperationName() + " - " + log.getResourceGroup());
+      }
+
+  - name: batch_query
+    prompt: |
+      Execute multiple queries in a single batch request.
+    expected_patterns:
+      - "LogsBatchQuery"
+      - "addWorkspaceQuery"
+      - "queryBatchWithResponse"
+      - "LogsBatchQueryResultCollection"
+      - "getResult"
+    tags:
+      - logs
+      - batch
+    mock_response: |
+      import com.azure.monitor.query.models.LogsBatchQuery;
+      import com.azure.monitor.query.models.LogsBatchQueryResult;
+      import com.azure.monitor.query.models.LogsBatchQueryResultCollection;
+      import com.azure.monitor.query.models.QueryTimeInterval;
+      import com.azure.core.util.Context;
+      import java.time.Duration;
+
+      LogsBatchQuery batchQuery = new LogsBatchQuery();
+      String q1 = batchQuery.addWorkspaceQuery("{workspace-id}", "AzureActivity | count", new QueryTimeInterval(Duration.ofDays(1)));
+      String q2 = batchQuery.addWorkspaceQuery("{workspace-id}", "Heartbeat | count", new QueryTimeInterval(Duration.ofDays(1)));
+      String q3 = batchQuery.addWorkspaceQuery("{workspace-id}", "Perf | count", new QueryTimeInterval(Duration.ofDays(1)));
+
+      LogsBatchQueryResultCollection results = logsClient
+          .queryBatchWithResponse(batchQuery, Context.NONE)
+          .getValue();
+
+      LogsBatchQueryResult result1 = results.getResult(q1);
+      LogsBatchQueryResult result2 = results.getResult(q2);
+      LogsBatchQueryResult result3 = results.getResult(q3);
+
+  - name: query_with_options
+    prompt: |
+      Execute a logs query with a custom timeout and include statistics.
+    expected_patterns:
+      - "LogsQueryOptions"
+      - "setServerTimeout"
+      - "setIncludeStatistics"
+      - "queryWorkspaceWithResponse"
+      - "getStatistics()"
+    tags:
+      - logs
+      - options
+    mock_response: |
+      import com.azure.monitor.query.models.LogsQueryOptions;
+      import com.azure.monitor.query.models.LogsQueryResult;
+      import com.azure.monitor.query.models.QueryTimeInterval;
+      import com.azure.core.http.rest.Response;
+      import com.azure.core.util.Context;
+      import java.time.Duration;
+
+      LogsQueryOptions options = new LogsQueryOptions()
+          .setServerTimeout(Duration.ofMinutes(10))
+          .setIncludeStatistics(true)
+          .setIncludeVisualization(true);
+
+      Response<LogsQueryResult> response = logsClient.queryWorkspaceWithResponse(
+          "{workspace-id}",
+          "AzureActivity | summarize count() by bin(TimeGenerated, 1h)",
+          new QueryTimeInterval(Duration.ofDays(7)),
+          options,
+          Context.NONE
+      );
+
+      LogsQueryResult result = response.getValue();
+      BinaryData statistics = result.getStatistics();
+
+  - name: basic_metrics_query
+    prompt: |
+      Query SuccessfulCalls and TotalCalls metrics from an Azure resource.
+    expected_patterns:
+      - "queryResource"
+      - "MetricsQueryResult"
+      - "Arrays.asList"
+      - "getMetrics()"
+      - "getTimeSeries()"
+      - "getValues()"
+    tags:
+      - metrics
+      - query
+    mock_response: |
+      import com.azure.monitor.query.models.MetricsQueryResult;
+      import com.azure.monitor.query.models.MetricResult;
+      import com.azure.monitor.query.models.TimeSeriesElement;
+      import com.azure.monitor.query.models.MetricValue;
+      import java.util.Arrays;
+
+      MetricsQueryResult result = metricsClient.queryResource(
+          "{resource-uri}",
+          Arrays.asList("SuccessfulCalls", "TotalCalls")
+      );
+
+      for (MetricResult metric : result.getMetrics()) {
+          System.out.println("Metric: " + metric.getMetricName());
+          for (TimeSeriesElement ts : metric.getTimeSeries()) {
+              for (MetricValue value : ts.getValues()) {
+                  System.out.println(value.getTimeStamp() + ": " + value.getTotal());
+              }
+          }
+      }
+
+  - name: metrics_with_aggregations
+    prompt: |
+      Query metrics with specific aggregation types and granularity.
+    expected_patterns:
+      - "MetricsQueryOptions"
+      - "setGranularity"
+      - "setAggregations"
+      - "AggregationType.AVERAGE"
+      - "queryResourceWithResponse"
+    forbidden_patterns:
+      - '"Average"'
+      - '"Count"'
+    tags:
+      - metrics
+      - aggregations
+    mock_response: |
+      import com.azure.monitor.query.models.MetricsQueryOptions;
+      import com.azure.monitor.query.models.MetricsQueryResult;
+      import com.azure.monitor.query.models.AggregationType;
+      import com.azure.core.http.rest.Response;
+      import com.azure.core.util.Context;
+      import java.time.Duration;
+      import java.util.Arrays;
+
+      Response<MetricsQueryResult> response = metricsClient.queryResourceWithResponse(
+          "{resource-id}",
+          Arrays.asList("SuccessfulCalls", "TotalCalls"),
+          new MetricsQueryOptions()
+              .setGranularity(Duration.ofHours(1))
+              .setAggregations(Arrays.asList(AggregationType.AVERAGE, AggregationType.COUNT)),
+          Context.NONE
+      );
+
+      MetricsQueryResult result = response.getValue();
+
+  - name: error_handling_with_partial_failure
+    prompt: |
+      Execute a logs query and handle both HTTP errors and partial failures.
+    expected_patterns:
+      - "HttpResponseException"
+      - "LogsQueryResultStatus"
+      - "PARTIAL_FAILURE"
+      - "getError()"
+      - "try"
+      - "catch"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      import com.azure.monitor.query.models.LogsQueryResult;
+      import com.azure.monitor.query.models.LogsQueryResultStatus;
+
+      try {
+          LogsQueryResult result = logsClient.queryWorkspace(workspaceId, query, timeInterval);
+          
+          if (result.getStatus() == LogsQueryResultStatus.PARTIAL_FAILURE) {
+              System.err.println("Partial failure: " + result.getError().getMessage());
+          }
+          
+          // Process results
+      } catch (HttpResponseException e) {
+          System.err.println("Query failed: " + e.getMessage());
+          System.err.println("Status: " + e.getResponse().getStatusCode());
+      }
+
+  - name: query_multiple_workspaces
+    prompt: |
+      Query logs across multiple Log Analytics workspaces.
+    expected_patterns:
+      - "LogsQueryOptions"
+      - "setAdditionalWorkspaces"
+      - "Arrays.asList"
+      - "queryWorkspaceWithResponse"
+    tags:
+      - logs
+      - multi-workspace
+    mock_response: |
+      import com.azure.monitor.query.models.LogsQueryOptions;
+      import com.azure.monitor.query.models.LogsQueryResult;
+      import com.azure.monitor.query.models.QueryTimeInterval;
+      import com.azure.core.http.rest.Response;
+      import com.azure.core.util.Context;
+      import java.time.Duration;
+      import java.util.Arrays;
+
+      LogsQueryOptions options = new LogsQueryOptions()
+          .setAdditionalWorkspaces(Arrays.asList("{workspace-id-2}", "{workspace-id-3}"));
+
+      Response<LogsQueryResult> response = logsClient.queryWorkspaceWithResponse(
+          "{workspace-id-1}",
+          "AzureActivity | summarize count() by TenantId",
+          new QueryTimeInterval(Duration.ofDays(1)),
+          options,
+          Context.NONE
+      );
+
+  - name: sovereign_cloud_configuration
+    prompt: |
+      Create LogsQueryClient and MetricsQueryClient for Azure China Cloud.
+    expected_patterns:
+      - "endpoint"
+      - "api.loganalytics.azure.cn"
+      - "management.chinacloudapi.cn"
+    tags:
+      - client-creation
+      - sovereign-cloud
+    mock_response: |
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import com.azure.monitor.query.LogsQueryClient;
+      import com.azure.monitor.query.LogsQueryClientBuilder;
+      import com.azure.monitor.query.MetricsQueryClient;
+      import com.azure.monitor.query.MetricsQueryClientBuilder;
+
+      // Azure China Cloud - Logs
+      LogsQueryClient logsClient = new LogsQueryClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint("https://api.loganalytics.azure.cn/v1")
+          .buildClient();
+
+      // Azure China Cloud - Metrics
+      MetricsQueryClient metricsClient = new MetricsQueryClientBuilder()
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .endpoint("https://management.chinacloudapi.cn")
+          .buildClient();
+
+  - name: query_resource_by_id
+    prompt: |
+      Query logs from a specific Azure resource using its resource ID.
+    expected_patterns:
+      - "queryResource"
+      - "resource-id"
+      - "LogsQueryResult"
+      - "QueryTimeInterval"
+    forbidden_patterns:
+      - "queryWorkspace"
+    tags:
+      - logs
+      - resource-query
+    mock_response: |
+      import com.azure.monitor.query.models.LogsQueryResult;
+      import com.azure.monitor.query.models.LogsTableRow;
+      import com.azure.monitor.query.models.QueryTimeInterval;
+      import java.time.Duration;
+
+      LogsQueryResult result = logsClient.queryResource(
+          "{resource-id}",
+          "AzureMetrics | where TimeGenerated > ago(1h)",
+          new QueryTimeInterval(Duration.ofDays(1))
+      );
+
+      for (LogsTableRow row : result.getTable().getRows()) {
+          System.out.println(row.getColumnValue("MetricName") + " " + row.getColumnValue("Average"));
+      }

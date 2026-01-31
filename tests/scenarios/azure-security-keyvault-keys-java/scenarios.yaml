@@ -1,0 +1,420 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-security-keyvault-keys-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_key_client
+    prompt: |
+      Create a KeyClient using DefaultAzureCredential to connect to an Azure Key Vault.
+    expected_patterns:
+      - "KeyClientBuilder"
+      - "KeyClient"
+      - "vaultUrl"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+      - "buildClient()"
+    forbidden_patterns:
+      - "endpoint"
+      - "KeyVaultClient"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.security.keyvault.keys.KeyClient;
+      import com.azure.security.keyvault.keys.KeyClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      KeyClient keyClient = new KeyClientBuilder()
+          .vaultUrl("https://my-vault.vault.azure.net")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: create_cryptography_client
+    prompt: |
+      Create a CryptographyClient for a specific key to perform encrypt/decrypt operations.
+    expected_patterns:
+      - "CryptographyClientBuilder"
+      - "CryptographyClient"
+      - "keyIdentifier"
+      - "DefaultAzureCredentialBuilder"
+      - "buildClient()"
+    forbidden_patterns:
+      - "keyUrl"
+      - "vaultUrl"
+    tags:
+      - client-creation
+      - cryptography
+    mock_response: |
+      import com.azure.security.keyvault.keys.cryptography.CryptographyClient;
+      import com.azure.security.keyvault.keys.cryptography.CryptographyClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      CryptographyClient cryptoClient = new CryptographyClientBuilder()
+          .keyIdentifier("https://my-vault.vault.azure.net/keys/my-key/version123")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildClient();
+
+  - name: create_rsa_key
+    prompt: |
+      Create a 2048-bit RSA key in Azure Key Vault.
+    expected_patterns:
+      - "createRsaKey"
+      - "CreateRsaKeyOptions"
+      - "setKeySize(2048)"
+      - "KeyVaultKey"
+    forbidden_patterns:
+      - "createKey"
+      - "KeyType.RSA"
+    tags:
+      - key-management
+      - rsa
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+      import com.azure.security.keyvault.keys.models.CreateRsaKeyOptions;
+
+      KeyVaultKey rsaKey = keyClient.createRsaKey(new CreateRsaKeyOptions("my-rsa-key")
+          .setKeySize(2048));
+
+      System.out.println("Key name: " + rsaKey.getName());
+      System.out.println("Key ID: " + rsaKey.getId());
+      System.out.println("Key type: " + rsaKey.getKeyType());
+
+  - name: create_rsa_key_with_options
+    prompt: |
+      Create an RSA key with expiration, key operations, and tags.
+    expected_patterns:
+      - "CreateRsaKeyOptions"
+      - "setExpiresOn"
+      - "setKeyOperations"
+      - "KeyOperation.ENCRYPT"
+      - "KeyOperation.DECRYPT"
+      - "setTags"
+    tags:
+      - key-management
+      - rsa
+      - options
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+      import com.azure.security.keyvault.keys.models.CreateRsaKeyOptions;
+      import com.azure.security.keyvault.keys.models.KeyOperation;
+      import java.time.OffsetDateTime;
+      import java.util.Map;
+
+      KeyVaultKey rsaKey = keyClient.createRsaKey(new CreateRsaKeyOptions("my-rsa-key")
+          .setKeySize(4096)
+          .setExpiresOn(OffsetDateTime.now().plusYears(1))
+          .setNotBefore(OffsetDateTime.now())
+          .setEnabled(true)
+          .setKeyOperations(KeyOperation.ENCRYPT, KeyOperation.DECRYPT, 
+                             KeyOperation.WRAP_KEY, KeyOperation.UNWRAP_KEY)
+          .setTags(Map.of("environment", "production")));
+
+  - name: create_ec_key
+    prompt: |
+      Create an Elliptic Curve key with P-256 curve.
+    expected_patterns:
+      - "createEcKey"
+      - "CreateEcKeyOptions"
+      - "setCurveName"
+      - "KeyCurveName.P_256"
+    forbidden_patterns:
+      - '"P-256"'
+      - "P256"
+    tags:
+      - key-management
+      - ec
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+      import com.azure.security.keyvault.keys.models.CreateEcKeyOptions;
+      import com.azure.security.keyvault.keys.models.KeyCurveName;
+
+      KeyVaultKey ecKey = keyClient.createEcKey(new CreateEcKeyOptions("my-ec-key")
+          .setCurveName(KeyCurveName.P_256));
+
+      System.out.println("Key: " + ecKey.getName());
+      System.out.println("Type: " + ecKey.getKeyType());
+
+  - name: create_hsm_key
+    prompt: |
+      Create an HSM-backed RSA key for production use.
+    expected_patterns:
+      - "createRsaKey"
+      - "CreateRsaKeyOptions"
+      - "setHardwareProtected(true)"
+    tags:
+      - key-management
+      - hsm
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+      import com.azure.security.keyvault.keys.models.CreateRsaKeyOptions;
+
+      KeyVaultKey hsmKey = keyClient.createRsaKey(new CreateRsaKeyOptions("my-hsm-key")
+          .setKeySize(2048)
+          .setHardwareProtected(true));
+
+      System.out.println("HSM Key: " + hsmKey.getName());
+
+  - name: get_key
+    prompt: |
+      Get a key from Key Vault by name, and also get a specific version.
+    expected_patterns:
+      - "getKey"
+      - "KeyVaultKey"
+      - '"my-key"'
+    tags:
+      - key-management
+      - get
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+
+      // Get latest version
+      KeyVaultKey key = keyClient.getKey("my-key");
+      System.out.println("Key: " + key.getName());
+
+      // Get specific version
+      KeyVaultKey keyVersion = keyClient.getKey("my-key", "<version-id>");
+
+  - name: list_keys
+    prompt: |
+      List all keys in the Key Vault.
+    expected_patterns:
+      - "listPropertiesOfKeys"
+      - "KeyProperties"
+      - "for"
+      - "getName()"
+      - "isEnabled()"
+    forbidden_patterns:
+      - "listKeys"
+    tags:
+      - key-management
+      - list
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyProperties;
+
+      for (KeyProperties keyProps : keyClient.listPropertiesOfKeys()) {
+          System.out.println("Key: " + keyProps.getName());
+          System.out.println("  Enabled: " + keyProps.isEnabled());
+          System.out.println("  Created: " + keyProps.getCreatedOn());
+      }
+
+  - name: delete_key
+    prompt: |
+      Delete a key from Key Vault using the proper poller pattern.
+    expected_patterns:
+      - "beginDeleteKey"
+      - "SyncPoller"
+      - "DeletedKey"
+      - "poll()"
+      - "waitForCompletion()"
+    forbidden_patterns:
+      - "deleteKey("
+    tags:
+      - key-management
+      - delete
+    mock_response: |
+      import com.azure.core.util.polling.SyncPoller;
+      import com.azure.security.keyvault.keys.models.DeletedKey;
+
+      SyncPoller<DeletedKey, Void> deletePoller = keyClient.beginDeleteKey("my-key");
+
+      DeletedKey deletedKey = deletePoller.poll().getValue();
+      System.out.println("Deleted: " + deletedKey.getDeletedOn());
+
+      deletePoller.waitForCompletion();
+
+  - name: encrypt_decrypt
+    prompt: |
+      Encrypt and decrypt data using RSA-OAEP algorithm.
+    expected_patterns:
+      - "encrypt"
+      - "decrypt"
+      - "EncryptionAlgorithm.RSA_OAEP"
+      - "EncryptResult"
+      - "DecryptResult"
+      - "getCipherText()"
+      - "getPlainText()"
+    forbidden_patterns:
+      - '"RSA-OAEP"'
+    tags:
+      - cryptography
+      - encrypt-decrypt
+    mock_response: |
+      import com.azure.security.keyvault.keys.cryptography.models.EncryptionAlgorithm;
+      import com.azure.security.keyvault.keys.cryptography.models.EncryptResult;
+      import com.azure.security.keyvault.keys.cryptography.models.DecryptResult;
+      import java.nio.charset.StandardCharsets;
+
+      byte[] plaintext = "Hello, World!".getBytes(StandardCharsets.UTF_8);
+
+      // Encrypt
+      EncryptResult encryptResult = cryptoClient.encrypt(EncryptionAlgorithm.RSA_OAEP, plaintext);
+      byte[] ciphertext = encryptResult.getCipherText();
+      System.out.println("Ciphertext length: " + ciphertext.length);
+
+      // Decrypt
+      DecryptResult decryptResult = cryptoClient.decrypt(EncryptionAlgorithm.RSA_OAEP, ciphertext);
+      String decrypted = new String(decryptResult.getPlainText(), StandardCharsets.UTF_8);
+      System.out.println("Decrypted: " + decrypted);
+
+  - name: sign_verify
+    prompt: |
+      Sign a SHA-256 digest and verify the signature.
+    expected_patterns:
+      - "sign"
+      - "verify"
+      - "SignatureAlgorithm.RS256"
+      - "SignResult"
+      - "VerifyResult"
+      - "MessageDigest"
+      - "isValid()"
+    forbidden_patterns:
+      - '"RS256"'
+    tags:
+      - cryptography
+      - sign-verify
+    mock_response: |
+      import com.azure.security.keyvault.keys.cryptography.models.SignatureAlgorithm;
+      import com.azure.security.keyvault.keys.cryptography.models.SignResult;
+      import com.azure.security.keyvault.keys.cryptography.models.VerifyResult;
+      import java.security.MessageDigest;
+      import java.nio.charset.StandardCharsets;
+
+      byte[] data = "Data to sign".getBytes(StandardCharsets.UTF_8);
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      byte[] digest = md.digest(data);
+
+      // Sign
+      SignResult signResult = cryptoClient.sign(SignatureAlgorithm.RS256, digest);
+      byte[] signature = signResult.getSignature();
+
+      // Verify
+      VerifyResult verifyResult = cryptoClient.verify(SignatureAlgorithm.RS256, digest, signature);
+      System.out.println("Valid signature: " + verifyResult.isValid());
+
+  - name: wrap_unwrap_key
+    prompt: |
+      Wrap and unwrap a symmetric key using RSA-OAEP.
+    expected_patterns:
+      - "wrapKey"
+      - "unwrapKey"
+      - "KeyWrapAlgorithm.RSA_OAEP"
+      - "WrapResult"
+      - "UnwrapResult"
+      - "getEncryptedKey()"
+      - "getKey()"
+    tags:
+      - cryptography
+      - key-wrapping
+    mock_response: |
+      import com.azure.security.keyvault.keys.cryptography.models.KeyWrapAlgorithm;
+      import com.azure.security.keyvault.keys.cryptography.models.WrapResult;
+      import com.azure.security.keyvault.keys.cryptography.models.UnwrapResult;
+      import java.security.SecureRandom;
+
+      byte[] keyToWrap = new byte[32];
+      new SecureRandom().nextBytes(keyToWrap);
+
+      // Wrap
+      WrapResult wrapResult = cryptoClient.wrapKey(KeyWrapAlgorithm.RSA_OAEP, keyToWrap);
+      byte[] wrappedKey = wrapResult.getEncryptedKey();
+
+      // Unwrap
+      UnwrapResult unwrapResult = cryptoClient.unwrapKey(KeyWrapAlgorithm.RSA_OAEP, wrappedKey);
+      byte[] unwrappedKey = unwrapResult.getKey();
+
+  - name: rotate_key
+    prompt: |
+      Rotate a key to create a new version.
+    expected_patterns:
+      - "rotateKey"
+      - "KeyVaultKey"
+      - "getVersion()"
+    tags:
+      - key-management
+      - rotation
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+
+      KeyVaultKey rotatedKey = keyClient.rotateKey("my-key");
+      System.out.println("New version: " + rotatedKey.getProperties().getVersion());
+
+  - name: set_rotation_policy
+    prompt: |
+      Set a key rotation policy to rotate 30 days before expiry.
+    expected_patterns:
+      - "KeyRotationPolicy"
+      - "setExpiresIn"
+      - "setLifetimeActions"
+      - "KeyRotationLifetimeAction"
+      - "KeyRotationPolicyAction.ROTATE"
+      - "setTimeBeforeExpiry"
+      - "updateKeyRotationPolicy"
+    tags:
+      - key-management
+      - rotation-policy
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyRotationPolicy;
+      import com.azure.security.keyvault.keys.models.KeyRotationLifetimeAction;
+      import com.azure.security.keyvault.keys.models.KeyRotationPolicyAction;
+      import java.util.Arrays;
+
+      KeyRotationPolicy policy = new KeyRotationPolicy()
+          .setExpiresIn("P90D")
+          .setLifetimeActions(Arrays.asList(
+              new KeyRotationLifetimeAction(KeyRotationPolicyAction.ROTATE)
+                  .setTimeBeforeExpiry("P30D")));
+
+      keyClient.updateKeyRotationPolicy("my-key", policy);
+
+  - name: backup_restore_key
+    prompt: |
+      Backup a key to a file and restore it later.
+    expected_patterns:
+      - "backupKey"
+      - "restoreKeyBackup"
+      - "byte[]"
+      - "Files.write"
+      - "Files.readAllBytes"
+    tags:
+      - key-management
+      - backup-restore
+    mock_response: |
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+      import java.nio.file.Files;
+      import java.nio.file.Paths;
+
+      // Backup
+      byte[] backup = keyClient.backupKey("my-key");
+      Files.write(Paths.get("key-backup.blob"), backup);
+
+      // Restore
+      byte[] backupData = Files.readAllBytes(Paths.get("key-backup.blob"));
+      KeyVaultKey restoredKey = keyClient.restoreKeyBackup(backupData);
+
+  - name: error_handling
+    prompt: |
+      Handle errors when getting a non-existent key.
+    expected_patterns:
+      - "ResourceNotFoundException"
+      - "HttpResponseException"
+      - "try"
+      - "catch"
+      - "getStatusCode()"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+      import com.azure.core.exception.ResourceNotFoundException;
+      import com.azure.security.keyvault.keys.models.KeyVaultKey;
+
+      try {
+          KeyVaultKey key = keyClient.getKey("non-existent-key");
+      } catch (ResourceNotFoundException e) {
+          System.out.println("Key not found: " + e.getMessage());
+      } catch (HttpResponseException e) {
+          System.out.println("HTTP error " + e.getResponse().getStatusCode());
+          System.out.println("Message: " + e.getMessage());
+      }

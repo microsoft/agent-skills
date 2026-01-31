@@ -1,0 +1,342 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-monitor-opentelemetry-exporter-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: initialize_sdk_with_env_var
+    prompt: |
+      Initialize OpenTelemetry SDK with Azure Monitor exporter using the environment variable for connection string.
+    expected_patterns:
+      - "AutoConfiguredOpenTelemetrySdk"
+      - "AzureMonitorExporter.customize"
+      - "sdkBuilder.build()"
+      - "getOpenTelemetrySdk()"
+    forbidden_patterns:
+      - "AzureMonitorExporterBuilder"
+      - "buildTraceExporter"
+    tags:
+      - initialization
+    mock_response: |
+      import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+      import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
+      import io.opentelemetry.api.OpenTelemetry;
+      import com.azure.monitor.opentelemetry.exporter.AzureMonitorExporter;
+
+      // Connection string from APPLICATIONINSIGHTS_CONNECTION_STRING env var
+      AutoConfiguredOpenTelemetrySdkBuilder sdkBuilder = AutoConfiguredOpenTelemetrySdk.builder();
+      AzureMonitorExporter.customize(sdkBuilder);
+      OpenTelemetry openTelemetry = sdkBuilder.build().getOpenTelemetrySdk();
+
+  - name: initialize_sdk_explicit_connection_string
+    prompt: |
+      Initialize OpenTelemetry SDK with Azure Monitor exporter using an explicit connection string.
+    expected_patterns:
+      - "AutoConfiguredOpenTelemetrySdk"
+      - 'AzureMonitorExporter.customize(sdkBuilder, "'
+      - "getOpenTelemetrySdk()"
+    forbidden_patterns:
+      - "setConnectionString"
+    tags:
+      - initialization
+      - configuration
+    mock_response: |
+      import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+      import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
+      import io.opentelemetry.api.OpenTelemetry;
+      import com.azure.monitor.opentelemetry.exporter.AzureMonitorExporter;
+
+      AutoConfiguredOpenTelemetrySdkBuilder sdkBuilder = AutoConfiguredOpenTelemetrySdk.builder();
+      AzureMonitorExporter.customize(sdkBuilder, "{connection-string}");
+      OpenTelemetry openTelemetry = sdkBuilder.build().getOpenTelemetrySdk();
+
+  - name: create_basic_span
+    prompt: |
+      Create a basic span with proper scope management using try-with-resources.
+    expected_patterns:
+      - "tracer.spanBuilder"
+      - "startSpan()"
+      - "try (Scope scope = span.makeCurrent())"
+      - "finally"
+      - "span.end()"
+    forbidden_patterns:
+      - "span.close()"
+    tags:
+      - tracing
+      - spans
+    mock_response: |
+      import io.opentelemetry.api.trace.Tracer;
+      import io.opentelemetry.api.trace.Span;
+      import io.opentelemetry.context.Scope;
+
+      Tracer tracer = openTelemetry.getTracer("com.example.myapp");
+
+      Span span = tracer.spanBuilder("myOperation").startSpan();
+
+      try (Scope scope = span.makeCurrent()) {
+          doWork();
+      } catch (Throwable t) {
+          span.recordException(t);
+          throw t;
+      } finally {
+          span.end();
+      }
+
+  - name: span_with_attributes
+    prompt: |
+      Create a span with attributes set at creation time and during execution.
+    expected_patterns:
+      - "spanBuilder"
+      - '.setAttribute("'
+      - "startSpan()"
+      - "span.setAttribute"
+    tags:
+      - tracing
+      - attributes
+    mock_response: |
+      import io.opentelemetry.api.trace.Span;
+      import io.opentelemetry.context.Scope;
+
+      Span span = tracer.spanBuilder("processOrder")
+          .setAttribute("order.id", "12345")
+          .setAttribute("customer.tier", "premium")
+          .startSpan();
+
+      try (Scope scope = span.makeCurrent()) {
+          span.setAttribute("items.count", 3);
+          span.setAttribute("total.amount", 99.99);
+          processOrder();
+      } finally {
+          span.end();
+      }
+
+  - name: nested_spans
+    prompt: |
+      Create parent and child spans with automatic context propagation.
+    expected_patterns:
+      - "parentSpan"
+      - "childSpan"
+      - "makeCurrent()"
+      - "span.end()"
+    forbidden_patterns:
+      - "setParent"
+    tags:
+      - tracing
+      - context-propagation
+    mock_response: |
+      import io.opentelemetry.api.trace.Span;
+      import io.opentelemetry.context.Scope;
+
+      public void parentOperation() {
+          Span parentSpan = tracer.spanBuilder("parentOperation").startSpan();
+          try (Scope scope = parentSpan.makeCurrent()) {
+              childOperation();
+          } finally {
+              parentSpan.end();
+          }
+      }
+
+      public void childOperation() {
+          Span childSpan = tracer.spanBuilder("childOperation").startSpan();
+          try (Scope scope = childSpan.makeCurrent()) {
+              // Child work - automatically linked to parent
+          } finally {
+              childSpan.end();
+          }
+      }
+
+  - name: record_exception
+    prompt: |
+      Create a span that properly records exceptions and sets error status.
+    expected_patterns:
+      - "recordException"
+      - "setStatus(StatusCode.ERROR"
+      - "try"
+      - "catch"
+      - "finally"
+      - "span.end()"
+    forbidden_patterns:
+      - "catch (Exception e) { }"
+    tags:
+      - tracing
+      - error-handling
+    mock_response: |
+      import io.opentelemetry.api.trace.Span;
+      import io.opentelemetry.api.trace.StatusCode;
+      import io.opentelemetry.context.Scope;
+
+      Span span = tracer.spanBuilder("riskyOperation").startSpan();
+      try (Scope scope = span.makeCurrent()) {
+          performRiskyWork();
+      } catch (Exception e) {
+          span.recordException(e);
+          span.setStatus(StatusCode.ERROR, e.getMessage());
+          throw e;
+      } finally {
+          span.end();
+      }
+
+  - name: custom_span_processor
+    prompt: |
+      Create a custom SpanProcessor that adds an attribute to every span.
+    expected_patterns:
+      - "implements SpanProcessor"
+      - "onStart"
+      - "onEnd"
+      - "isStartRequired"
+      - "isEndRequired"
+      - "setAttribute"
+    tags:
+      - tracing
+      - customization
+    mock_response: |
+      import io.opentelemetry.sdk.trace.SpanProcessor;
+      import io.opentelemetry.sdk.trace.ReadWriteSpan;
+      import io.opentelemetry.sdk.trace.ReadableSpan;
+      import io.opentelemetry.context.Context;
+      import io.opentelemetry.api.common.AttributeKey;
+
+      private static final AttributeKey<String> CUSTOM_ATTR = AttributeKey.stringKey("custom.attribute");
+
+      SpanProcessor customProcessor = new SpanProcessor() {
+          @Override
+          public void onStart(Context context, ReadWriteSpan span) {
+              span.setAttribute(CUSTOM_ATTR, "customValue");
+          }
+
+          @Override
+          public boolean isStartRequired() {
+              return true;
+          }
+
+          @Override
+          public void onEnd(ReadableSpan span) {
+              // Post-processing if needed
+          }
+
+          @Override
+          public boolean isEndRequired() {
+              return false;
+          }
+      };
+
+  - name: register_custom_processor
+    prompt: |
+      Register a custom SpanProcessor with the OpenTelemetry SDK during initialization.
+    expected_patterns:
+      - "addTracerProviderCustomizer"
+      - "addSpanProcessor"
+      - "sdkTracerProviderBuilder"
+    tags:
+      - tracing
+      - customization
+    mock_response: |
+      import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
+      import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdkBuilder;
+      import com.azure.monitor.opentelemetry.exporter.AzureMonitorExporter;
+
+      AutoConfiguredOpenTelemetrySdkBuilder sdkBuilder = AutoConfiguredOpenTelemetrySdk.builder();
+      AzureMonitorExporter.customize(sdkBuilder);
+
+      sdkBuilder.addTracerProviderCustomizer(
+          (sdkTracerProviderBuilder, configProperties) -> 
+              sdkTracerProviderBuilder.addSpanProcessor(customProcessor)
+      );
+
+      OpenTelemetry openTelemetry = sdkBuilder.build().getOpenTelemetrySdk();
+
+  - name: create_counter_metric
+    prompt: |
+      Create a counter metric to track HTTP requests.
+    expected_patterns:
+      - "getMeter"
+      - "counterBuilder"
+      - "setDescription"
+      - "setUnit"
+      - ".build()"
+      - ".add("
+      - "Attributes.of"
+    tags:
+      - metrics
+      - counter
+    mock_response: |
+      import io.opentelemetry.api.metrics.Meter;
+      import io.opentelemetry.api.metrics.LongCounter;
+      import io.opentelemetry.api.common.AttributeKey;
+      import io.opentelemetry.api.common.Attributes;
+
+      Meter meter = openTelemetry.getMeter("com.example.myapp");
+
+      LongCounter requestCounter = meter.counterBuilder("http.requests")
+          .setDescription("Total HTTP requests")
+          .setUnit("requests")
+          .build();
+
+      requestCounter.add(1, Attributes.of(
+          AttributeKey.stringKey("http.method"), "GET",
+          AttributeKey.longKey("http.status_code"), 200L
+      ));
+
+  - name: create_histogram_metric
+    prompt: |
+      Create a histogram metric to track request latency.
+    expected_patterns:
+      - "histogramBuilder"
+      - "setDescription"
+      - "setUnit"
+      - "ofLongs()"
+      - ".build()"
+      - ".record("
+    tags:
+      - metrics
+      - histogram
+    mock_response: |
+      import io.opentelemetry.api.metrics.Meter;
+      import io.opentelemetry.api.metrics.LongHistogram;
+      import io.opentelemetry.api.common.AttributeKey;
+      import io.opentelemetry.api.common.Attributes;
+
+      Meter meter = openTelemetry.getMeter("com.example.myapp");
+
+      LongHistogram latencyHistogram = meter.histogramBuilder("http.latency")
+          .setDescription("Request latency")
+          .setUnit("ms")
+          .ofLongs()
+          .build();
+
+      latencyHistogram.record(150, Attributes.of(
+          AttributeKey.stringKey("http.route"), "/api/users"
+      ));
+
+  - name: semantic_conventions
+    prompt: |
+      Create a span with attributes following OpenTelemetry semantic conventions for HTTP.
+    expected_patterns:
+      - "http.method"
+      - "http.url"
+      - "http.status_code"
+      - "setAttribute"
+    forbidden_patterns:
+      - '"method"'
+      - '"url"'
+      - '"statusCode"'
+    tags:
+      - tracing
+      - semantic-conventions
+    mock_response: |
+      import io.opentelemetry.api.trace.Span;
+
+      Span span = tracer.spanBuilder("HTTP GET /api/users").startSpan();
+      
+      try (Scope scope = span.makeCurrent()) {
+          span.setAttribute("http.method", "GET");
+          span.setAttribute("http.url", "https://api.example.com/users");
+          span.setAttribute("http.status_code", 200);
+          
+          // Perform HTTP request
+      } finally {
+          span.end();
+      }

@@ -1,0 +1,284 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-monitor-ingestion-java skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_sync_client
+    prompt: |
+      Create a LogsIngestionClient using DefaultAzureCredential and a data collection endpoint.
+    expected_patterns:
+      - "LogsIngestionClientBuilder"
+      - "LogsIngestionClient"
+      - "DefaultAzureCredentialBuilder"
+      - ".build()"
+      - "endpoint"
+      - "buildClient()"
+    forbidden_patterns:
+      - "LogsClient"
+      - "IngestionClient"
+      - "dataCollectionEndpoint"
+    tags:
+      - client-creation
+    mock_response: |
+      import com.azure.identity.DefaultAzureCredential;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import com.azure.monitor.ingestion.LogsIngestionClient;
+      import com.azure.monitor.ingestion.LogsIngestionClientBuilder;
+
+      DefaultAzureCredential credential = new DefaultAzureCredentialBuilder().build();
+
+      LogsIngestionClient client = new LogsIngestionClientBuilder()
+          .endpoint("https://my-dce.eastus.ingest.monitor.azure.com")
+          .credential(credential)
+          .buildClient();
+
+  - name: create_async_client
+    prompt: |
+      Create a LogsIngestionAsyncClient for asynchronous log uploads.
+    expected_patterns:
+      - "LogsIngestionAsyncClient"
+      - "LogsIngestionClientBuilder"
+      - "buildAsyncClient()"
+      - "endpoint"
+    forbidden_patterns:
+      - "buildClient()"
+    tags:
+      - client-creation
+      - async
+    mock_response: |
+      import com.azure.monitor.ingestion.LogsIngestionAsyncClient;
+      import com.azure.monitor.ingestion.LogsIngestionClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+
+      LogsIngestionAsyncClient asyncClient = new LogsIngestionClientBuilder()
+          .endpoint("https://my-dce.eastus.ingest.monitor.azure.com")
+          .credential(new DefaultAzureCredentialBuilder().build())
+          .buildAsyncClient();
+
+  - name: basic_upload
+    prompt: |
+      Upload a list of custom log entries to Azure Monitor using a Data Collection Rule.
+    expected_patterns:
+      - "client.upload"
+      - "List<Object>"
+      - "data-collection-rule-id"
+      - "stream-name"
+    forbidden_patterns:
+      - "uploadLogs"
+      - "ingest"
+    tags:
+      - upload
+      - basic
+    mock_response: |
+      import java.util.ArrayList;
+      import java.util.List;
+
+      List<Object> logs = new ArrayList<>();
+      logs.add(new MyLogEntry("2024-01-15T10:30:00Z", "INFO", "Application started"));
+      logs.add(new MyLogEntry("2024-01-15T10:30:05Z", "DEBUG", "Processing request"));
+
+      client.upload("<data-collection-rule-id>", "<stream-name>", logs);
+      System.out.println("Logs uploaded successfully");
+
+  - name: upload_with_concurrency
+    prompt: |
+      Upload a large collection of logs with concurrent batch processing.
+    expected_patterns:
+      - "LogsUploadOptions"
+      - "setMaxConcurrency"
+      - "client.upload"
+      - "Context.NONE"
+    forbidden_patterns:
+      - "setConcurrency"
+    tags:
+      - upload
+      - performance
+    mock_response: |
+      import com.azure.monitor.ingestion.models.LogsUploadOptions;
+      import com.azure.core.util.Context;
+      import java.util.List;
+
+      List<Object> logs = getLargeLogs();
+
+      LogsUploadOptions options = new LogsUploadOptions()
+          .setMaxConcurrency(3);
+
+      client.upload("<data-collection-rule-id>", "<stream-name>", logs, options, Context.NONE);
+
+  - name: upload_with_error_handling
+    prompt: |
+      Upload logs with an error consumer to handle partial upload failures.
+    expected_patterns:
+      - "LogsUploadOptions"
+      - "setLogsUploadErrorConsumer"
+      - "getResponseException"
+      - "getFailedLogs"
+    forbidden_patterns:
+      - "setErrorHandler"
+      - "onError"
+    tags:
+      - upload
+      - error-handling
+    mock_response: |
+      import com.azure.monitor.ingestion.models.LogsUploadOptions;
+      import com.azure.core.util.Context;
+
+      LogsUploadOptions options = new LogsUploadOptions()
+          .setLogsUploadErrorConsumer(uploadError -> {
+              System.err.println("Upload error: " + uploadError.getResponseException().getMessage());
+              System.err.println("Failed logs count: " + uploadError.getFailedLogs().size());
+              
+              for (Object failedLog : uploadError.getFailedLogs()) {
+                  System.err.println("Failed: " + failedLog);
+              }
+          });
+
+      client.upload("<data-collection-rule-id>", "<stream-name>", logs, options, Context.NONE);
+
+  - name: async_upload
+    prompt: |
+      Upload logs asynchronously with reactive error handling.
+    expected_patterns:
+      - "asyncClient"
+      - "upload"
+      - "subscribe"
+      - "doOnSuccess"
+      - "doOnError"
+    forbidden_patterns:
+      - ".block()"
+    tags:
+      - async
+      - upload
+    mock_response: |
+      import java.util.List;
+
+      List<Object> logs = getLogs();
+
+      asyncClient.upload("<data-collection-rule-id>", "<stream-name>", logs)
+          .doOnSuccess(v -> System.out.println("Upload completed"))
+          .doOnError(e -> System.err.println("Upload failed: " + e.getMessage()))
+          .subscribe();
+
+  - name: create_log_entry_model
+    prompt: |
+      Create a custom log entry class suitable for uploading to Azure Monitor.
+    expected_patterns:
+      - "class"
+      - "timeGenerated"
+      - "getTimeGenerated"
+      - "getMessage"
+      - "getLevel"
+    forbidden_patterns:
+      - "public String timeGenerated"
+    tags:
+      - model
+    mock_response: |
+      public class MyLogEntry {
+          private String timeGenerated;
+          private String level;
+          private String message;
+          
+          public MyLogEntry(String timeGenerated, String level, String message) {
+              this.timeGenerated = timeGenerated;
+              this.level = level;
+              this.message = message;
+          }
+          
+          public String getTimeGenerated() { return timeGenerated; }
+          public String getLevel() { return level; }
+          public String getMessage() { return message; }
+      }
+
+  - name: http_error_handling
+    prompt: |
+      Handle HTTP errors when uploading logs, including 403 and 404 responses.
+    expected_patterns:
+      - "HttpResponseException"
+      - "try"
+      - "catch"
+      - "getResponse().getStatusCode()"
+      - "403"
+      - "404"
+    tags:
+      - error-handling
+    mock_response: |
+      import com.azure.core.exception.HttpResponseException;
+
+      try {
+          client.upload(ruleId, streamName, logs);
+      } catch (HttpResponseException e) {
+          System.err.println("HTTP Status: " + e.getResponse().getStatusCode());
+          System.err.println("Error: " + e.getMessage());
+          
+          if (e.getResponse().getStatusCode() == 403) {
+              System.err.println("Check DCR permissions and managed identity");
+          } else if (e.getResponse().getStatusCode() == 404) {
+              System.err.println("Verify DCE endpoint and DCR ID");
+          }
+      }
+
+  - name: upload_map_based_logs
+    prompt: |
+      Upload log entries using Map objects instead of custom POJOs.
+    expected_patterns:
+      - "Map<String, Object>"
+      - "HashMap"
+      - "put"
+      - "TimeGenerated"
+      - "client.upload"
+    tags:
+      - upload
+      - model
+    mock_response: |
+      import java.util.ArrayList;
+      import java.util.HashMap;
+      import java.util.List;
+      import java.util.Map;
+
+      List<Object> logs = new ArrayList<>();
+      
+      Map<String, Object> entry = new HashMap<>();
+      entry.put("TimeGenerated", "2024-01-15T10:30:00Z");
+      entry.put("Level", "INFO");
+      entry.put("Message", "Application started");
+      logs.add(entry);
+
+      client.upload(ruleId, streamName, logs);
+
+  - name: service_pattern
+    prompt: |
+      Create a reusable service class for log ingestion that reuses the client instance.
+    expected_patterns:
+      - "class"
+      - "private final LogsIngestionClient"
+      - "constructor"
+      - "client.upload"
+    forbidden_patterns:
+      - "new LogsIngestionClientBuilder()"
+    tags:
+      - patterns
+      - service
+    mock_response: |
+      import com.azure.monitor.ingestion.LogsIngestionClient;
+      import com.azure.monitor.ingestion.LogsIngestionClientBuilder;
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import java.util.List;
+
+      public class LogIngestionService {
+          private final LogsIngestionClient client;
+          
+          public LogIngestionService(String endpoint) {
+              this.client = new LogsIngestionClientBuilder()
+                  .endpoint(endpoint)
+                  .credential(new DefaultAzureCredentialBuilder().build())
+                  .buildClient();
+          }
+          
+          public void uploadLogs(String ruleId, String stream, List<Object> logs) {
+              client.upload(ruleId, stream, logs);
+          }
+      }
