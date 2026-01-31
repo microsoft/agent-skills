@@ -1,0 +1,493 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for microsoft-azure-webjobs-extensions-authentication-events-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: token_enrichment_basic
+    prompt: |
+      Create an Azure Function that adds custom claims to tokens during sign-in using
+      Microsoft Entra ID custom authentication extensions. Add department and costCenter claims.
+    expected_patterns:
+      - "using Microsoft.Azure.WebJobs"
+      - "using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents"
+      - "using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.TokenIssuanceStart"
+      - "WebJobsAuthenticationEventsTrigger"
+      - "WebJobsTokenIssuanceStartRequest"
+      - "WebJobsTokenIssuanceStartResponse"
+      - "WebJobsProvideClaimsForToken"
+      - "response.Actions.Add"
+      - "Claims"
+      - "Dictionary<string, string>"
+    forbidden_patterns:
+      - "HttpTrigger"
+      - "throw"
+    tags:
+      - token-enrichment
+      - claims
+      - basic
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.TokenIssuanceStart;
+      using Microsoft.Extensions.Logging;
+      
+      public static class TokenEnrichmentFunction
+      {
+          [FunctionName("OnTokenIssuanceStart")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsTokenIssuanceStartRequest request,
+              ILogger log)
+          {
+              log.LogInformation("Token issuance event for user: {UserId}", 
+                  request.Data?.AuthenticationContext?.User?.Id);
+              
+              var response = new WebJobsTokenIssuanceStartResponse();
+              
+              response.Actions.Add(new WebJobsProvideClaimsForToken
+              {
+                  Claims = new Dictionary<string, string>
+                  {
+                      { "department", "Engineering" },
+                      { "costCenter", "CC-12345" }
+                  }
+              });
+              
+              return response;
+          }
+      }
+
+  - name: token_enrichment_external_api
+    prompt: |
+      Create an async Azure Function that fetches user profile data from an external API
+      and adds the data as claims to the token.
+    expected_patterns:
+      - "async Task<WebJobsAuthenticationEventResponse>"
+      - "HttpClient"
+      - "WebJobsProvideClaimsForToken"
+      - "await"
+      - "request.Data?.AuthenticationContext?.User?.Id"
+    forbidden_patterns:
+      - "throw"
+      - ".Result"
+    tags:
+      - token-enrichment
+      - external-api
+      - async
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.TokenIssuanceStart;
+      using Microsoft.Extensions.Logging;
+      using System.Net.Http;
+      using System.Text.Json;
+      
+      public static class TokenEnrichmentWithExternalData
+      {
+          private static readonly HttpClient _httpClient = new();
+          
+          [FunctionName("OnTokenIssuanceStartExternal")]
+          public static async Task<WebJobsAuthenticationEventResponse> Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsTokenIssuanceStartRequest request,
+              ILogger log)
+          {
+              string? userId = request.Data?.AuthenticationContext?.User?.Id;
+              
+              if (string.IsNullOrEmpty(userId))
+              {
+                  log.LogWarning("No user ID in request");
+                  return new WebJobsTokenIssuanceStartResponse();
+              }
+              
+              var userProfile = await GetUserProfileAsync(userId);
+              
+              var response = new WebJobsTokenIssuanceStartResponse();
+              response.Actions.Add(new WebJobsProvideClaimsForToken
+              {
+                  Claims = new Dictionary<string, string>
+                  {
+                      { "employeeId", userProfile.EmployeeId },
+                      { "department", userProfile.Department }
+                  }
+              });
+              
+              return response;
+          }
+          
+          private static async Task<UserProfile> GetUserProfileAsync(string userId)
+          {
+              var response = await _httpClient.GetAsync($"https://api.example.com/users/{userId}");
+              response.EnsureSuccessStatusCode();
+              var json = await response.Content.ReadAsStringAsync();
+              return JsonSerializer.Deserialize<UserProfile>(json)!;
+          }
+      }
+      
+      public record UserProfile(string EmployeeId, string Department);
+
+  - name: attribute_collection_start
+    prompt: |
+      Create an Azure Function for the OnAttributeCollectionStart event that prefills
+      the city and country fields with default values.
+    expected_patterns:
+      - "WebJobsAttributeCollectionStartRequest"
+      - "WebJobsAttributeCollectionStartResponse"
+      - "WebJobsSetPrefillValues"
+      - "Attributes"
+      - "response.Actions.Add"
+    forbidden_patterns:
+      - "WebJobsTokenIssuanceStartRequest"
+    tags:
+      - attribute-collection
+      - prefill
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.Framework;
+      using Microsoft.Extensions.Logging;
+      
+      public static class AttributeCollectionStartFunction
+      {
+          [FunctionName("OnAttributeCollectionStart")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsAttributeCollectionStartRequest request,
+              ILogger log)
+          {
+              log.LogInformation("Attribute collection start for correlation: {CorrelationId}",
+                  request.Data?.AuthenticationContext?.CorrelationId);
+              
+              var response = new WebJobsAttributeCollectionStartResponse();
+              
+              response.Actions.Add(new WebJobsSetPrefillValues
+              {
+                  Attributes = new Dictionary<string, string>
+                  {
+                      { "city", "Seattle" },
+                      { "country", "USA" }
+                  }
+              });
+              
+              return response;
+          }
+      }
+
+  - name: attribute_collection_block
+    prompt: |
+      Create an Azure Function that blocks user sign-up with a custom message using
+      the OnAttributeCollectionStart event.
+    expected_patterns:
+      - "WebJobsAttributeCollectionStartResponse"
+      - "WebJobsShowBlockPage"
+      - "Message"
+    forbidden_patterns:
+      - "throw"
+    tags:
+      - attribute-collection
+      - block
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.Framework;
+      using Microsoft.Extensions.Logging;
+      
+      public static class BlockSignUpFunction
+      {
+          [FunctionName("OnAttributeCollectionStartBlock")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsAttributeCollectionStartRequest request,
+              ILogger log)
+          {
+              log.LogInformation("Blocking sign-up");
+              
+              var response = new WebJobsAttributeCollectionStartResponse();
+              
+              response.Actions.Add(new WebJobsShowBlockPage
+              {
+                  Message = "Sign-up is currently disabled for maintenance."
+              });
+              
+              return response;
+          }
+      }
+
+  - name: attribute_collection_validation
+    prompt: |
+      Create an Azure Function for OnAttributeCollectionSubmit that validates the display name
+      is at least 3 characters and blocks sign-up from @blocked.com email domain.
+    expected_patterns:
+      - "WebJobsAttributeCollectionSubmitRequest"
+      - "WebJobsAttributeCollectionSubmitResponse"
+      - "WebJobsShowValidationError"
+      - "WebJobsShowBlockPage"
+      - "AttributeErrors"
+      - "request.Data?.UserSignUpInfo?.Attributes"
+    forbidden_patterns:
+      - "throw"
+    tags:
+      - attribute-collection
+      - validation
+      - submit
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.Framework;
+      using Microsoft.Extensions.Logging;
+      
+      public static class AttributeCollectionSubmitFunction
+      {
+          [FunctionName("OnAttributeCollectionSubmit")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsAttributeCollectionSubmitRequest request,
+              ILogger log)
+          {
+              var response = new WebJobsAttributeCollectionSubmitResponse();
+              var attributes = request.Data?.UserSignUpInfo?.Attributes;
+              
+              string? email = attributes?["email"]?.ToString();
+              string? displayName = attributes?["displayName"]?.ToString();
+              
+              // Block certain email domains
+              if (email?.EndsWith("@blocked.com") == true)
+              {
+                  response.Actions.Add(new WebJobsShowBlockPage
+                  {
+                      Message = "Sign-up from this email domain is not allowed."
+                  });
+                  return response;
+              }
+              
+              // Validate display name
+              if (string.IsNullOrEmpty(displayName) || displayName.Length < 3)
+              {
+                  response.Actions.Add(new WebJobsShowValidationError
+                  {
+                      Message = "Display name must be at least 3 characters.",
+                      AttributeErrors = new Dictionary<string, string>
+                      {
+                          { "displayName", "Name is too short" }
+                      }
+                  });
+                  return response;
+              }
+              
+              response.Actions.Add(new WebJobsContinueWithDefaultBehavior());
+              return response;
+          }
+      }
+
+  - name: attribute_collection_modify
+    prompt: |
+      Create an Azure Function that modifies submitted attribute values - trim the display name
+      and convert city to uppercase.
+    expected_patterns:
+      - "WebJobsAttributeCollectionSubmitResponse"
+      - "WebJobsModifyAttributeValues"
+      - "Trim()"
+      - "ToUpperInvariant()"
+    forbidden_patterns:
+      - "throw"
+    tags:
+      - attribute-collection
+      - modify
+      - transform
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.Framework;
+      using Microsoft.Extensions.Logging;
+      
+      public static class ModifyAttributesFunction
+      {
+          [FunctionName("OnAttributeCollectionSubmitModify")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsAttributeCollectionSubmitRequest request,
+              ILogger log)
+          {
+              var response = new WebJobsAttributeCollectionSubmitResponse();
+              var attributes = request.Data?.UserSignUpInfo?.Attributes;
+              
+              string? displayName = attributes?["displayName"]?.ToString();
+              string? city = attributes?["city"]?.ToString();
+              
+              response.Actions.Add(new WebJobsModifyAttributeValues
+              {
+                  Attributes = new Dictionary<string, string>
+                  {
+                      { "displayName", displayName?.Trim() ?? "" },
+                      { "city", city?.ToUpperInvariant() ?? "" }
+                  }
+              });
+              
+              return response;
+          }
+      }
+
+  - name: custom_otp_send
+    prompt: |
+      Create an Azure Function for custom OTP delivery that sends the verification code
+      via SMS and handles both success and failure cases.
+    expected_patterns:
+      - "WebJobsOnOtpSendRequest"
+      - "WebJobsOnOtpSendResponse"
+      - "WebJobsOnOtpSendSuccess"
+      - "WebJobsOnOtpSendFailed"
+      - "request.Data?.OtpContext?.Identifier"
+      - "request.Data?.OtpContext?.OneTimeCode"
+    forbidden_patterns:
+      - "throw"
+    tags:
+      - otp
+      - sms
+      - custom-delivery
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.Framework;
+      using Microsoft.Extensions.Logging;
+      
+      public static class CustomOtpFunction
+      {
+          [FunctionName("OnOtpSend")]
+          public static async Task<WebJobsAuthenticationEventResponse> Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsOnOtpSendRequest request,
+              ILogger log)
+          {
+              var response = new WebJobsOnOtpSendResponse();
+              
+              string? phoneNumber = request.Data?.OtpContext?.Identifier;
+              string? otp = request.Data?.OtpContext?.OneTimeCode;
+              
+              if (string.IsNullOrEmpty(phoneNumber) || string.IsNullOrEmpty(otp))
+              {
+                  log.LogError("Missing phone number or OTP");
+                  response.Actions.Add(new WebJobsOnOtpSendFailed
+                  {
+                      Error = "Missing required data"
+                  });
+                  return response;
+              }
+              
+              try
+              {
+                  await SendSmsAsync(phoneNumber, $"Your verification code is: {otp}");
+                  response.Actions.Add(new WebJobsOnOtpSendSuccess());
+                  log.LogInformation("OTP sent to {PhoneNumber}", phoneNumber);
+              }
+              catch (Exception ex)
+              {
+                  log.LogError(ex, "Failed to send OTP");
+                  response.Actions.Add(new WebJobsOnOtpSendFailed
+                  {
+                      Error = "Failed to send verification code"
+                  });
+              }
+              
+              return response;
+          }
+          
+          private static async Task SendSmsAsync(string phoneNumber, string message)
+          {
+              // Implement SMS provider integration
+              await Task.CompletedTask;
+          }
+      }
+
+  - name: error_handling
+    prompt: |
+      Create an Azure Function for token enrichment with proper error handling that
+      doesn't fail the authentication flow when errors occur.
+    expected_patterns:
+      - "try"
+      - "catch"
+      - "log.LogError"
+      - "return new WebJobsTokenIssuanceStartResponse()"
+    forbidden_patterns:
+      - "throw"
+      - "throw ex"
+    tags:
+      - error-handling
+      - resilience
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.TokenIssuanceStart;
+      using Microsoft.Extensions.Logging;
+      
+      public static class ResilientTokenFunction
+      {
+          [FunctionName("OnTokenIssuanceStart")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsTokenIssuanceStartRequest request,
+              ILogger log)
+          {
+              try
+              {
+                  var response = new WebJobsTokenIssuanceStartResponse();
+                  response.Actions.Add(new WebJobsProvideClaimsForToken
+                  {
+                      Claims = new Dictionary<string, string> { { "claim", "value" } }
+                  });
+                  return response;
+              }
+              catch (Exception ex)
+              {
+                  log.LogError(ex, "Error processing token issuance event");
+                  
+                  // Return empty response - authentication continues without custom claims
+                  // Do NOT throw - this would fail the authentication
+                  return new WebJobsTokenIssuanceStartResponse();
+              }
+          }
+      }
+
+  - name: logging_with_correlation
+    prompt: |
+      Create a token enrichment function with proper logging that includes the correlation ID
+      for troubleshooting.
+    expected_patterns:
+      - "CorrelationId"
+      - "log.LogInformation"
+      - "request.Data?.AuthenticationContext"
+    forbidden_patterns:
+      - "Console.WriteLine"
+    tags:
+      - logging
+      - correlation
+      - observability
+    mock_response: |
+      using Microsoft.Azure.WebJobs;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents;
+      using Microsoft.Azure.WebJobs.Extensions.AuthenticationEvents.TokenIssuanceStart;
+      using Microsoft.Extensions.Logging;
+      
+      public static class LoggingTokenFunction
+      {
+          [FunctionName("OnTokenIssuanceStart")]
+          public static WebJobsAuthenticationEventResponse Run(
+              [WebJobsAuthenticationEventsTrigger] WebJobsTokenIssuanceStartRequest request,
+              ILogger log)
+          {
+              log.LogInformation(
+                  "Token issuance event. CorrelationId: {CorrelationId}, UserId: {UserId}",
+                  request.Data?.AuthenticationContext?.CorrelationId,
+                  request.Data?.AuthenticationContext?.User?.Id);
+              
+              var response = new WebJobsTokenIssuanceStartResponse();
+              response.Actions.Add(new WebJobsProvideClaimsForToken
+              {
+                  Claims = new Dictionary<string, string>
+                  {
+                      { "processed", "true" }
+                  }
+              });
+              
+              log.LogInformation(
+                  "Token enrichment complete. CorrelationId: {CorrelationId}",
+                  request.Data?.AuthenticationContext?.CorrelationId);
+              
+              return response;
+          }
+      }

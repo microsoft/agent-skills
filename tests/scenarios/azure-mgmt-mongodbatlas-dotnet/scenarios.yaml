@@ -1,0 +1,308 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-mongodbatlas-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_mongodb_atlas_organization
+    prompt: |
+      Create a MongoDB Atlas organization as an Azure resource using the 
+      Azure.ResourceManager.MongoDBAtlas SDK. The organization should be in East US 2
+      with admin user admin@contoso.com.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.MongoDBAtlas"
+      - "DefaultAzureCredential"
+      - "ArmClient"
+      - "GetMongoDBAtlasOrganizations"
+      - "MongoDBAtlasOrganizationData"
+      - "MongoDBAtlasOrganizationProperties"
+      - "MongoDBAtlasMarketplaceDetails"
+      - "MongoDBAtlasOfferDetails"
+      - "MongoDBAtlasUserDetails"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "hardcoded"
+      - "password"
+      - "new ArmClient()"
+    tags:
+      - create
+      - organization
+      - mongodb
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      using Azure.ResourceManager.MongoDBAtlas.Models;
+      
+      var credential = new DefaultAzureCredential();
+      var armClient = new ArmClient(credential);
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      
+      var organizations = resourceGroup.Value.GetMongoDBAtlasOrganizations();
+      
+      var organizationData = new MongoDBAtlasOrganizationData(AzureLocation.EastUS2)
+      {
+          Properties = new MongoDBAtlasOrganizationProperties(
+              marketplace: new MongoDBAtlasMarketplaceDetails(
+                  subscriptionId: subscriptionId,
+                  offerDetails: new MongoDBAtlasOfferDetails(
+                      publisherId: "mongodb",
+                      offerId: "mongodb_atlas_azure_native_prod",
+                      planId: "private_plan",
+                      planName: "Pay as You Go (Free) (Private)",
+                      termUnit: "P1M",
+                      termId: "gmz7xq9ge3py"
+                  )
+              ),
+              user: new MongoDBAtlasUserDetails(
+                  emailAddress: "admin@contoso.com",
+                  upn: "admin@contoso.com"
+              )
+          )
+      };
+      
+      var operation = await organizations.CreateOrUpdateAsync(
+          WaitUntil.Completed, "my-atlas-org", organizationData);
+      
+      Console.WriteLine($"Created: {operation.Value.Data.Name}");
+
+  - name: get_organization_by_resource_identifier
+    prompt: |
+      Get a MongoDB Atlas organization using its resource identifier with the 
+      Azure.ResourceManager.MongoDBAtlas SDK.
+    expected_patterns:
+      - "CreateResourceIdentifier"
+      - "GetMongoDBAtlasOrganizationResource"
+      - "GetAsync"
+    forbidden_patterns:
+      - ".Result"
+      - "GetAwaiter().GetResult()"
+    tags:
+      - get
+      - resource-identifier
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      
+      var resourceId = MongoDBAtlasOrganizationResource.CreateResourceIdentifier(
+          subscriptionId: "subscription-id",
+          resourceGroupName: "my-resource-group",
+          organizationName: "my-atlas-org"
+      );
+      
+      var orgResource = armClient.GetMongoDBAtlasOrganizationResource(resourceId);
+      var response = await orgResource.GetAsync();
+      
+      Console.WriteLine($"Organization: {response.Value.Data.Name}");
+      Console.WriteLine($"Location: {response.Value.Data.Location}");
+
+  - name: list_organizations_in_subscription
+    prompt: |
+      List all MongoDB Atlas organizations across an Azure subscription.
+    expected_patterns:
+      - "GetMongoDBAtlasOrganizationsAsync"
+      - "await foreach"
+      - "subscription"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - list
+      - subscription
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      await foreach (var org in subscription.GetMongoDBAtlasOrganizationsAsync())
+      {
+          Console.WriteLine($"Org: {org.Data.Name}");
+          Console.WriteLine($"  Location: {org.Data.Location}");
+          Console.WriteLine($"  Provisioning State: {org.Data.Properties?.ProvisioningState}");
+      }
+
+  - name: update_organization_tags
+    prompt: |
+      Update the tags on a MongoDB Atlas organization to add Environment=Production 
+      and Team=DataPlatform tags.
+    expected_patterns:
+      - "SetTagsAsync"
+      - "Dictionary<string, string>"
+      - "Environment"
+      - "Production"
+    forbidden_patterns:
+      - "Data.Tags"
+    tags:
+      - update
+      - tags
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var org = await resourceGroup.Value.GetMongoDBAtlasOrganizations().GetAsync("my-atlas-org");
+      
+      await org.Value.SetTagsAsync(new Dictionary<string, string>
+      {
+          ["Environment"] = "Production",
+          ["Team"] = "DataPlatform"
+      });
+      
+      Console.WriteLine("Tags updated successfully");
+
+  - name: check_provisioning_state
+    prompt: |
+      Check if a MongoDB Atlas organization has finished provisioning and is ready to use.
+    expected_patterns:
+      - "ProvisioningState"
+      - "MongoDBAtlasResourceProvisioningState"
+      - "Succeeded"
+    forbidden_patterns:
+      - "Status"
+    tags:
+      - provisioning
+      - state
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      using Azure.ResourceManager.MongoDBAtlas.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var organizations = resourceGroup.Value.GetMongoDBAtlasOrganizations();
+      
+      var org = await organizations.GetAsync("my-atlas-org");
+      
+      if (org.Value.Data.Properties?.ProvisioningState == 
+          MongoDBAtlasResourceProvisioningState.Succeeded)
+      {
+          Console.WriteLine("Organization is ready");
+      }
+      else
+      {
+          Console.WriteLine($"State: {org.Value.Data.Properties?.ProvisioningState}");
+      }
+
+  - name: delete_organization
+    prompt: |
+      Delete a MongoDB Atlas organization resource from Azure.
+    expected_patterns:
+      - "DeleteAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "Remove"
+    tags:
+      - delete
+      - cleanup
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var org = await resourceGroup.Value.GetMongoDBAtlasOrganizations().GetAsync("my-atlas-org");
+      
+      await org.Value.DeleteAsync(WaitUntil.Completed);
+      Console.WriteLine("Organization deleted");
+
+  - name: handle_long_running_operation
+    prompt: |
+      Create a MongoDB Atlas organization and poll for completion manually instead of 
+      waiting with WaitUntil.Completed.
+    expected_patterns:
+      - "WaitUntil.Started"
+      - "HasCompleted"
+      - "UpdateStatusAsync"
+      - "Task.Delay"
+    forbidden_patterns:
+      - ".Result"
+      - "Thread.Sleep"
+    tags:
+      - long-running
+      - polling
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      using Azure.ResourceManager.MongoDBAtlas.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var organizations = resourceGroup.Value.GetMongoDBAtlasOrganizations();
+      
+      var operation = await organizations.CreateOrUpdateAsync(
+          WaitUntil.Started, "my-atlas-org", organizationData);
+      
+      while (!operation.HasCompleted)
+      {
+          await Task.Delay(TimeSpan.FromSeconds(5));
+          await operation.UpdateStatusAsync();
+          Console.WriteLine("Polling...");
+      }
+      
+      Console.WriteLine($"Completed: {operation.Value.Data.Name}");
+
+  - name: error_handling
+    prompt: |
+      Create a MongoDB Atlas organization with proper error handling for common HTTP errors.
+    expected_patterns:
+      - "RequestFailedException"
+      - "ex.Status"
+      - "404"
+      - "403"
+      - "400"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception)"
+    tags:
+      - error-handling
+      - exceptions
+    mock_response: |
+      using Azure;
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.MongoDBAtlas;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var organizations = resourceGroup.Value.GetMongoDBAtlasOrganizations();
+      
+      try
+      {
+          var operation = await organizations.CreateOrUpdateAsync(
+              WaitUntil.Completed, "my-atlas-org", organizationData);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 404)
+      {
+          Console.WriteLine("Resource not found");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 403)
+      {
+          Console.WriteLine("Authorization failed - check RBAC roles");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 400)
+      {
+          Console.WriteLine($"Invalid parameters: {ex.Message}");
+      }

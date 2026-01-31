@@ -1,0 +1,389 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-resource-manager-playwright-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_playwright_workspace
+    prompt: |
+      Create a Microsoft Playwright Testing workspace in Azure using the 
+      Azure.ResourceManager.Playwright SDK. The workspace should be in West US 3
+      with regional affinity and local auth enabled.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.Playwright"
+      - "DefaultAzureCredential"
+      - "ArmClient"
+      - "GetPlaywrightWorkspaces"
+      - "PlaywrightWorkspaceData"
+      - "PlaywrightRegionalAffinity.Enabled"
+      - "PlaywrightLocalAuth.Enabled"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+      - "DataplaneUri"
+    forbidden_patterns:
+      - "hardcoded"
+      - "password"
+      - "new ArmClient()"
+      - "MicrosoftPlaywrightTesting.NUnit"
+    tags:
+      - create
+      - workspace
+      - playwright
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      using Azure.ResourceManager.Playwright.Models;
+      
+      var credential = new DefaultAzureCredential();
+      var armClient = new ArmClient(credential);
+      var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+      var subscription = armClient.GetSubscriptionResource(
+          new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
+      
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      
+      var workspaceData = new PlaywrightWorkspaceData(AzureLocation.WestUS3)
+      {
+          RegionalAffinity = PlaywrightRegionalAffinity.Enabled,
+          LocalAuth = PlaywrightLocalAuth.Enabled,
+          Tags =
+          {
+              ["Team"] = "QA",
+              ["Environment"] = "Production"
+          }
+      };
+      
+      var workspaceCollection = resourceGroup.Value.GetPlaywrightWorkspaces();
+      var operation = await workspaceCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed, "my-playwright-workspace", workspaceData);
+      
+      Console.WriteLine($"Data Plane URI: {operation.Value.Data.DataplaneUri}");
+      Console.WriteLine($"Workspace ID: {operation.Value.Data.WorkspaceId}");
+
+  - name: get_playwright_workspace
+    prompt: |
+      Get an existing Playwright Testing workspace and display its configuration details.
+    expected_patterns:
+      - "GetAsync"
+      - "Data.Name"
+      - "Data.DataplaneUri"
+      - "Data.ProvisioningState"
+    forbidden_patterns:
+      - ".Result"
+      - "GetAwaiter().GetResult()"
+    tags:
+      - get
+      - workspace
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspaceCollection = resourceGroup.Value.GetPlaywrightWorkspaces();
+      
+      var workspace = await workspaceCollection.GetAsync("my-playwright-workspace");
+      
+      Console.WriteLine($"Name: {workspace.Value.Data.Name}");
+      Console.WriteLine($"Location: {workspace.Value.Data.Location}");
+      Console.WriteLine($"State: {workspace.Value.Data.ProvisioningState}");
+      Console.WriteLine($"Data Plane URI: {workspace.Value.Data.DataplaneUri}");
+      Console.WriteLine($"Workspace ID: {workspace.Value.Data.WorkspaceId}");
+
+  - name: check_workspace_existence
+    prompt: |
+      Check if a Playwright Testing workspace exists before attempting to get it.
+    expected_patterns:
+      - "ExistsAsync"
+      - "if"
+      - "GetAsync"
+    forbidden_patterns:
+      - "try"
+      - "catch"
+    tags:
+      - exists
+      - check
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspaceCollection = resourceGroup.Value.GetPlaywrightWorkspaces();
+      
+      bool exists = await workspaceCollection.ExistsAsync("my-playwright-workspace");
+      if (exists)
+      {
+          var workspace = await workspaceCollection.GetAsync("my-playwright-workspace");
+          Console.WriteLine($"Workspace found: {workspace.Value.Data.Name}");
+      }
+      else
+      {
+          Console.WriteLine("Workspace does not exist");
+      }
+
+  - name: list_workspaces_subscription
+    prompt: |
+      List all Playwright Testing workspaces across an Azure subscription.
+    expected_patterns:
+      - "GetPlaywrightWorkspacesAsync"
+      - "await foreach"
+      - "subscription"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - list
+      - subscription
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      await foreach (var workspace in subscription.GetPlaywrightWorkspacesAsync())
+      {
+          Console.WriteLine($"Workspace: {workspace.Data.Name}");
+          Console.WriteLine($"  Location: {workspace.Data.Location}");
+          Console.WriteLine($"  State: {workspace.Data.ProvisioningState}");
+          Console.WriteLine($"  Data Plane URI: {workspace.Data.DataplaneUri}");
+      }
+
+  - name: update_workspace_tags
+    prompt: |
+      Update the tags on a Playwright Testing workspace.
+    expected_patterns:
+      - "PlaywrightWorkspacePatch"
+      - "Tags"
+      - "UpdateAsync"
+    forbidden_patterns:
+      - "Data.Tags"
+    tags:
+      - update
+      - tags
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      using Azure.ResourceManager.Playwright.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspace = await resourceGroup.Value.GetPlaywrightWorkspaces()
+          .GetAsync("my-playwright-workspace");
+      
+      var patch = new PlaywrightWorkspacePatch
+      {
+          Tags =
+          {
+              ["Team"] = "Dev Exp",
+              ["Environment"] = "Staging",
+              ["UpdatedAt"] = DateTime.UtcNow.ToString("o")
+          }
+      };
+      
+      var updatedWorkspace = await workspace.Value.UpdateAsync(patch);
+      Console.WriteLine($"Updated: {updatedWorkspace.Value.Data.Name}");
+
+  - name: check_name_availability
+    prompt: |
+      Check if a Playwright Testing workspace name is available in Azure.
+    expected_patterns:
+      - "PlaywrightCheckNameAvailabilityContent"
+      - "CheckPlaywrightNameAvailabilityAsync"
+      - "Microsoft.LoadTestService/playwrightWorkspaces"
+      - "IsNameAvailable"
+    forbidden_patterns:
+      - "Microsoft.Playwright"
+    tags:
+      - validation
+      - name-availability
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      using Azure.ResourceManager.Playwright.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      var checkRequest = new PlaywrightCheckNameAvailabilityContent
+      {
+          Name = "my-new-workspace",
+          ResourceType = "Microsoft.LoadTestService/playwrightWorkspaces"
+      };
+      
+      var result = await subscription.CheckPlaywrightNameAvailabilityAsync(checkRequest);
+      
+      if (result.Value.IsNameAvailable == true)
+      {
+          Console.WriteLine("Name is available!");
+      }
+      else
+      {
+          Console.WriteLine($"Name unavailable: {result.Value.Message}");
+          Console.WriteLine($"Reason: {result.Value.Reason}");
+      }
+
+  - name: get_quota_information
+    prompt: |
+      Get quota information for Playwright Testing at both subscription and workspace levels.
+    expected_patterns:
+      - "GetPlaywrightQuotasAsync"
+      - "GetAllPlaywrightWorkspaceQuota"
+      - "quota.Data.Limit"
+      - "quota.Data.Used"
+    forbidden_patterns:
+      - ".ToList()"
+    tags:
+      - quota
+      - limits
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      using Azure.Core;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      // Subscription-level quotas
+      Console.WriteLine("Subscription Quotas:");
+      await foreach (var quota in subscription.GetPlaywrightQuotasAsync(AzureLocation.WestUS3))
+      {
+          Console.WriteLine($"  {quota.Data.Name}: {quota.Data.Used}/{quota.Data.Limit}");
+      }
+      
+      // Workspace-level quotas
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspace = await resourceGroup.Value.GetPlaywrightWorkspaces()
+          .GetAsync("my-playwright-workspace");
+      
+      Console.WriteLine("Workspace Quotas:");
+      var workspaceQuotas = workspace.Value.GetAllPlaywrightWorkspaceQuota();
+      await foreach (var quota in workspaceQuotas.GetAllAsync())
+      {
+          Console.WriteLine($"  {quota.Data.Name}");
+      }
+
+  - name: delete_workspace
+    prompt: |
+      Delete a Playwright Testing workspace from Azure.
+    expected_patterns:
+      - "DeleteAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "Remove"
+    tags:
+      - delete
+      - cleanup
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspace = await resourceGroup.Value.GetPlaywrightWorkspaces()
+          .GetAsync("my-playwright-workspace");
+      
+      await workspace.Value.DeleteAsync(WaitUntil.Completed);
+      Console.WriteLine("Workspace deleted");
+
+  - name: error_handling
+    prompt: |
+      Create a Playwright workspace with proper error handling for HTTP 409 and 400 errors.
+    expected_patterns:
+      - "RequestFailedException"
+      - "ex.Status == 409"
+      - "ex.Status == 400"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception)"
+    tags:
+      - error-handling
+      - exceptions
+    mock_response: |
+      using Azure;
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      using Azure.ResourceManager.Playwright.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspaceCollection = resourceGroup.Value.GetPlaywrightWorkspaces();
+      
+      try
+      {
+          var operation = await workspaceCollection.CreateOrUpdateAsync(
+              WaitUntil.Completed, "my-workspace", workspaceData);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 409)
+      {
+          Console.WriteLine("Workspace already exists");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 400)
+      {
+          Console.WriteLine($"Bad request: {ex.Message}");
+      }
+      catch (RequestFailedException ex)
+      {
+          Console.WriteLine($"ARM Error: {ex.Status} - {ex.ErrorCode}: {ex.Message}");
+      }
+
+  - name: configure_test_execution
+    prompt: |
+      Create a Playwright workspace and configure the environment for running tests at scale.
+    expected_patterns:
+      - "DataplaneUri"
+      - "Environment.SetEnvironmentVariable"
+      - "PLAYWRIGHT_SERVICE_URL"
+    forbidden_patterns:
+      - "NUnit"
+    tags:
+      - integration
+      - test-execution
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Playwright;
+      using Azure.ResourceManager.Playwright.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var workspaceCollection = resourceGroup.Value.GetPlaywrightWorkspaces();
+      
+      var workspaceData = new PlaywrightWorkspaceData(AzureLocation.WestUS3)
+      {
+          RegionalAffinity = PlaywrightRegionalAffinity.Enabled,
+          LocalAuth = PlaywrightLocalAuth.Enabled
+      };
+      
+      // Create workspace
+      var workspace = await workspaceCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed, "my-workspace", workspaceData);
+      
+      // Get the service URL
+      var serviceUrl = workspace.Value.Data.DataplaneUri;
+      
+      // Configure environment for test execution SDK
+      Environment.SetEnvironmentVariable("PLAYWRIGHT_SERVICE_URL", serviceUrl.ToString());
+      
+      Console.WriteLine($"Workspace ready. Set PLAYWRIGHT_SERVICE_URL={serviceUrl}");

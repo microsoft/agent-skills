@@ -1,0 +1,292 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-fabric-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_fabric_capacity
+    prompt: |
+      Create a Microsoft Fabric capacity in Azure using the Azure.ResourceManager.Fabric SDK.
+      The capacity should be named "analytics-capacity" in West US 2 region with F64 SKU
+      and admin@contoso.com as the administrator.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.Fabric"
+      - "DefaultAzureCredential"
+      - "ArmClient"
+      - "GetFabricCapacities"
+      - "FabricCapacityAdministration"
+      - "FabricCapacityProperties"
+      - "FabricSku"
+      - "FabricSkuTier.Fabric"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "hardcoded"
+      - "password"
+      - "secret"
+      - "new ArmClient()"
+    tags:
+      - create
+      - capacity
+      - fabric
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      using Azure.ResourceManager.Fabric.Models;
+      using Azure.Core;
+      
+      var credential = new DefaultAzureCredential();
+      var armClient = new ArmClient(credential);
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      
+      var administration = new FabricCapacityAdministration(new[] { "admin@contoso.com" });
+      var properties = new FabricCapacityProperties(administration);
+      var sku = new FabricSku("F64", FabricSkuTier.Fabric);
+      var capacityData = new FabricCapacityData(AzureLocation.WestUS2, properties, sku);
+      
+      var capacityCollection = resourceGroup.Value.GetFabricCapacities();
+      var operation = await capacityCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed, "analytics-capacity", capacityData);
+      
+      Console.WriteLine($"Created: {operation.Value.Data.Name}");
+
+  - name: suspend_resume_capacity
+    prompt: |
+      Write C# code to suspend a Fabric capacity named "dev-capacity" and then resume it.
+      Use the Azure.ResourceManager.Fabric SDK.
+    expected_patterns:
+      - "SuspendAsync"
+      - "ResumeAsync"
+      - "WaitUntil.Completed"
+      - "GetFabricCapacityAsync"
+    forbidden_patterns:
+      - "Stop"
+      - "Start"
+    tags:
+      - suspend
+      - resume
+      - lifecycle
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      
+      var capacity = await resourceGroup.Value.GetFabricCapacityAsync("dev-capacity");
+      
+      // Suspend capacity
+      await capacity.Value.SuspendAsync(WaitUntil.Completed);
+      Console.WriteLine("Capacity suspended");
+      
+      // Resume capacity
+      var resumeOperation = await capacity.Value.ResumeAsync(WaitUntil.Completed);
+      Console.WriteLine($"Resumed. State: {resumeOperation.Value.Data.Properties.State}");
+
+  - name: scale_capacity_sku
+    prompt: |
+      Scale an existing Fabric capacity from F64 to F128 SKU using the Azure.ResourceManager.Fabric SDK.
+    expected_patterns:
+      - "FabricCapacityPatch"
+      - "FabricSku"
+      - "F128"
+      - "UpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "CreateOrUpdateAsync"
+    tags:
+      - update
+      - scale
+      - sku
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      using Azure.ResourceManager.Fabric.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      var capacity = await resourceGroup.Value.GetFabricCapacityAsync("my-capacity");
+      
+      var patch = new FabricCapacityPatch
+      {
+          Sku = new FabricSku("F128", FabricSkuTier.Fabric)
+      };
+      
+      var operation = await capacity.Value.UpdateAsync(WaitUntil.Completed, patch);
+      Console.WriteLine($"Scaled to: {operation.Value.Data.Sku.Name}");
+
+  - name: list_capacities_in_subscription
+    prompt: |
+      List all Fabric capacities across an Azure subscription using the Azure.ResourceManager.Fabric SDK.
+    expected_patterns:
+      - "GetFabricCapacitiesAsync"
+      - "await foreach"
+      - "subscription"
+    forbidden_patterns:
+      - ".ToList()"
+      - "GetAll().Result"
+    tags:
+      - list
+      - subscription
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      await foreach (var capacity in subscription.GetFabricCapacitiesAsync())
+      {
+          Console.WriteLine($"- {capacity.Data.Name} in {capacity.Data.Location}");
+          Console.WriteLine($"  SKU: {capacity.Data.Sku.Name}");
+          Console.WriteLine($"  State: {capacity.Data.Properties.State}");
+      }
+
+  - name: check_name_availability
+    prompt: |
+      Check if the Fabric capacity name "new-analytics" is available in East US region.
+    expected_patterns:
+      - "FabricNameAvailabilityContent"
+      - "CheckFabricCapacityNameAvailabilityAsync"
+      - "Microsoft.Fabric/capacities"
+      - "IsNameAvailable"
+    forbidden_patterns:
+      - "Fabric/capacities"
+    tags:
+      - validation
+      - name-availability
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric.Models;
+      using Azure.Core;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      var checkContent = new FabricNameAvailabilityContent
+      {
+          Name = "new-analytics",
+          ResourceType = "Microsoft.Fabric/capacities"
+      };
+      
+      var result = await subscription.CheckFabricCapacityNameAvailabilityAsync(
+          AzureLocation.EastUS, checkContent);
+      
+      if (result.Value.IsNameAvailable == true)
+          Console.WriteLine("Name is available!");
+      else
+          Console.WriteLine($"Unavailable: {result.Value.Message}");
+
+  - name: error_handling_capacity_creation
+    prompt: |
+      Create a Fabric capacity with proper error handling for conflict (409), bad request (400), 
+      and forbidden (403) scenarios.
+    expected_patterns:
+      - "RequestFailedException"
+      - "ex.Status == 409"
+      - "ex.Status == 400"
+      - "ex.Status == 403"
+      - "catch"
+    forbidden_patterns:
+      - "catch (Exception ex)"
+    tags:
+      - error-handling
+      - exceptions
+    mock_response: |
+      using Azure;
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      using Azure.ResourceManager.Fabric.Models;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-rg");
+      var capacityCollection = resourceGroup.Value.GetFabricCapacities();
+      
+      try
+      {
+          var operation = await capacityCollection.CreateOrUpdateAsync(
+              WaitUntil.Completed, "my-capacity", capacityData);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 409)
+      {
+          Console.WriteLine("Capacity already exists or conflict");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 400)
+      {
+          Console.WriteLine($"Invalid configuration: {ex.Message}");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 403)
+      {
+          Console.WriteLine("Insufficient permissions or quota exceeded");
+      }
+
+  - name: list_available_skus
+    prompt: |
+      List all available Fabric SKUs in the subscription and their supported regions.
+    expected_patterns:
+      - "GetSkusFabricCapacitiesAsync"
+      - "await foreach"
+      - "skuDetails.Name"
+      - "Locations"
+    forbidden_patterns:
+      - ".ToList()"
+    tags:
+      - sku
+      - list
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      
+      await foreach (var skuDetails in subscription.GetSkusFabricCapacitiesAsync())
+      {
+          Console.WriteLine($"SKU: {skuDetails.Name}");
+          Console.WriteLine($"  Resource Type: {skuDetails.ResourceType}");
+          foreach (var location in skuDetails.Locations)
+          {
+              Console.WriteLine($"  Available in: {location}");
+          }
+      }
+
+  - name: delete_capacity
+    prompt: |
+      Delete a Fabric capacity named "temp-capacity" using the Azure.ResourceManager.Fabric SDK.
+    expected_patterns:
+      - "DeleteAsync"
+      - "WaitUntil.Completed"
+      - "GetFabricCapacityAsync"
+    forbidden_patterns:
+      - "Remove"
+    tags:
+      - delete
+      - cleanup
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Fabric;
+      
+      var armClient = new ArmClient(new DefaultAzureCredential());
+      var subscription = await armClient.GetDefaultSubscriptionAsync();
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+      
+      var capacity = await resourceGroup.Value.GetFabricCapacityAsync("temp-capacity");
+      await capacity.Value.DeleteAsync(WaitUntil.Completed);
+      Console.WriteLine("Capacity deleted");
