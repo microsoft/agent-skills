@@ -1,0 +1,404 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-applicationinsights-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_workspace_based_component
+    prompt: |
+      Create a workspace-based Application Insights component in East US
+      linked to a Log Analytics workspace with 90-day retention.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.ApplicationInsights"
+      - "new ArmClient"
+      - "new DefaultAzureCredential"
+      - "GetApplicationInsightsComponents"
+      - "ApplicationInsightsComponentData"
+      - "AzureLocation.EastUS"
+      - "ApplicationInsightsApplicationType.Web"
+      - "WorkspaceResourceId"
+      - "IngestionMode.LogAnalytics"
+      - "RetentionInDays"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ClientSecretCredential"
+      - "IngestionMode.ApplicationInsights"
+      - "ApplicationInsightsClient"
+    tags:
+      - component-creation
+      - workspace-based
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.ApplicationInsights;
+      using Azure.ResourceManager.ApplicationInsights.Models;
+
+      ArmClient client = new ArmClient(new DefaultAzureCredential());
+
+      ResourceGroupResource resourceGroup = await client
+          .GetDefaultSubscriptionAsync()
+          .Result
+          .GetResourceGroupAsync("my-resource-group");
+
+      ApplicationInsightsComponentCollection components = resourceGroup.GetApplicationInsightsComponents();
+
+      ApplicationInsightsComponentData data = new ApplicationInsightsComponentData(
+          AzureLocation.EastUS,
+          ApplicationInsightsApplicationType.Web)
+      {
+          Kind = "web",
+          WorkspaceResourceId = new ResourceIdentifier(
+              "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<workspace-name>"),
+          IngestionMode = IngestionMode.LogAnalytics,
+          RetentionInDays = 90,
+          SamplingPercentage = 100
+      };
+
+      ArmOperation<ApplicationInsightsComponentResource> operation = await components
+          .CreateOrUpdateAsync(WaitUntil.Completed, "my-appinsights", data);
+
+      ApplicationInsightsComponentResource component = operation.Value;
+
+  - name: get_connection_string
+    prompt: |
+      Retrieve the connection string and instrumentation key from an
+      existing Application Insights component.
+    expected_patterns:
+      - "GetApplicationInsightsComponentAsync"
+      - "component.Data.ConnectionString"
+      - "component.Data.InstrumentationKey"
+      - "component.Data.AppId"
+    forbidden_patterns:
+      - "GetSecretsAsync"
+      - "GetKeysAsync"
+    tags:
+      - connection-string
+      - telemetry
+    mock_response: |
+      ApplicationInsightsComponentResource component = await resourceGroup
+          .GetApplicationInsightsComponentAsync("my-appinsights");
+
+      string connectionString = component.Data.ConnectionString;
+      string instrumentationKey = component.Data.InstrumentationKey;
+      string appId = component.Data.AppId;
+
+      Console.WriteLine($"Connection String: {connectionString}");
+      Console.WriteLine($"Instrumentation Key: {instrumentationKey}");
+      Console.WriteLine($"App ID: {appId}");
+
+  - name: create_api_key
+    prompt: |
+      Create an API key for reading telemetry data from Application Insights.
+    expected_patterns:
+      - "GetApplicationInsightsComponentApiKeys"
+      - "ApplicationInsightsApiKeyContent"
+      - "Name"
+      - "LinkedReadProperties"
+      - "/api"
+      - "CreateOrUpdateAsync"
+      - "apiKey.Data.ApiKey"
+    forbidden_patterns:
+      - "LinkedWriteProperties"
+    tags:
+      - api-key
+    mock_response: |
+      ApplicationInsightsComponentResource component = await resourceGroup
+          .GetApplicationInsightsComponentAsync("my-appinsights");
+
+      ApplicationInsightsComponentApiKeyCollection apiKeys = component.GetApplicationInsightsComponentApiKeys();
+
+      ApplicationInsightsApiKeyContent keyContent = new ApplicationInsightsApiKeyContent
+      {
+          Name = "ReadTelemetryKey",
+          LinkedReadProperties =
+          {
+              $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.insights/components/{component.Data.Name}/api",
+              $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.insights/components/{component.Data.Name}/agentconfig"
+          }
+      };
+
+      ApplicationInsightsComponentApiKeyResource apiKey = await apiKeys
+          .CreateOrUpdateAsync(WaitUntil.Completed, keyContent);
+
+      Console.WriteLine($"API Key Name: {apiKey.Data.Name}");
+      Console.WriteLine($"API Key: {apiKey.Data.ApiKey}");
+
+  - name: create_url_ping_test
+    prompt: |
+      Create a URL ping test (availability test) that checks a homepage
+      every 5 minutes from multiple locations.
+    expected_patterns:
+      - "GetWebTests"
+      - "WebTestData"
+      - "WebTestKind.Ping"
+      - "SyntheticMonitorId"
+      - "WebTestName"
+      - "Frequency"
+      - "Timeout"
+      - "Locations"
+      - "WebTestGeolocation"
+      - "WebTestLocationId"
+      - "Configuration"
+      - "WebTestConfiguration"
+      - "<WebTest"
+      - "hidden-link"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "WebTestKind.MultiStep"
+    tags:
+      - web-test
+      - availability
+    mock_response: |
+      WebTestCollection webTests = resourceGroup.GetWebTests();
+
+      WebTestData urlPingTest = new WebTestData(AzureLocation.EastUS)
+      {
+          Kind = WebTestKind.Ping,
+          SyntheticMonitorId = "webtest-ping-myapp",
+          WebTestName = "Homepage Availability",
+          Description = "Checks if homepage is available",
+          IsEnabled = true,
+          Frequency = 300,
+          Timeout = 120,
+          WebTestKind = WebTestKind.Ping,
+          IsRetryEnabled = true,
+          Locations =
+          {
+              new WebTestGeolocation { WebTestLocationId = "us-ca-sjc-azr" },
+              new WebTestGeolocation { WebTestLocationId = "us-tx-sn1-azr" },
+              new WebTestGeolocation { WebTestLocationId = "emea-gb-db3-azr" }
+          },
+          Configuration = new WebTestConfiguration
+          {
+              WebTest = """
+                  <WebTest Name="Homepage" Enabled="True" Timeout="120" 
+                           xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+                      <Items>
+                          <Request Method="GET" Version="1.1" Url="https://myapp.example.com" 
+                                   ThinkTime="0" Timeout="120" ExpectedHttpStatusCode="200" />
+                      </Items>
+                  </WebTest>
+              """
+          },
+          Tags =
+          {
+              { $"hidden-link:/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/microsoft.insights/components/my-appinsights", "Resource" }
+          }
+      };
+
+      ArmOperation<WebTestResource> operation = await webTests
+          .CreateOrUpdateAsync(WaitUntil.Completed, "webtest-homepage", urlPingTest);
+
+  - name: create_workbook
+    prompt: |
+      Create a shared workbook for application performance monitoring
+      with a KQL query for requests per hour.
+    expected_patterns:
+      - "GetWorkbooks"
+      - "WorkbookData"
+      - "DisplayName"
+      - "Category"
+      - "WorkbookSharedTypeKind.Shared"
+      - "SerializedData"
+      - "KqlItem"
+      - "query"
+      - "SourceId"
+      - "Guid.NewGuid"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "WorkbookSharedTypeKind.User"
+    tags:
+      - workbook
+    mock_response: |
+      WorkbookCollection workbooks = resourceGroup.GetWorkbooks();
+
+      WorkbookData workbookData = new WorkbookData(AzureLocation.EastUS)
+      {
+          DisplayName = "Application Performance Dashboard",
+          Category = "workbook",
+          Kind = WorkbookSharedTypeKind.Shared,
+          SerializedData = """
+          {
+              "version": "Notebook/1.0",
+              "items": [
+                  {
+                      "type": 1,
+                      "content": {
+                          "json": "# Application Performance"
+                      },
+                      "name": "header"
+                  },
+                  {
+                      "type": 3,
+                      "content": {
+                          "version": "KqlItem/1.0",
+                          "query": "requests | summarize count() by bin(timestamp, 1h) | render timechart",
+                          "size": 0,
+                          "title": "Requests per Hour"
+                      },
+                      "name": "requestsChart"
+                  }
+              ],
+              "isLocked": false
+          }
+          """,
+          SourceId = component.Id
+      };
+
+      string workbookId = Guid.NewGuid().ToString();
+
+      ArmOperation<WorkbookResource> operation = await workbooks
+          .CreateOrUpdateAsync(WaitUntil.Completed, workbookId, workbookData);
+
+  - name: link_storage_account
+    prompt: |
+      Link a storage account to Application Insights for profiler data.
+    expected_patterns:
+      - "GetComponentLinkedStorageAccounts"
+      - "ComponentLinkedStorageAccountData"
+      - "LinkedStorageAccount"
+      - "ResourceIdentifier"
+      - "StorageType.ServiceProfiler"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "LinkedStorageAccount ="
+    tags:
+      - storage
+      - profiler
+    mock_response: |
+      ApplicationInsightsComponentResource component = await resourceGroup
+          .GetApplicationInsightsComponentAsync("my-appinsights");
+
+      ComponentLinkedStorageAccountCollection linkedStorage = component.GetComponentLinkedStorageAccounts();
+
+      ComponentLinkedStorageAccountData storageData = new ComponentLinkedStorageAccountData
+      {
+          LinkedStorageAccount = new ResourceIdentifier(
+              "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.Storage/storageAccounts/<storage-account>")
+      };
+
+      ArmOperation<ComponentLinkedStorageAccountResource> operation = await linkedStorage
+          .CreateOrUpdateAsync(WaitUntil.Completed, StorageType.ServiceProfiler, storageData);
+
+  - name: list_components
+    prompt: |
+      List all Application Insights components in a resource group
+      and display their name, type, and retention settings.
+    expected_patterns:
+      - "await foreach"
+      - "GetApplicationInsightsComponents"
+      - "ApplicationInsightsComponentResource"
+      - "component.Data.Name"
+      - "component.Data.ApplicationType"
+      - "component.Data.RetentionInDays"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - listing
+    mock_response: |
+      await foreach (ApplicationInsightsComponentResource component in 
+          resourceGroup.GetApplicationInsightsComponents())
+      {
+          Console.WriteLine($"Component: {component.Data.Name}");
+          Console.WriteLine($"  App ID: {component.Data.AppId}");
+          Console.WriteLine($"  Type: {component.Data.ApplicationType}");
+          Console.WriteLine($"  Ingestion Mode: {component.Data.IngestionMode}");
+          Console.WriteLine($"  Retention: {component.Data.RetentionInDays} days");
+      }
+
+  - name: list_web_tests
+    prompt: |
+      List all web tests in a resource group and display their
+      name, status, and frequency.
+    expected_patterns:
+      - "await foreach"
+      - "GetWebTests"
+      - "WebTestResource"
+      - "webTest.Data.WebTestName"
+      - "webTest.Data.IsEnabled"
+      - "webTest.Data.Frequency"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - listing
+      - web-test
+    mock_response: |
+      await foreach (WebTestResource webTest in resourceGroup.GetWebTests())
+      {
+          Console.WriteLine($"Web Test: {webTest.Data.WebTestName}");
+          Console.WriteLine($"  Enabled: {webTest.Data.IsEnabled}");
+          Console.WriteLine($"  Frequency: {webTest.Data.Frequency}s");
+      }
+
+  - name: update_component
+    prompt: |
+      Update an Application Insights component to change retention
+      and sampling percentage.
+    expected_patterns:
+      - "GetApplicationInsightsComponentAsync"
+      - "component.Data"
+      - "RetentionInDays"
+      - "SamplingPercentage"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "UpdateAsync"
+    tags:
+      - update
+    mock_response: |
+      ApplicationInsightsComponentResource component = await resourceGroup
+          .GetApplicationInsightsComponentAsync("my-appinsights");
+
+      ApplicationInsightsComponentData updateData = component.Data;
+      updateData.RetentionInDays = 180;
+      updateData.SamplingPercentage = 50;
+      updateData.Tags["updated"] = "true";
+
+      ArmOperation<ApplicationInsightsComponentResource> operation = await resourceGroup
+          .GetApplicationInsightsComponents()
+          .CreateOrUpdateAsync(WaitUntil.Completed, "my-appinsights", updateData);
+
+  - name: error_handling
+    prompt: |
+      Handle errors when creating an Application Insights component,
+      including conflict (409) and bad request (400) scenarios.
+    expected_patterns:
+      - "using Azure"
+      - "try"
+      - "catch"
+      - "RequestFailedException"
+      - "ex.Status == 409"
+      - "ex.Status == 400"
+      - "ex.Message"
+    forbidden_patterns:
+      - "catch (Exception ex)"
+    tags:
+      - error-handling
+    mock_response: |
+      using Azure;
+
+      try
+      {
+          ArmOperation<ApplicationInsightsComponentResource> operation = await components
+              .CreateOrUpdateAsync(WaitUntil.Completed, "my-appinsights", data);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 409)
+      {
+          Console.WriteLine("Component already exists");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 400)
+      {
+          Console.WriteLine($"Invalid configuration: {ex.Message}");
+      }
+      catch (RequestFailedException ex)
+      {
+          Console.WriteLine($"Azure error: {ex.Status} - {ex.Message}");
+      }

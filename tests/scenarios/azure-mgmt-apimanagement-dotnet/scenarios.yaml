@@ -1,0 +1,348 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-apimanagement-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_apim_service
+    prompt: |
+      Create an Azure API Management service with Developer SKU in East US
+      using the Azure.ResourceManager.ApiManagement SDK.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.ApiManagement"
+      - "new ArmClient"
+      - "new DefaultAzureCredential"
+      - "ApiManagementServiceData"
+      - "AzureLocation.EastUS"
+      - "ApiManagementServiceSkuProperties"
+      - "ApiManagementServiceSkuType.Developer"
+      - "publisherEmail"
+      - "publisherName"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil"
+    forbidden_patterns:
+      - "ClientSecretCredential"
+      - "ApiManagementClient"
+      - "ManagementClient"
+    tags:
+      - service-creation
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.ApiManagement;
+      using Azure.ResourceManager.ApiManagement.Models;
+
+      var credential = new DefaultAzureCredential();
+      var armClient = new ArmClient(credential);
+
+      var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+      var subscription = armClient.GetSubscriptionResource(
+          new ResourceIdentifier($"/subscriptions/{subscriptionId}"));
+
+      var resourceGroup = await subscription.GetResourceGroupAsync("my-resource-group");
+
+      var serviceData = new ApiManagementServiceData(
+          location: AzureLocation.EastUS,
+          sku: new ApiManagementServiceSkuProperties(
+              ApiManagementServiceSkuType.Developer, 
+              capacity: 1),
+          publisherEmail: "admin@contoso.com",
+          publisherName: "Contoso");
+
+      var serviceCollection = resourceGroup.Value.GetApiManagementServices();
+      var operation = await serviceCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          "my-apim-service",
+          serviceData);
+
+      ApiManagementServiceResource service = operation.Value;
+
+  - name: create_api
+    prompt: |
+      Create an API named "orders-api" in an existing API Management service
+      with HTTPS protocol and a backend service URL.
+    expected_patterns:
+      - "ApiCreateOrUpdateContent"
+      - "DisplayName"
+      - "Path"
+      - "Protocols"
+      - "ApiOperationInvokableProtocol.Https"
+      - "ServiceUri"
+      - "GetApis"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ApiOperationInvokableProtocol.Http"
+      - "ApiData"
+    tags:
+      - api-creation
+    mock_response: |
+      var apiData = new ApiCreateOrUpdateContent
+      {
+          DisplayName = "Orders API",
+          Path = "orders",
+          Protocols = { ApiOperationInvokableProtocol.Https },
+          ServiceUri = new Uri("https://backend.contoso.com/api/orders")
+      };
+
+      var apiCollection = service.GetApis();
+      var apiOperation = await apiCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          "orders-api",
+          apiData);
+
+      ApiResource api = apiOperation.Value;
+
+  - name: create_product
+    prompt: |
+      Create a product named "Starter" that requires subscription and
+      is in published state.
+    expected_patterns:
+      - "ApiManagementProductData"
+      - "DisplayName"
+      - "Description"
+      - "IsSubscriptionRequired"
+      - "State"
+      - "ApiManagementProductState.Published"
+      - "GetApiManagementProducts"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ApiManagementProductState.NotPublished"
+    tags:
+      - product
+    mock_response: |
+      var productData = new ApiManagementProductData
+      {
+          DisplayName = "Starter",
+          Description = "Starter tier with limited access",
+          IsSubscriptionRequired = true,
+          IsApprovalRequired = false,
+          SubscriptionsLimit = 1,
+          State = ApiManagementProductState.Published
+      };
+
+      var productCollection = service.GetApiManagementProducts();
+      var productOperation = await productCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          "starter",
+          productData);
+
+      ApiManagementProductResource product = productOperation.Value;
+
+  - name: add_api_to_product
+    prompt: |
+      Add an existing API to a product in API Management.
+    expected_patterns:
+      - "GetProductApis"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "Apis.Add"
+      - "productData.Apis"
+    tags:
+      - product
+      - api
+    mock_response: |
+      await product.GetProductApis().CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          "my-api");
+
+  - name: create_subscription
+    prompt: |
+      Create an active subscription for a product with display name and scope.
+    expected_patterns:
+      - "ApiManagementSubscriptionCreateOrUpdateContent"
+      - "DisplayName"
+      - "Scope"
+      - "/products/"
+      - "State"
+      - "ApiManagementSubscriptionState.Active"
+      - "GetApiManagementSubscriptions"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ApiManagementSubscriptionState.Suspended"
+    tags:
+      - subscription
+    mock_response: |
+      var subscriptionData = new ApiManagementSubscriptionCreateOrUpdateContent
+      {
+          DisplayName = "My Subscription",
+          Scope = $"/products/{product.Data.Name}",
+          State = ApiManagementSubscriptionState.Active
+      };
+
+      var subscriptionCollection = service.GetApiManagementSubscriptions();
+      var subOperation = await subscriptionCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          "my-subscription",
+          subscriptionData);
+
+      ApiManagementSubscriptionResource subscription = subOperation.Value;
+
+  - name: get_subscription_keys
+    prompt: |
+      Retrieve subscription keys (primary and secondary) from an API
+      Management subscription.
+    expected_patterns:
+      - "GetSecretsAsync"
+      - "keys.Value.PrimaryKey"
+      - "keys.Value.SecondaryKey"
+    forbidden_patterns:
+      - "subscription.Data.PrimaryKey"
+      - "Data.SecondaryKey"
+    tags:
+      - subscription
+      - secrets
+    mock_response: |
+      var keys = await subscription.GetSecretsAsync();
+      Console.WriteLine($"Primary Key: {keys.Value.PrimaryKey}");
+      Console.WriteLine($"Secondary Key: {keys.Value.SecondaryKey}");
+
+  - name: set_api_policy
+    prompt: |
+      Set a rate limiting policy on an API with 100 calls per 60 seconds
+      and a custom header.
+    expected_patterns:
+      - "PolicyContractData"
+      - "Value"
+      - "Format"
+      - "PolicyContentFormat.Xml"
+      - "<policies>"
+      - "<inbound>"
+      - "<rate-limit"
+      - "<base />"
+      - "GetApiPolicy"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "PolicyContentFormat.Json"
+    tags:
+      - policy
+      - rate-limiting
+    mock_response: |
+      var policyXml = @"
+      <policies>
+          <inbound>
+              <rate-limit calls=""100"" renewal-period=""60"" />
+              <set-header name=""X-Custom-Header"" exists-action=""override"">
+                  <value>CustomValue</value>
+              </set-header>
+              <base />
+          </inbound>
+          <backend>
+              <base />
+          </backend>
+          <outbound>
+              <base />
+          </outbound>
+          <on-error>
+              <base />
+          </on-error>
+      </policies>";
+
+      var policyData = new PolicyContractData
+      {
+          Value = policyXml,
+          Format = PolicyContentFormat.Xml
+      };
+
+      await api.GetApiPolicy().CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          policyData);
+
+  - name: backup_service
+    prompt: |
+      Backup an API Management service to Azure Storage using
+      system-assigned managed identity.
+    expected_patterns:
+      - "ApiManagementServiceBackupRestoreContent"
+      - "storageAccount"
+      - "containerName"
+      - "backupName"
+      - "AccessType"
+      - "StorageAccountAccessType.SystemAssignedManagedIdentity"
+      - "BackupAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "AccessKey"
+      - "AccessType.AccessKey"
+    tags:
+      - backup
+      - managed-identity
+    mock_response: |
+      var backupParams = new ApiManagementServiceBackupRestoreContent(
+          storageAccount: "mystorageaccount",
+          containerName: "apim-backups",
+          backupName: "backup-2024-01-15")
+      {
+          AccessType = StorageAccountAccessType.SystemAssignedManagedIdentity
+      };
+
+      await service.BackupAsync(WaitUntil.Completed, backupParams);
+
+  - name: list_apis
+    prompt: |
+      List all APIs in an API Management service and display their
+      name and path.
+    expected_patterns:
+      - "await foreach"
+      - "GetApis"
+      - "GetAllAsync"
+      - "api.Data.Name"
+      - "api.Data.Path"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - listing
+    mock_response: |
+      await foreach (ApiResource api in service.GetApis().GetAllAsync())
+      {
+          Console.WriteLine($"API: {api.Data.Name}");
+          Console.WriteLine($"  Path: {api.Data.Path}");
+          Console.WriteLine($"  Display Name: {api.Data.DisplayName}");
+      }
+
+  - name: error_handling
+    prompt: |
+      Handle errors when creating an API Management service,
+      including conflict (409) and bad request (400) scenarios.
+    expected_patterns:
+      - "using Azure"
+      - "try"
+      - "catch"
+      - "RequestFailedException"
+      - "ex.Status == 409"
+      - "ex.Status == 400"
+      - "ex.ErrorCode"
+      - "ex.Message"
+    forbidden_patterns:
+      - "catch (Exception ex)"
+    tags:
+      - error-handling
+    mock_response: |
+      using Azure;
+
+      try
+      {
+          var operation = await serviceCollection.CreateOrUpdateAsync(
+              WaitUntil.Completed, serviceName, serviceData);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 409)
+      {
+          Console.WriteLine("Service already exists");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 400)
+      {
+          Console.WriteLine($"Bad request: {ex.Message}");
+      }
+      catch (RequestFailedException ex)
+      {
+          Console.WriteLine($"ARM Error: {ex.Status} - {ex.ErrorCode}: {ex.Message}");
+      }

@@ -1,0 +1,409 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-apicenter-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_api_center_service
+    prompt: |
+      Create an Azure API Center service with system-assigned managed identity
+      in East US region using the Azure.ResourceManager.ApiCenter SDK.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.ApiCenter"
+      - "new ArmClient"
+      - "new DefaultAzureCredential"
+      - "GetApiCenterServices"
+      - "ApiCenterServiceData"
+      - "AzureLocation.EastUS"
+      - "ManagedServiceIdentity"
+      - "ManagedServiceIdentityType.SystemAssigned"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ClientSecretCredential"
+      - "new ApiCenterServiceClient"
+      - "ApiCenterManagementClient"
+    tags:
+      - service-creation
+      - managed-identity
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.ApiCenter;
+      using Azure.ResourceManager.ApiCenter.Models;
+
+      ArmClient client = new ArmClient(new DefaultAzureCredential());
+
+      ResourceGroupResource resourceGroup = await client
+          .GetDefaultSubscriptionAsync()
+          .Result
+          .GetResourceGroupAsync("my-resource-group");
+
+      ApiCenterServiceCollection services = resourceGroup.GetApiCenterServices();
+
+      ApiCenterServiceData data = new ApiCenterServiceData(AzureLocation.EastUS)
+      {
+          Identity = new ManagedServiceIdentity(ManagedServiceIdentityType.SystemAssigned)
+      };
+
+      ArmOperation<ApiCenterServiceResource> operation = await services
+          .CreateOrUpdateAsync(WaitUntil.Completed, "my-api-center", data);
+
+      ApiCenterServiceResource service = operation.Value;
+
+  - name: create_workspace
+    prompt: |
+      Create a workspace named "engineering" in an existing API Center service
+      with a title and description.
+    expected_patterns:
+      - "GetApiCenterWorkspaces"
+      - "ApiCenterWorkspaceData"
+      - "Title"
+      - "Description"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+      - "ApiCenterWorkspaceResource"
+    forbidden_patterns:
+      - "GetApiCenterApis"
+      - "ApiCenterApiData"
+    tags:
+      - workspace
+    mock_response: |
+      ApiCenterWorkspaceCollection workspaces = service.GetApiCenterWorkspaces();
+
+      ApiCenterWorkspaceData workspaceData = new ApiCenterWorkspaceData
+      {
+          Title = "Engineering APIs",
+          Description = "APIs owned by the engineering team"
+      };
+
+      ArmOperation<ApiCenterWorkspaceResource> operation = await workspaces
+          .CreateOrUpdateAsync(WaitUntil.Completed, "engineering", workspaceData);
+
+      ApiCenterWorkspaceResource workspace = operation.Value;
+
+  - name: create_rest_api
+    prompt: |
+      Create a REST API named "orders-api" in a workspace with title, description,
+      kind set to REST, lifecycle stage set to production, and custom metadata
+      for team and cost center.
+    expected_patterns:
+      - "GetApiCenterApis"
+      - "ApiCenterApiData"
+      - "Title"
+      - "Description"
+      - "ApiKind.Rest"
+      - "ApiLifecycleStage.Production"
+      - "CustomProperties"
+      - "BinaryData.FromObjectAsJson"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "ApiKind.GraphQL"
+      - "ApiKind.SOAP"
+    tags:
+      - api-creation
+      - metadata
+    mock_response: |
+      ApiCenterApiCollection apis = workspace.GetApiCenterApis();
+
+      ApiCenterApiData apiData = new ApiCenterApiData
+      {
+          Title = "Orders API",
+          Description = "API for managing customer orders",
+          Kind = ApiKind.Rest,
+          LifecycleStage = ApiLifecycleStage.Production,
+          Contacts =
+          {
+              new ApiContact
+              {
+                  Name = "API Support",
+                  Email = "api-support@example.com"
+              }
+          }
+      };
+
+      apiData.CustomProperties = BinaryData.FromObjectAsJson(new
+      {
+          team = "orders-team",
+          costCenter = "CC-1234"
+      });
+
+      ArmOperation<ApiCenterApiResource> operation = await apis
+          .CreateOrUpdateAsync(WaitUntil.Completed, "orders-api", apiData);
+
+      ApiCenterApiResource api = operation.Value;
+
+  - name: create_api_version
+    prompt: |
+      Create version v1.0.0 for an existing API with production lifecycle stage.
+    expected_patterns:
+      - "GetApiCenterApiVersions"
+      - "ApiCenterApiVersionData"
+      - "Title"
+      - "ApiLifecycleStage.Production"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "GetApiCenterApis"
+      - "ApiCenterApiData"
+    tags:
+      - versioning
+    mock_response: |
+      ApiCenterApiVersionCollection versions = api.GetApiCenterApiVersions();
+
+      ApiCenterApiVersionData versionData = new ApiCenterApiVersionData
+      {
+          Title = "v1.0.0",
+          LifecycleStage = ApiLifecycleStage.Production
+      };
+
+      ArmOperation<ApiCenterApiVersionResource> operation = await versions
+          .CreateOrUpdateAsync(WaitUntil.Completed, "v1-0-0", versionData);
+
+      ApiCenterApiVersionResource version = operation.Value;
+
+  - name: import_openapi_spec
+    prompt: |
+      Import an OpenAPI 3.0 specification file into an API definition using
+      inline format.
+    expected_patterns:
+      - "GetApiCenterApiDefinitions"
+      - "ApiCenterApiDefinitionData"
+      - "ApiSpecImportContent"
+      - "ApiSpecImportSourceFormat.Inline"
+      - "ApiSpecImportSpecification"
+      - "ImportSpecificationAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "Link"
+      - "ApiSpecImportSourceFormat.Link"
+    tags:
+      - openapi
+      - import
+    mock_response: |
+      ApiCenterApiDefinitionCollection definitions = version.GetApiCenterApiDefinitions();
+
+      ApiCenterApiDefinitionData definitionData = new ApiCenterApiDefinitionData
+      {
+          Title = "OpenAPI Specification",
+          Description = "Orders API OpenAPI 3.0 definition"
+      };
+
+      ArmOperation<ApiCenterApiDefinitionResource> operation = await definitions
+          .CreateOrUpdateAsync(WaitUntil.Completed, "openapi", definitionData);
+
+      ApiCenterApiDefinitionResource definition = operation.Value;
+
+      string openApiSpec = await File.ReadAllTextAsync("orders-api.yaml");
+
+      ApiSpecImportContent importContent = new ApiSpecImportContent
+      {
+          Format = ApiSpecImportSourceFormat.Inline,
+          Value = openApiSpec,
+          Specification = new ApiSpecImportSpecification
+          {
+              Name = "openapi",
+              Version = "3.0.1"
+          }
+      };
+
+      await definition.ImportSpecificationAsync(WaitUntil.Completed, importContent);
+
+  - name: create_environment
+    prompt: |
+      Create a production environment with server management portal URI
+      and onboarding instructions.
+    expected_patterns:
+      - "GetApiCenterEnvironments"
+      - "ApiCenterEnvironmentData"
+      - "Title"
+      - "ApiCenterEnvironmentKind.Production"
+      - "ApiCenterEnvironmentServer"
+      - "ManagementPortalUris"
+      - "EnvironmentOnboardingModel"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "ApiCenterEnvironmentKind.Development"
+    tags:
+      - environment
+    mock_response: |
+      ApiCenterEnvironmentCollection environments = workspace.GetApiCenterEnvironments();
+
+      ApiCenterEnvironmentData envData = new ApiCenterEnvironmentData
+      {
+          Title = "Production",
+          Description = "Production environment",
+          Kind = ApiCenterEnvironmentKind.Production,
+          Server = new ApiCenterEnvironmentServer
+          {
+              ManagementPortalUris = { new Uri("https://portal.azure.com") }
+          },
+          Onboarding = new EnvironmentOnboardingModel
+          {
+              Instructions = "Contact platform team for access",
+              DeveloperPortalUris = { new Uri("https://developer.example.com") }
+          }
+      };
+
+      ArmOperation<ApiCenterEnvironmentResource> operation = await environments
+          .CreateOrUpdateAsync(WaitUntil.Completed, "production", envData);
+
+  - name: create_deployment
+    prompt: |
+      Create an active deployment linking an API definition to a production
+      environment with runtime URI.
+    expected_patterns:
+      - "GetApiCenterDeployments"
+      - "ApiCenterDeploymentData"
+      - "CreateResourceIdentifier"
+      - "EnvironmentId"
+      - "DefinitionId"
+      - "ApiCenterDeploymentState.Active"
+      - "ApiCenterDeploymentServer"
+      - "RuntimeUris"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "ApiCenterDeploymentState.Inactive"
+    tags:
+      - deployment
+    mock_response: |
+      ApiCenterDeploymentCollection deployments = workspace.GetApiCenterDeployments();
+
+      ResourceIdentifier envResourceId = ApiCenterEnvironmentResource.CreateResourceIdentifier(
+          subscriptionId, resourceGroupName, serviceName, workspaceName, "production");
+
+      ResourceIdentifier definitionResourceId = ApiCenterApiDefinitionResource.CreateResourceIdentifier(
+          subscriptionId, resourceGroupName, serviceName, workspaceName, 
+          "orders-api", "v1-0-0", "openapi");
+
+      ApiCenterDeploymentData deploymentData = new ApiCenterDeploymentData
+      {
+          Title = "Orders API - Production",
+          Description = "Production deployment of Orders API v1.0.0",
+          EnvironmentId = envResourceId,
+          DefinitionId = definitionResourceId,
+          State = ApiCenterDeploymentState.Active,
+          Server = new ApiCenterDeploymentServer
+          {
+              RuntimeUris = { new Uri("https://api.example.com/orders") }
+          }
+      };
+
+      ArmOperation<ApiCenterDeploymentResource> operation = await deployments
+          .CreateOrUpdateAsync(WaitUntil.Completed, "orders-api-prod", deploymentData);
+
+  - name: create_metadata_schema
+    prompt: |
+      Create a custom metadata schema with team and cost center properties,
+      assigned to APIs as required.
+    expected_patterns:
+      - "GetApiCenterMetadataSchemas"
+      - "ApiCenterMetadataSchemaData"
+      - "Schema"
+      - "AssignedTo"
+      - "MetadataAssignment"
+      - "MetadataAssignmentEntity.Api"
+      - "Required = true"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "MetadataAssignmentEntity.Environment"
+    tags:
+      - metadata
+      - governance
+    mock_response: |
+      ApiCenterMetadataSchemaCollection schemas = service.GetApiCenterMetadataSchemas();
+
+      string jsonSchema = """
+      {
+          "type": "object",
+          "properties": {
+              "team": { "type": "string", "title": "Owning Team" },
+              "costCenter": { "type": "string", "title": "Cost Center" }
+          },
+          "required": ["team"]
+      }
+      """;
+
+      ApiCenterMetadataSchemaData schemaData = new ApiCenterMetadataSchemaData
+      {
+          Schema = jsonSchema,
+          AssignedTo =
+          {
+              new MetadataAssignment
+              {
+                  Entity = MetadataAssignmentEntity.Api,
+                  Required = true
+              }
+          }
+      };
+
+      ArmOperation<ApiCenterMetadataSchemaResource> operation = await schemas
+          .CreateOrUpdateAsync(WaitUntil.Completed, "api-metadata", schemaData);
+
+  - name: list_apis
+    prompt: |
+      List all APIs in a workspace and display their title, kind, and
+      lifecycle stage.
+    expected_patterns:
+      - "await foreach"
+      - "GetApiCenterApis"
+      - "ApiCenterApiResource"
+      - "api.Data.Title"
+      - "api.Data.Kind"
+      - "api.Data.LifecycleStage"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - listing
+      - enumeration
+    mock_response: |
+      await foreach (ApiCenterApiResource api in workspace.GetApiCenterApis())
+      {
+          Console.WriteLine($"API: {api.Data.Title}");
+          Console.WriteLine($"  Kind: {api.Data.Kind}");
+          Console.WriteLine($"  Stage: {api.Data.LifecycleStage}");
+      }
+
+  - name: error_handling
+    prompt: |
+      Handle errors when creating an API, including conflict (409) and
+      bad request (400) scenarios.
+    expected_patterns:
+      - "using Azure"
+      - "try"
+      - "catch"
+      - "RequestFailedException"
+      - "ex.Status == 409"
+      - "ex.Status == 400"
+      - "ex.Message"
+    forbidden_patterns:
+      - "catch (Exception ex)"
+      - "throw;"
+    tags:
+      - error-handling
+    mock_response: |
+      using Azure;
+
+      try
+      {
+          ArmOperation<ApiCenterApiResource> operation = await apis
+              .CreateOrUpdateAsync(WaitUntil.Completed, "my-api", apiData);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 409)
+      {
+          Console.WriteLine("API already exists with conflicting configuration");
+      }
+      catch (RequestFailedException ex) when (ex.Status == 400)
+      {
+          Console.WriteLine($"Invalid request: {ex.Message}");
+      }
+      catch (RequestFailedException ex)
+      {
+          Console.WriteLine($"Azure error: {ex.Status} - {ex.Message}");
+      }

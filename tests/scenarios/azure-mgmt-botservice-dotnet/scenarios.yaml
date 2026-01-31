@@ -1,0 +1,364 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-botservice-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_bot_resource
+    prompt: |
+      Create an Azure Bot resource with F0 SKU in West US 2 using the
+      Azure.ResourceManager.BotService SDK with multi-tenant app type.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.BotService"
+      - "new ArmClient"
+      - "new DefaultAzureCredential"
+      - "GetBots"
+      - "BotData"
+      - "AzureLocation.WestUS2"
+      - "BotServiceKind.Azurebot"
+      - "BotServiceSku"
+      - "BotServiceSkuName.F0"
+      - "BotProperties"
+      - "displayName"
+      - "endpoint"
+      - "msaAppId"
+      - "BotMsaAppType.MultiTenant"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ClientSecretCredential"
+      - "BotServiceKind.Bot"
+      - "BotClient"
+    tags:
+      - bot-creation
+    mock_response: |
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.BotService;
+      using Azure.ResourceManager.BotService.Models;
+
+      var credential = new DefaultAzureCredential();
+      ArmClient armClient = new ArmClient(credential);
+
+      SubscriptionResource subscription = await armClient.GetDefaultSubscriptionAsync();
+      ResourceGroupResource resourceGroup = await subscription.GetResourceGroups().GetAsync("myResourceGroup");
+      BotCollection botCollection = resourceGroup.GetBots();
+
+      var botData = new BotData(AzureLocation.WestUS2)
+      {
+          Kind = BotServiceKind.Azurebot,
+          Sku = new BotServiceSku(BotServiceSkuName.F0),
+          Properties = new BotProperties(
+              displayName: "MyBot",
+              endpoint: new Uri("https://mybot.azurewebsites.net/api/messages"),
+              msaAppId: "<your-msa-app-id>")
+          {
+              Description = "My Azure Bot",
+              MsaAppType = BotMsaAppType.MultiTenant
+          }
+      };
+
+      ArmOperation<BotResource> operation = await botCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed, 
+          "myBotName", 
+          botData);
+          
+      BotResource bot = operation.Value;
+
+  - name: configure_directline_channel
+    prompt: |
+      Configure a DirectLine channel for a bot with a secure site enabled.
+    expected_patterns:
+      - "GetBotChannels"
+      - "BotChannelData"
+      - "DirectLineChannel"
+      - "DirectLineChannelProperties"
+      - "DirectLineSite"
+      - "IsEnabled"
+      - "IsV3Enabled"
+      - "IsSecureSiteEnabled"
+      - "BotChannelName.DirectLineChannel"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "DirectLineChannel\""
+      - "IsSecureSiteEnabled = false"
+    tags:
+      - channel
+      - directline
+    mock_response: |
+      BotResource bot = await resourceGroup.GetBots().GetAsync("myBotName");
+
+      BotChannelCollection channels = bot.GetBotChannels();
+
+      var channelData = new BotChannelData(AzureLocation.WestUS2)
+      {
+          Properties = new DirectLineChannel()
+          {
+              Properties = new DirectLineChannelProperties()
+              {
+                  Sites = 
+                  {
+                      new DirectLineSite("Default Site")
+                      {
+                          IsEnabled = true,
+                          IsV1Enabled = false,
+                          IsV3Enabled = true,
+                          IsSecureSiteEnabled = true
+                      }
+                  }
+              }
+          }
+      };
+
+      ArmOperation<BotChannelResource> channelOp = await channels.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          BotChannelName.DirectLineChannel,
+          channelData);
+
+  - name: configure_teams_channel
+    prompt: |
+      Configure a Microsoft Teams channel for a bot with calling disabled.
+    expected_patterns:
+      - "GetBotChannels"
+      - "BotChannelData"
+      - "MsTeamsChannel"
+      - "MsTeamsChannelProperties"
+      - "IsEnabled"
+      - "EnableCalling"
+      - "BotChannelName.MsTeamsChannel"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "TeamsChannel"
+      - "EnableCalling = true"
+    tags:
+      - channel
+      - teams
+    mock_response: |
+      var teamsChannelData = new BotChannelData(AzureLocation.WestUS2)
+      {
+          Properties = new MsTeamsChannel()
+          {
+              Properties = new MsTeamsChannelProperties()
+              {
+                  IsEnabled = true,
+                  EnableCalling = false
+              }
+          }
+      };
+
+      await channels.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          BotChannelName.MsTeamsChannel,
+          teamsChannelData);
+
+  - name: configure_webchat_channel
+    prompt: |
+      Configure a Web Chat channel for a bot with a default site.
+    expected_patterns:
+      - "GetBotChannels"
+      - "BotChannelData"
+      - "WebChatChannel"
+      - "WebChatChannelProperties"
+      - "WebChatSite"
+      - "IsEnabled"
+      - "BotChannelName.WebChatChannel"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "DirectLineChannel"
+    tags:
+      - channel
+      - webchat
+    mock_response: |
+      var webChatChannelData = new BotChannelData(AzureLocation.WestUS2)
+      {
+          Properties = new WebChatChannel()
+          {
+              Properties = new WebChatChannelProperties()
+              {
+                  Sites =
+                  {
+                      new WebChatSite("Default Site")
+                      {
+                          IsEnabled = true
+                      }
+                  }
+              }
+          }
+      };
+
+      await channels.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          BotChannelName.WebChatChannel,
+          webChatChannelData);
+
+  - name: get_bot_and_list_channels
+    prompt: |
+      Get a bot and list all its configured channels.
+    expected_patterns:
+      - "GetAsync"
+      - "bot.Data.Properties.DisplayName"
+      - "bot.Data.Properties.Endpoint"
+      - "await foreach"
+      - "GetBotChannels"
+      - "GetAllAsync"
+      - "channel.Data.Name"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - get
+      - listing
+    mock_response: |
+      BotResource bot = await botCollection.GetAsync("myBotName");
+      Console.WriteLine($"Bot: {bot.Data.Properties.DisplayName}");
+      Console.WriteLine($"Endpoint: {bot.Data.Properties.Endpoint}");
+
+      await foreach (BotChannelResource channel in bot.GetBotChannels().GetAllAsync())
+      {
+          Console.WriteLine($"Channel: {channel.Data.Name}");
+      }
+
+  - name: regenerate_directline_keys
+    prompt: |
+      Regenerate the DirectLine keys for a bot's default site.
+    expected_patterns:
+      - "BotChannelRegenerateKeysContent"
+      - "BotChannelName.DirectLineChannel"
+      - "SiteName"
+      - "GetBotChannelWithRegenerateKeysAsync"
+    forbidden_patterns:
+      - "RegenerateKeysAsync"
+    tags:
+      - keys
+      - directline
+    mock_response: |
+      var regenerateRequest = new BotChannelRegenerateKeysContent(BotChannelName.DirectLineChannel)
+      {
+          SiteName = "Default Site"
+      };
+
+      BotChannelResource channelWithKeys = await bot.GetBotChannelWithRegenerateKeysAsync(regenerateRequest);
+
+  - name: update_bot
+    prompt: |
+      Update a bot's display name and description.
+    expected_patterns:
+      - "GetAsync"
+      - "BotData"
+      - "BotProperties"
+      - "displayName"
+      - "Description"
+      - "UpdateAsync"
+    forbidden_patterns:
+      - "CreateOrUpdateAsync"
+    tags:
+      - update
+    mock_response: |
+      BotResource bot = await botCollection.GetAsync("myBotName");
+
+      var updateData = new BotData(bot.Data.Location)
+      {
+          Properties = new BotProperties(
+              displayName: "Updated Bot Name",
+              endpoint: bot.Data.Properties.Endpoint,
+              msaAppId: bot.Data.Properties.MsaAppId)
+          {
+              Description = "Updated description"
+          }
+      };
+
+      await bot.UpdateAsync(updateData);
+
+  - name: delete_bot
+    prompt: |
+      Delete a bot resource.
+    expected_patterns:
+      - "GetAsync"
+      - "DeleteAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "WaitUntil.Started"
+    tags:
+      - delete
+    mock_response: |
+      BotResource bot = await botCollection.GetAsync("myBotName");
+      await bot.DeleteAsync(WaitUntil.Completed);
+
+  - name: create_bot_with_managed_identity
+    prompt: |
+      Create a bot using user-assigned managed identity for authentication.
+    expected_patterns:
+      - "BotData"
+      - "BotProperties"
+      - "BotMsaAppType.UserAssignedMSI"
+      - "MsaAppMSIResourceId"
+      - "ResourceIdentifier"
+      - "userAssignedIdentities"
+      - "CreateOrUpdateAsync"
+    forbidden_patterns:
+      - "BotMsaAppType.MultiTenant"
+      - "BotMsaAppType.SingleTenant"
+    tags:
+      - managed-identity
+      - security
+    mock_response: |
+      var botData = new BotData(AzureLocation.WestUS2)
+      {
+          Kind = BotServiceKind.Azurebot,
+          Sku = new BotServiceSku(BotServiceSkuName.S1),
+          Properties = new BotProperties(
+              displayName: "ProductionBot",
+              endpoint: new Uri("https://prodbot.azurewebsites.net/api/messages"),
+              msaAppId: userAssignedMsiClientId)
+          {
+              Description = "Production bot with managed identity",
+              MsaAppType = BotMsaAppType.UserAssignedMSI,
+              MsaAppMSIResourceId = new ResourceIdentifier(
+                  "/subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.ManagedIdentity/userAssignedIdentities/my-identity")
+          }
+      };
+
+      ArmOperation<BotResource> operation = await botCollection.CreateOrUpdateAsync(
+          WaitUntil.Completed, 
+          "prodBotName", 
+          botData);
+
+  - name: error_handling
+    prompt: |
+      Handle errors when creating a bot, including conflict (409) scenarios.
+    expected_patterns:
+      - "using Azure"
+      - "try"
+      - "catch"
+      - "RequestFailedException"
+      - "ex.Status == 409"
+      - "ex.ErrorCode"
+      - "ex.Message"
+    forbidden_patterns:
+      - "catch (Exception ex)"
+    tags:
+      - error-handling
+    mock_response: |
+      using Azure;
+
+      try
+      {
+          var operation = await botCollection.CreateOrUpdateAsync(
+              WaitUntil.Completed, 
+              botName, 
+              botData);
+      }
+      catch (RequestFailedException ex) when (ex.Status == 409)
+      {
+          Console.WriteLine("Bot already exists");
+      }
+      catch (RequestFailedException ex)
+      {
+          Console.WriteLine($"ARM Error: {ex.Status} - {ex.ErrorCode}: {ex.Message}");
+      }

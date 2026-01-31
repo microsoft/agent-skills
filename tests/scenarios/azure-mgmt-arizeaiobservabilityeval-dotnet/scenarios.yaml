@@ -1,0 +1,282 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azure-mgmt-arizeaiobservabilityeval-dotnet skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  - name: create_arize_organization
+    prompt: |
+      Create an Arize AI organization in East US with marketplace details
+      and user information using the Azure.ResourceManager.ArizeAIObservabilityEval SDK.
+    expected_patterns:
+      - "using Azure.Identity"
+      - "using Azure.ResourceManager"
+      - "using Azure.ResourceManager.ArizeAIObservabilityEval"
+      - "new ArmClient"
+      - "new DefaultAzureCredential"
+      - "GetArizeAIObservabilityEvalOrganizations"
+      - "ArizeAIObservabilityEvalOrganizationData"
+      - "AzureLocation.EastUS"
+      - "ArizeAIObservabilityEvalOrganizationProperties"
+      - "ArizeAIObservabilityEvalMarketplaceDetails"
+      - "ArizeAIObservabilityEvalOfferDetails"
+      - "PublisherId"
+      - "OfferId"
+      - "PlanId"
+      - "ArizeAIObservabilityEvalUserDetails"
+      - "EmailAddress"
+      - "CreateOrUpdateAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "ClientSecretCredential"
+      - "ArizeClient"
+    tags:
+      - organization-creation
+      - marketplace
+    mock_response: |
+      using Azure.Core;
+      using Azure.Identity;
+      using Azure.ResourceManager;
+      using Azure.ResourceManager.Resources;
+      using Azure.ResourceManager.ArizeAIObservabilityEval;
+      using Azure.ResourceManager.ArizeAIObservabilityEval.Models;
+
+      var credential = new DefaultAzureCredential();
+      var armClient = new ArmClient(credential);
+
+      var subscriptionId = Environment.GetEnvironmentVariable("AZURE_SUBSCRIPTION_ID");
+      var subscription = await armClient.GetSubscriptionResource(
+          SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync();
+      var resourceGroup = await subscription.Value.GetResourceGroupAsync("my-resource-group");
+
+      var collection = resourceGroup.Value.GetArizeAIObservabilityEvalOrganizations();
+
+      var data = new ArizeAIObservabilityEvalOrganizationData(AzureLocation.EastUS)
+      {
+          Properties = new ArizeAIObservabilityEvalOrganizationProperties
+          {
+              Marketplace = new ArizeAIObservabilityEvalMarketplaceDetails
+              {
+                  SubscriptionId = "marketplace-subscription-id",
+                  OfferDetails = new ArizeAIObservabilityEvalOfferDetails
+                  {
+                      PublisherId = "arikimlabs1649082416596",
+                      OfferId = "arize-liftr-1",
+                      PlanId = "arize-liftr-1-plan",
+                      PlanName = "Arize AI Plan",
+                      TermUnit = "P1M",
+                      TermId = "term-id"
+                  }
+              },
+              User = new ArizeAIObservabilityEvalUserDetails
+              {
+                  FirstName = "John",
+                  LastName = "Doe",
+                  EmailAddress = "john.doe@example.com"
+              }
+          },
+          Tags = { ["environment"] = "production" }
+      };
+
+      var operation = await collection.CreateOrUpdateAsync(
+          WaitUntil.Completed,
+          "my-arize-org",
+          data);
+
+      var organization = operation.Value;
+
+  - name: get_organization
+    prompt: |
+      Get an existing Arize AI organization by name from a resource group.
+    expected_patterns:
+      - "GetArizeAIObservabilityEvalOrganizations"
+      - "GetAsync"
+      - "org.Data.Name"
+    forbidden_patterns:
+      - "GetIfExistsAsync"
+    tags:
+      - get
+    mock_response: |
+      var collection = resourceGroup.Value.GetArizeAIObservabilityEvalOrganizations();
+      var org = await collection.GetAsync("my-arize-org");
+      Console.WriteLine($"Organization: {org.Value.Data.Name}");
+
+  - name: check_organization_exists
+    prompt: |
+      Check if an Arize AI organization exists before attempting to get it.
+    expected_patterns:
+      - "ExistsAsync"
+      - "exists.Value"
+      - "if"
+      - "GetAsync"
+    forbidden_patterns:
+      - "try"
+      - "catch"
+    tags:
+      - exists
+    mock_response: |
+      var collection = resourceGroup.Value.GetArizeAIObservabilityEvalOrganizations();
+      var exists = await collection.ExistsAsync("my-arize-org");
+      if (exists.Value)
+      {
+          var org = await collection.GetAsync("my-arize-org");
+          Console.WriteLine($"Found: {org.Value.Data.Name}");
+      }
+
+  - name: get_if_exists
+    prompt: |
+      Get an Arize AI organization only if it exists using the safe
+      GetIfExistsAsync pattern.
+    expected_patterns:
+      - "GetIfExistsAsync"
+      - "response.HasValue"
+      - "response.Value"
+    forbidden_patterns:
+      - "ExistsAsync"
+      - "try"
+      - "catch"
+    tags:
+      - get
+      - safe-access
+    mock_response: |
+      var collection = resourceGroup.Value.GetArizeAIObservabilityEvalOrganizations();
+      var response = await collection.GetIfExistsAsync("my-arize-org");
+      if (response.HasValue)
+      {
+          var org = response.Value;
+          Console.WriteLine($"Found: {org.Data.Name}");
+      }
+
+  - name: list_organizations_resource_group
+    prompt: |
+      List all Arize AI organizations in a resource group and display
+      their name and provisioning state.
+    expected_patterns:
+      - "await foreach"
+      - "GetAllAsync"
+      - "org.Data.Name"
+      - "org.Data.Properties"
+      - "ProvisioningState"
+    forbidden_patterns:
+      - ".ToList()"
+      - ".Result"
+    tags:
+      - listing
+    mock_response: |
+      var collection = resourceGroup.Value.GetArizeAIObservabilityEvalOrganizations();
+      await foreach (var org in collection.GetAllAsync())
+      {
+          Console.WriteLine($"Org: {org.Data.Name}, State: {org.Data.Properties?.ProvisioningState}");
+      }
+
+  - name: list_organizations_subscription
+    prompt: |
+      List all Arize AI organizations across the entire subscription.
+    expected_patterns:
+      - "await foreach"
+      - "GetArizeAIObservabilityEvalOrganizationsAsync"
+      - "subscription"
+      - "org.Data.Name"
+    forbidden_patterns:
+      - "GetAllAsync"
+      - ".ToList()"
+    tags:
+      - listing
+      - subscription
+    mock_response: |
+      await foreach (var org in subscription.Value.GetArizeAIObservabilityEvalOrganizationsAsync())
+      {
+          Console.WriteLine($"Org: {org.Data.Name}");
+      }
+
+  - name: update_organization_tags
+    prompt: |
+      Update the tags on an existing Arize AI organization.
+    expected_patterns:
+      - "GetAsync"
+      - "ArizeAIObservabilityEvalOrganizationPatch"
+      - "Tags"
+      - "UpdateAsync"
+    forbidden_patterns:
+      - "CreateOrUpdateAsync"
+    tags:
+      - update
+      - tags
+    mock_response: |
+      var org = await collection.GetAsync("my-arize-org");
+      var updateData = new ArizeAIObservabilityEvalOrganizationPatch
+      {
+          Tags = { ["environment"] = "staging", ["team"] = "ml-ops" }
+      };
+      var updated = await org.Value.UpdateAsync(updateData);
+
+  - name: delete_organization
+    prompt: |
+      Delete an Arize AI organization.
+    expected_patterns:
+      - "GetAsync"
+      - "DeleteAsync"
+      - "WaitUntil.Completed"
+    forbidden_patterns:
+      - "WaitUntil.Started"
+    tags:
+      - delete
+    mock_response: |
+      var org = await collection.GetAsync("my-arize-org");
+      await org.Value.DeleteAsync(WaitUntil.Completed);
+
+  - name: direct_resource_access
+    prompt: |
+      Access an Arize AI organization directly by resource ID without
+      listing or navigating through the resource group.
+    expected_patterns:
+      - "CreateResourceIdentifier"
+      - "ArizeAIObservabilityEvalOrganizationResource"
+      - "GetArizeAIObservabilityEvalOrganizationResource"
+      - "GetAsync"
+    forbidden_patterns:
+      - "GetResourceGroupAsync"
+      - "GetAllAsync"
+    tags:
+      - direct-access
+      - resource-id
+    mock_response: |
+      var resourceId = ArizeAIObservabilityEvalOrganizationResource.CreateResourceIdentifier(
+          subscriptionId,
+          "my-resource-group",
+          "my-arize-org");
+
+      var org = armClient.GetArizeAIObservabilityEvalOrganizationResource(resourceId);
+      var data = await org.GetAsync();
+      Console.WriteLine($"Organization: {data.Value.Data.Name}");
+
+  - name: error_handling
+    prompt: |
+      Handle errors when getting an Arize AI organization, including
+      the 404 not found scenario.
+    expected_patterns:
+      - "try"
+      - "catch"
+      - "Azure.RequestFailedException"
+      - "ex.Status == 404"
+      - "ex.Message"
+    forbidden_patterns:
+      - "catch (Exception ex)"
+    tags:
+      - error-handling
+    mock_response: |
+      try
+      {
+          var org = await collection.GetAsync("my-arize-org");
+      }
+      catch (Azure.RequestFailedException ex) when (ex.Status == 404)
+      {
+          Console.WriteLine("Organization not found");
+      }
+      catch (Azure.RequestFailedException ex)
+      {
+          Console.WriteLine($"Azure error: {ex.Message}");
+      }
