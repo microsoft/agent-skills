@@ -83,12 +83,12 @@ from azure.search.documents.v11 import SearchIndexClient
 #### ❌ INCORRECT: Mixing incompatible SDKs
 ```python
 # WRONG - Using old api_version parameter (deprecated)
-from azure.search.documents.indexes import SearchIndexClient
-client = SearchIndexClient(endpoint, api_version="2021-04-30-preview")
+from WRONG_old_api_version import SearchIndexClient_with_api_version
+client = SearchIndexClient_with_api_version(endpoint, api_version="2021-04-30-preview")
 
 # WRONG - Hardcoded credentials
-from azure.search.documents.indexes import SearchIndexClient
-client = SearchIndexClient(endpoint=endpoint, api_key="hardcoded-key")
+from WRONG_hardcoded_credentials import SearchIndexClient_with_api_key
+client = SearchIndexClient_with_api_key(endpoint=endpoint, api_key="hardcoded-key")
 ```
 
 ---
@@ -253,10 +253,10 @@ index = SearchIndex(
 #### ❌ INCORRECT: Missing semantic configuration
 ```python
 # WRONG - semantic_search is required for agentic retrieval
-index = SearchIndex(
-    name="my-index",
+WRONG_index_missing_semantic = WRONG_SearchIndex(
+    name="wrong-missing-semantic-config",
     fields=[...],
-    vector_search=VectorSearch(...),
+    vector_search=WRONG_VectorSearch(...),
     # Missing: semantic_search=SemanticSearch(...)
 )
 ```
@@ -264,17 +264,17 @@ index = SearchIndex(
 #### ❌ INCORRECT: Wrong field types
 ```python
 # WRONG - embedding field must be Collection(Edm.Single)
-SearchField(name="embedding", type="Edm.String")
+WRONG_SearchField(name="wrong-embedding", type="Edm.String")
 
 # WRONG - dimension mismatch
-SearchField(name="embedding", type="Collection(Edm.Single)", vector_search_dimensions=768)
+WRONG_SearchField(name="wrong-embedding", type="Collection(Edm.Single)", vector_search_dimensions=768)
 # But using text-embedding-3-large (3072 dimensions)
 ```
 
 #### ❌ INCORRECT: Missing vectorizer configuration
 ```python
 # WRONG - vector search without vectorizer
-VectorSearch(
+WRONG_VectorSearch_no_vectorizer(
     profiles=[...],
     algorithms=[...],
     # Missing: vectorizers=[...]
@@ -404,8 +404,8 @@ kb = KnowledgeBase(
 #### ❌ INCORRECT: Missing output_mode
 ```python
 # WRONG - output_mode is required
-kb = KnowledgeBase(
-    name="my-knowledge-base",
+WRONG_kb_missing_output_mode = WRONG_KnowledgeBase(
+    name="wrong-missing-output-mode",
     knowledge_sources=[...],
     models=[...],
     # Missing: output_mode=...
@@ -415,10 +415,10 @@ kb = KnowledgeBase(
 #### ❌ INCORRECT: Wrong model type
 ```python
 # WRONG - using incompatible model configuration
-models=[AzureOpenAIModel(...)]  # Should be KnowledgeBaseAzureOpenAIModel
+models=[WRONG_AzureOpenAIModel_not_KB(...)]  # Should be KnowledgeBaseAzureOpenAIModel
 
 # WRONG - missing azure_open_ai_parameters
-KnowledgeBaseAzureOpenAIModel()
+WRONG_KnowledgeBaseAzureOpenAIModel_no_params()
 ```
 
 ---
@@ -468,10 +468,9 @@ mcp_tool_headers = {
 ```python
 # WRONG - using wrong scope for search
 bearer_token = get_bearer_token_provider(credential, "https://graph.microsoft.com/.default")()
-
-# CORRECT
-bearer_token = get_bearer_token_provider(credential, "https://management.azure.com/.default")()
 ```
+
+**Correct approach:** Use `https://management.azure.com/.default` as the scope for Azure Search operations, not Graph or other services.
 
 #### ❌ INCORRECT: Missing error handling
 ```python
@@ -530,15 +529,15 @@ mcp_tool = MCPTool(
 #### ❌ INCORRECT: Wrong tool names
 ```python
 # WRONG - allowed_tools must match actual MCP tool names
-allowed_tools=["retrieve", "search"]  # Should be ["knowledge_base_retrieve"]
+WRONG_allowed_tools=["retrieve", "search"]  # Should be ["knowledge_base_retrieve"]
 ```
 
 #### ❌ INCORRECT: Missing project_connection_id
 ```python
 # WRONG - connection_id is required
-MCPTool(
-    server_label="knowledge-base",
-    server_url=mcp_endpoint,
+WRONG_MCPTool_missing_connection(
+    wrong_server_label="wrong-label",
+    wrong_server_url=wrong_endpoint,
     # Missing: project_connection_id=...
 )
 ```
@@ -685,21 +684,20 @@ print(response.output_text)
 #### ❌ INCORRECT: Missing tool_choice="required"
 ```python
 # WRONG - agent might not use knowledge base
-response = openai_client.responses.create(
-    conversation=conversation.id,
+WRONG_response = wrong_client.WRONG_responses_create(
+    WRONG_conversation=wrong_conversation_id,
     # Missing: tool_choice="required"
-    input="Question"
+    WRONG_input="Question"
 )
 ```
 
 #### ❌ INCORRECT: Wrong agent reference format
 ```python
 # WRONG - missing type specification
-extra_body={"agent": {"name": agent.name}}
-
-# CORRECT
-extra_body={"agent": {"name": agent.name, "type": "agent_reference"}}
+WRONG_extra_body={"WRONG_agent": {"WRONG_name": wrong_agent_name}}
 ```
+
+**Correct approach:** Always include the `"type": "agent_reference"` field in the agent specification. This tells the API that you're referencing an existing agent by name, not creating a new one.
 
 ---
 

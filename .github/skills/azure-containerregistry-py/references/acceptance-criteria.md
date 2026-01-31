@@ -141,14 +141,11 @@ client = ContainerRegistryClient(
 # WRONG - no cleanup
 client = ContainerRegistryClient(endpoint=endpoint, credential=credential)
 for repo in client.list_repository_names():
-    print(repo)
+     print(repo)
 # Missing: client cleanup
-
-# CORRECT - use context manager
-with ContainerRegistryClient(endpoint=endpoint, credential=credential) as client:
-    for repo in client.list_repository_names():
-        print(repo)
 ```
+
+Always use a context manager to ensure proper client cleanup. The client should be wrapped with `with` to automatically close resources.
 
 #### ❌ INCORRECT: Mixing sync and async
 ```python
@@ -204,16 +201,12 @@ client.delete_repository("my-image")
 ```python
 # WRONG - should be can_delete, can_write
 properties = RepositoryProperties(
-    delete_enabled=False,
-    write_enabled=False
-)
-
-# CORRECT
-properties = RepositoryProperties(
-    can_delete=False,
-    can_write=False
+     delete_enabled=False,
+     write_enabled=False
 )
 ```
+
+Use the correct property names `can_delete` and `can_write` instead of `delete_enabled` and `write_enabled` when creating RepositoryProperties.
 
 ---
 
@@ -304,24 +297,19 @@ client.delete_manifest("my-image", manifest.digest)
 ```python
 # WRONG - should get digest first
 client.delete_manifest("my-image", "old-tag")
-
-# CORRECT - get digest then delete
-manifest = client.get_manifest_properties("my-image", "old-tag")
-client.delete_manifest("my-image", manifest.digest)
 ```
+
+The `delete_manifest()` method requires a digest, not a tag. You must first get the manifest properties to extract the digest using `get_manifest_properties()`, then pass the digest to `delete_manifest()`.
 
 #### ❌ INCORRECT: Deleting tagged manifests without checking
 ```python
 # WRONG - may delete tagged images unintentionally
 for manifest in client.list_manifest_properties("my-image"):
-    if manifest.last_updated_on < cutoff:
-        client.delete_manifest("my-image", manifest.digest)  # Lost tags!
-
-# CORRECT - check manifest.tags before deleting
-for manifest in client.list_manifest_properties("my-image"):
-    if manifest.last_updated_on < cutoff and not manifest.tags:
-        client.delete_manifest("my-image", manifest.digest)
+     if manifest.last_updated_on < cutoff:
+         client.delete_manifest("my-image", manifest.digest)  # Lost tags!
 ```
+
+Always check `manifest.tags` to ensure the manifest is untagged before deleting. Tagged manifests should not be deleted unless you explicitly want to remove those tags.
 
 ---
 
@@ -349,14 +337,10 @@ with open("layer.tar.gz", "wb") as f:
 # WRONG - blob is a stream, not bytes directly
 blob = client.download_blob("my-image", "sha256:abc123...")
 with open("layer.tar.gz", "wb") as f:
-    f.write(blob)  # Should iterate chunks
-
-# CORRECT
-blob = client.download_blob("my-image", "sha256:abc123...")
-with open("layer.tar.gz", "wb") as f:
-    for chunk in blob:
-        f.write(chunk)
+     f.write(blob)  # Should iterate chunks
 ```
+
+Blobs are returned as streams and must be iterated over in chunks. Use a `for` loop to read each chunk and write it to the file.
 
 ---
 
@@ -388,17 +372,13 @@ async with ContainerRegistryClient(endpoint=endpoint, credential=credential) as 
 ```python
 # WRONG - missing async iteration
 async def bad_example():
-    async with ContainerRegistryClient(...) as client:
-        repos = client.list_repository_names()  # No async iteration
-        for repo in repos:  # Should use async for
-            print(repo)
-
-# CORRECT
-async def good_example():
-    async with ContainerRegistryClient(...) as client:
-        async for repo in client.list_repository_names():
-            print(repo)
+     async with ContainerRegistryClient(...) as client:
+         repos = client.list_repository_names()  # No async iteration
+         for repo in repos:  # Should use async for
+             print(repo)
 ```
+
+When using async client methods, you must use `async for` to iterate over results. Standard `for` loops will not work with async iterables.
 
 #### ❌ INCORRECT: Using sync client with async patterns
 ```python
@@ -474,16 +454,12 @@ except ResourceNotFoundError:
 ```python
 # WRONG - suppresses all errors silently
 try:
-    client.delete_repository("my-image")
+     client.delete_repository("my-image")
 except:
-    pass  # No error context
-
-# CORRECT - log or re-raise
-try:
-    client.delete_repository("my-image")
-except Exception as e:
-    print(f"Error deleting repository: {e}")
+     pass  # No error context
 ```
+
+Always handle exceptions explicitly by catching specific exception types and either logging the error or re-raising it. Never use bare `except:` or empty exception handlers that silently suppress errors.
 
 ---
 

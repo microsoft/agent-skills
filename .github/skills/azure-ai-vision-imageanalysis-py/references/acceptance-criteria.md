@@ -292,43 +292,32 @@ result = client.analyze_from_url(
 ```python
 # WRONG - result.caption is an object, not a string
 for caption in result.caption:  # Can't iterate
-    print(caption)
-
-# CORRECT - check if exists first
-if result.caption:
-    print(result.caption.text)
+     print(caption)
 ```
+
+To correctly access caption, always check if it exists first, then access the `.text` property on the result.caption object.
 
 #### ❌ INCORRECT: Missing error handling
 ```python
 # WRONG - no error handling
 result = client.analyze_from_url(...)  # May fail with invalid URL or auth error
 for tag in result.tags.list:
-    print(tag.name)
-
-# CORRECT - handle exceptions
-try:
-    result = client.analyze_from_url(...)
-except HttpResponseError as e:
-    print(f"Error: {e.status_code} - {e.reason}")
+     print(tag.name)
 ```
+
+Always wrap client calls in try-except blocks to handle `HttpResponseError` exceptions that may occur due to invalid URLs, authentication failures, or other API errors.
 
 #### ❌ INCORRECT: Wrong method for analyzing files
 ```python
 # WRONG - analyze_from_url with file data
 with open("image.jpg", "rb") as f:
-    result = client.analyze_from_url(
-        image_url=f.read(),  # Should use analyze() method
-        visual_features=[VisualFeatures.CAPTION]
-    )
-
-# CORRECT
-with open("image.jpg", "rb") as f:
-    result = client.analyze(
-        image_data=f.read(),
-        visual_features=[VisualFeatures.CAPTION]
-    )
+     result = client.analyze_from_url(
+          image_url=f.read(),  # Should use analyze() method
+          visual_features=[VisualFeatures.CAPTION]
+     )
 ```
+
+For file-based analysis, read the file contents and use the `analyze()` method with the `image_data` parameter instead of `analyze_from_url()`.
 
 ---
 
@@ -379,36 +368,29 @@ async def analyze_file():
 ```python
 # WRONG - missing await for async operations
 async def bad_example():
-    result = client.analyze_from_url(...)  # Missing await
-    print(result.caption.text)
-
-# CORRECT
-async def good_example():
-    result = await client.analyze_from_url(...)
-    print(result.caption.text)
+     result = client.analyze_from_url(...)  # Missing await
+     print(result.caption.text)
 ```
+
+Always use the `await` keyword when calling async methods on async clients to properly wait for the coroutine to complete.
 
 #### ❌ INCORRECT: Wrong credential type
 ```python
 # WRONG - using sync credential with async client
 from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
 from azure.identity import DefaultAzureCredential  # Should be from .aio
-
-# CORRECT
-from azure.ai.vision.imageanalysis.aio import ImageAnalysisClient
-from azure.identity.aio import DefaultAzureCredential
 ```
+
+When using the async client from `azure.ai.vision.imageanalysis.aio`, always import the async credential from `azure.identity.aio` to avoid type mismatches and runtime errors.
 
 #### ❌ INCORRECT: Not using async context manager
 ```python
 # WRONG - no proper cleanup
 client = ImageAnalysisClient(endpoint=endpoint, credential=credential)
 result = await client.analyze_from_url(...)
-
-# CORRECT
-async with ImageAnalysisClient(endpoint=endpoint, credential=credential) as client:
-    result = await client.analyze_from_url(...)
 ```
+
+Always use `async with` when creating async clients to ensure proper resource cleanup and connection management.
 
 ---
 
@@ -454,27 +436,20 @@ else:
 ```python
 # WRONG - no error handling
 try:
-    result = client.analyze_from_url(...)
+     result = client.analyze_from_url(...)
 except:
-    pass  # Silent failure
-
-# CORRECT - handle errors explicitly
-try:
-    result = client.analyze_from_url(...)
-except HttpResponseError as e:
-    logger.error(f"Analysis failed: {e.reason}")
-    raise
+     pass  # Silent failure
 ```
+
+Never use bare `except:` clauses. Always catch specific exceptions like `HttpResponseError` and log or re-raise them to ensure errors are properly handled and visible.
 
 #### ❌ INCORRECT: Accessing None values
 ```python
 # WRONG - assuming caption always exists
 print(result.caption.text)  # Crashes if caption is None
-
-# CORRECT - check first
-if result.caption:
-    print(result.caption.text)
 ```
+
+Always check if a result property exists (is not None) before accessing its nested attributes to avoid AttributeError crashes.
 
 ---
 

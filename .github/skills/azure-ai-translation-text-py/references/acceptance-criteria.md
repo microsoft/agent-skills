@@ -219,8 +219,11 @@ result = client.translate(
 ```python
 # WRONG - 'from' is a Python keyword
 result = client.translate(body=["Hello"], to=["es"], from="en")
+```
 
-# CORRECT - use 'from_parameter'
+**Fix:** Use `from_parameter` instead of `from`, since `from` is a reserved Python keyword. This parameter specifies the source language code.
+
+```python
 result = client.translate(body=["Hello"], to=["es"], from_parameter="en")
 ```
 
@@ -228,8 +231,11 @@ result = client.translate(body=["Hello"], to=["es"], from_parameter="en")
 ```python
 # WRONG - 'to' must be a list
 result = client.translate(body=["Hello"], to="es")
+```
 
-# CORRECT
+**Fix:** The `to` parameter must always be a list of target language codes, even if translating to a single language. This allows the SDK to handle batch translations to multiple languages in a single request.
+
+```python
 result = client.translate(body=["Hello"], to=["es"])
 ```
 
@@ -238,8 +244,11 @@ result = client.translate(body=["Hello"], to=["es"])
 # WRONG - accessing text directly
 for item in result:
     print(item.text)  # This won't work
+```
 
-# CORRECT
+**Fix:** Each item in the result is a translation item that contains a list of `translations` objects. You must iterate through the `translations` list to access the translated text. Each translation object has `to`, `text`, and other fields.
+
+```python
 for item in result:
     for translation in item.translations:
         print(translation.text)
@@ -277,8 +286,11 @@ for item in result:
 ```python
 # WRONG - detected_language might be None
 language = result[0].detected_language.language
+```
 
-# CORRECT
+**Fix:** The `detected_language` field can be `None` if the API cannot confidently detect the language. Always check before accessing its properties. This prevents `AttributeError` when the language is undetected.
+
+```python
 if result[0].detected_language:
     language = result[0].detected_language.language
 ```
@@ -370,8 +382,11 @@ result = client.lookup_dictionary_examples(
     from_parameter="en",
     to="es"
 )
+```
 
-# CORRECT
+**Fix:** The `lookup_dictionary_examples` method requires the `body` parameter to be a list of `DictionaryExampleTextItem` objects, not dictionaries or strings. This ensures proper serialization and API compatibility.
+
+```python
 from azure.ai.translation.text.models import DictionaryExampleTextItem
 
 result = client.lookup_dictionary_examples(

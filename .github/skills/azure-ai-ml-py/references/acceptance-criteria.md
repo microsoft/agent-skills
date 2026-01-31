@@ -125,10 +125,9 @@ ml_client.workspaces.begin_create(ws)  # Missing .result()
 ```python
 # WRONG - create_or_update is not the method for workspaces
 ml_client.workspaces.create_or_update(ws)
-
-# CORRECT
-ml_client.workspaces.begin_create(ws).result()
 ```
+
+**Correct approach:** Use `begin_create(ws).result()` instead of `create_or_update()`. Workspace creation is an async operation that requires the LROPoller chain.
 
 ---
 
@@ -278,10 +277,9 @@ print(compute.provisioning_state)
 ```python
 # WRONG - compute creation is async, need .begin_create_or_update().result()
 ml_client.compute.create_or_update(cluster)
-
-# CORRECT
-ml_client.compute.begin_create_or_update(cluster).result()
 ```
+
+**Correct approach:** Use `.begin_create_or_update(cluster).result()` instead. Long-running operations in Azure ML SDK return an LROPoller that must be awaited with `.result()`.
 
 #### ❌ INCORRECT: Wrong cluster type
 ```python
@@ -343,21 +341,17 @@ for job in jobs:
 inputs={
     "data": Input(type=uri_folder, path="azureml:dataset:1"),  # Unquoted
 }
-
-# CORRECT
-inputs={
-    "data": Input(type="uri_folder", path="azureml:my-dataset:1"),
-}
 ```
+
+**Correct approach:** Use string literals for the `type` parameter: `Input(type="uri_folder", path="azureml:my-dataset:1")`. The type must be a quoted string, not an unquoted variable name.
 
 #### ❌ INCORRECT: Using wrong parameter placeholders
 ```python
 # WRONG - should use ${{inputs.param}} format
 command="python train.py --data {data} --lr {learning_rate}"
-
-# CORRECT
-command="python train.py --data ${{inputs.data}} --lr ${{inputs.learning_rate}}"
 ```
+
+**Correct approach:** Use the Azure ML DSL placeholder syntax `${{inputs.param}}` instead of simple brace placeholders. This ensures the values are properly injected at job submission time.
 
 ---
 

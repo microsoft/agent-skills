@@ -67,12 +67,9 @@ from azure.ai.translation.document import TranslationDocument
 from azure.ai.translation.document import DocumentTranslationClient
 async with DocumentTranslationClient(...) as client:
     ...
-
-# CORRECT
-from azure.ai.translation.document.aio import DocumentTranslationClient
-async with DocumentTranslationClient(...) as client:
-    ...
 ```
+
+**The fix:** Use the async client from `azure.ai.translation.document.aio` when using async context managers. Import `DocumentTranslationClient` from `.aio` instead of the base module, then use `async with` for proper async context management.
 
 ---
 
@@ -388,13 +385,9 @@ async def bad_example():
     from azure.ai.translation.document import DocumentTranslationClient
     async with DocumentTranslationClient(...) as client:  # Won't work, not async
         ...
-
-# CORRECT
-async def good_example():
-    from azure.ai.translation.document.aio import DocumentTranslationClient
-    async with DocumentTranslationClient(...) as client:
-        ...
 ```
+
+**The fix:** Import the async variant from `azure.ai.translation.document.aio` instead. The sync `DocumentTranslationClient` is not compatible with async context managers (`async with`). Always use the `.aio` module when working in async functions.
 
 #### ❌ INCORRECT: Missing await
 ```python

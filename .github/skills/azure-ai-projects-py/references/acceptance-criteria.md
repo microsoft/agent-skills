@@ -200,14 +200,12 @@ agent = client.agents.create_agent(...)
 
 #### ❌ INCORRECT: Mixing sync credential with async client
 ```python
-# WRONG - sync credential with async client
-from azure.ai.projects.aio import AIProjectClient
-from azure.identity import DefaultAzureCredential  # Should be from azure.identity.aio
+# WRONG - using sync credential with async client
+# Don't mix azure.identity (sync) with azure.ai.projects.aio (async)
+# Use azure.identity.aio.DefaultAzureCredential instead
 
-async with AIProjectClient(
-    endpoint=endpoint,
-    credential=DefaultAzureCredential(),  # Wrong! Need async credential
-):
+credential = DefaultAzureCredential()  # This is SYNC!
+async with client:  # async client needs async credential
     ...
 ```
 
@@ -316,8 +314,8 @@ project_client.agents.delete_agent(agent.id)
 ```python
 # WRONG - missing model parameter
 agent = project_client.agents.create_agent(
-    name="my-agent",
-    instructions="You are helpful.",
+    name="WRONG-agent",
+    instructions="WRONG_INSTRUCTIONS",
 )
 ```
 
@@ -325,18 +323,12 @@ agent = project_client.agents.create_agent(
 ```python
 # WRONG - create_agent doesn't support versioning
 agent = project_client.agents.create_agent(
-    model="gpt-4o",
-    name="my-agent",
+    model="WRONG-model",
+    name="WRONG-agent",
     version_label="v1.0",  # This parameter doesn't exist on create_agent
 )
-
-# CORRECT - use create_version for versioned agents
-agent = project_client.agents.create_version(
-    agent_name="my-agent",
-    definition=PromptAgentDefinition(...),
-    version_label="v1.0",
-)
 ```
+Use `create_version()` with `PromptAgentDefinition` for versioned agents instead.
 
 ---
 
@@ -456,7 +448,7 @@ with project_client.agents.runs.stream(
 ```python
 # WRONG - role must be "user" for messages from user
 message = project_client.agents.messages.create(
-    thread_id=thread.id,
+    thread_id=WRONG_THREAD_ID,
     role="human",  # Wrong! Should be "user"
     content="Hello",
 )
@@ -466,29 +458,20 @@ message = project_client.agents.messages.create(
 ```python
 # WRONG - not handling failed runs
 run = project_client.agents.runs.create_and_process(
-    thread_id=thread.id,
-    agent_id=agent.id,
+    thread_id=WRONG_THREAD_ID,
+    agent_id=WRONG_AGENT_ID,
 )
 # Immediately accessing messages without checking status
-
-# CORRECT - always check run status
-if run.status == "completed":
-    messages = project_client.agents.messages.list(thread_id=thread.id)
-elif run.status == "failed":
-    print(f"Run failed: {run.last_error}")
 ```
+Always check `run.status` before accessing results. If status is "failed", examine `run.last_error` for the error message.
 
 #### ❌ INCORRECT: Using wrong streaming handler
 ```python
-# WRONG - using sync handler with async client
-from azure.ai.agents.models import AgentEventHandler  # This is sync
-
-async with client.agents.runs.stream(...) as stream:  # This is async
-    await stream.until_done()
-
-# CORRECT - use AsyncAgentEventHandler with async client
-from azure.ai.agents.aio import AsyncAgentEventHandler
+# WRONG - using the synchronous event handler with an async client
+# The sync handler from azure.ai.agents.models won't work correctly
+# with async stream contexts
 ```
+With async clients, use the async variant of the event handler from the `.aio` module instead.
 
 ---
 
@@ -574,22 +557,15 @@ from azure.ai.projects.models import ConnectionType
 ```python
 # WRONG - using string instead of enum
 connections = project_client.connections.list(connection_type="AzureOpenAI")
-
-# CORRECT - use ConnectionType enum
-from azure.ai.projects.models import ConnectionType
-connections = project_client.connections.list(
-    connection_type=ConnectionType.AZURE_OPEN_AI
-)
 ```
+Always use the `ConnectionType` enum from `azure.ai.projects.models`, not string values.
 
 #### ❌ INCORRECT: Using wrong parameter name
 ```python
 # WRONG - parameter is connection_name, not name
 connection = project_client.connections.get(name="my-connection")
-
-# CORRECT
-connection = project_client.connections.get(connection_name="my-connection")
 ```
+Use `connection_name` parameter instead of `name`.
 
 ---
 
@@ -658,10 +634,8 @@ if gpt4_deployments:
 # WRONG - model property doesn't exist
 deployment = project_client.deployments.get("my-deployment")
 print(deployment.model)  # Wrong! Use model_name
-
-# CORRECT
-print(deployment.model_name)
 ```
+Use `deployment.model_name` to access the model name, not `deployment.model`.
 
 ---
 
@@ -789,11 +763,8 @@ print(f"Evaluation run created: {eval_run.id}")
 ```python
 # WRONG - evals are on openai_client, not project_client
 eval_object = project_client.evals.create(...)
-
-# CORRECT
-openai_client = project_client.get_openai_client()
-eval_object = openai_client.evals.create(...)
 ```
+Get the OpenAI client via `project_client.get_openai_client()` and call `evals.create()` on that client instead.
 
 #### ❌ INCORRECT: Wrong data_source_config type
 ```python
@@ -802,13 +773,8 @@ data_source_config = DataSourceConfigCustom(
     type="json",  # Wrong!
     item_schema={...},
 )
-
-# CORRECT
-data_source_config = DataSourceConfigCustom(
-    type="custom",
-    item_schema={...},
-)
 ```
+The type parameter must always be `"custom"` for DataSourceConfigCustom.
 
 ---
 
@@ -1138,29 +1104,22 @@ run = project_client.agents.runs.create_and_process(
 ```python
 # WRONG - CodeInterpreterTool is in azure.ai.agents.models
 from azure.ai.projects.models import CodeInterpreterTool
-
-# CORRECT
-from azure.ai.agents.models import CodeInterpreterTool
 ```
+Import tool classes from `azure.ai.agents.models`, not `azure.ai.projects.models`.
 
 #### ❌ INCORRECT: Missing tool_resources for File Search
 ```python
-# WRONG - FileSearchTool requires tool_resources
+# WRONG - FileSearchTool requires tool_resources to access vector stores
+# If you omit the tool_resources parameter, the agent cannot access
+# the vector store data needed for file search operations
 agent = project_client.agents.create_agent(
-    model=model,
-    name="search-agent",
-    tools=file_search.definitions,
-    # Missing: tool_resources=file_search.resources
-)
-
-# CORRECT
-agent = project_client.agents.create_agent(
-    model=model,
-    name="search-agent",
-    tools=file_search.definitions,
-    tool_resources=file_search.resources,  # Required!
+    model=WRONG_MODEL,
+    name="WRONG-agent-name",
+    tools=WRONG_TOOLS,
+    # Missing the required resources parameter!
 )
 ```
+Always pass the `.resources` property from your FileSearchTool instance to the `tool_resources` parameter when creating agents that use file search. This enables vector store access.
 
 #### ❌ INCORRECT: Passing FunctionTool object instead of definitions
 ```python
@@ -1170,13 +1129,8 @@ agent = project_client.agents.create_agent(
     model=model,
     tools=functions,  # Wrong! Should be functions.definitions
 )
-
-# CORRECT
-agent = project_client.agents.create_agent(
-    model=model,
-    tools=functions.definitions,
-)
 ```
+Pass the `.definitions` property of the FunctionTool object to the `tools` parameter, not the tool object itself.
 
 ---
 
@@ -1352,14 +1306,12 @@ async with AIProjectClient(...) as client:
 
 #### ❌ INCORRECT: Using sync credential with async client
 ```python
-# WRONG - sync credential with async client
-from azure.ai.projects.aio import AIProjectClient
-from azure.identity import DefaultAzureCredential  # Should be from azure.identity.aio
+# WRONG - using the synchronous credential with async client
+# The sync credential class cannot be used with async context managers
+# Use the async credential from the .aio module instead
 
-async with AIProjectClient(
-    endpoint=endpoint,
-    credential=DefaultAzureCredential(),  # Wrong!
-) as client:
+credential = SyncCredential()  # This is SYNC!
+async with client:  # async client needs async credential
     ...
 ```
 
@@ -1368,27 +1320,23 @@ async with AIProjectClient(
 # WRONG - missing await
 async with AIProjectClient(...) as client:
     agent = client.agents.create_agent(...)  # Missing await!
-    
-# CORRECT
-async with AIProjectClient(...) as client:
-    agent = await client.agents.create_agent(...)
 ```
+Always use `await` with async client methods to properly resolve the coroutine.
 
 #### ❌ INCORRECT: Using sync handler with async client
 ```python
-# WRONG - using sync AgentEventHandler with async client
-from azure.ai.agents.models import AgentEventHandler  # This is sync!
+# WRONG - using the synchronous event handler with async client
+# The sync handler class cannot be used with async stream contexts
+# Use the async variant from the .aio module instead
 
-async with client.agents.runs.stream(
-    thread_id=thread.id,
-    agent_id=agent.id,
-    event_handler=AgentEventHandler(),  # Wrong!
+async with WRONG_CLIENT.agents.runs.stream(
+    thread_id=WRONG_THREAD_ID,
+    agent_id=WRONG_AGENT_ID,
+    event_handler=SyncEventHandler(),  # Wrong! This is sync
 ) as stream:
-    await stream.until_done()
-
-# CORRECT - use AsyncAgentEventHandler
-from azure.ai.agents.aio import AsyncAgentEventHandler
+    await WRONG_STREAM.until_done()
 ```
+Use the async event handler from the `.aio` module when working with async clients.
 
 ---
 
@@ -1502,15 +1450,8 @@ dataset = project_client.datasets.upload_file(
     file_path="./data.csv",
     connection_name="storage",
 )
-
-# CORRECT
-dataset = project_client.datasets.upload_file(
-    name="my-dataset",
-    version="1.0",  # Required!
-    file_path="./data.csv",
-    connection_name="storage",
-)
 ```
+Always provide a `version` parameter when uploading dataset files.
 
 #### ❌ INCORRECT: Using wrong parameter name for folders
 ```python
@@ -1521,15 +1462,8 @@ dataset = project_client.datasets.upload_folder(
     folder_path="./docs/",  # Wrong! Should be folder
     connection_name="storage",
 )
-
-# CORRECT
-dataset = project_client.datasets.upload_folder(
-    name="docs",
-    version="1.0",
-    folder="./docs/",  # Correct parameter name
-    connection_name="storage",
-)
 ```
+Use `folder=` parameter, not `folder_path=`, when uploading folders to datasets.
 
 ---
 
@@ -1580,19 +1514,14 @@ agent = project_client.agents.create_agent(
 #### ❌ INCORRECT: Wrong FilePurpose
 ```python
 # WRONG - FilePurpose.ASSISTANTS doesn't exist
-from azure.ai.agents.models import FilePurpose
+# Use FilePurpose.AGENTS instead
 
 file = project_client.agents.files.upload_and_poll(
     file_path="doc.pdf",
-    purpose=FilePurpose.ASSISTANTS,  # Wrong!
-)
-
-# CORRECT - use FilePurpose.AGENTS
-file = project_client.agents.files.upload_and_poll(
-    file_path="doc.pdf",
-    purpose=FilePurpose.AGENTS,
+    purpose=FilePurpose.ASSISTANTS,  # Wrong! This doesn't exist
 )
 ```
+Use `FilePurpose.AGENTS` for files used with agents, not `FilePurpose.ASSISTANTS`.
 
 #### ❌ INCORRECT: Missing purpose parameter
 ```python
@@ -1600,15 +1529,8 @@ file = project_client.agents.files.upload_and_poll(
 file = project_client.agents.files.upload_and_poll(
     file_path="doc.pdf",
 )
-
-# CORRECT
-from azure.ai.agents.models import FilePurpose
-
-file = project_client.agents.files.upload_and_poll(
-    file_path="doc.pdf",
-    purpose=FilePurpose.AGENTS,
-)
 ```
+Always specify `purpose=FilePurpose.AGENTS` when uploading files for agent use.
 
 ---
 

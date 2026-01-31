@@ -124,10 +124,8 @@ from azure.ai.projects.agents import AgentsClient
 ```python
 # WRONG - These don't exist
 from azure.ai.agents.models import Agent, Thread, Message, Run
-# CORRECT equivalents:
-# Agent response is just a dict-like object
-# ThreadMessage, ThreadRun are the correct types
 ```
+Use `ThreadMessage`, `ThreadRun` instead of `Message` and `Run`. Agent responses are dict-like objects.
 
 ---
 
@@ -440,13 +438,8 @@ agent = agents_client.create_agent(
     model=model,
     tools=functions,  # WRONG - should be functions.definitions
 )
-
-# CORRECT
-agent = agents_client.create_agent(
-    model=model,
-    tools=functions.definitions,
-)
 ```
+Use `functions.definitions` when passing tools to `create_agent`.
 
 #### ❌ INCORRECT: Missing tool_resources for file-based tools
 ```python
@@ -468,16 +461,8 @@ def bad_function(param: str) -> dict:  # Should return str
 # WRONG - no docstring (SDK uses it for description)
 def no_docs(param: str) -> str:
     return json.dumps({"result": param})
-
-# CORRECT
-def good_function(param: str) -> str:
-    """Description for the AI model.
-    :param param: Description of param.
-    :return: Result
-    :rtype: str
-    """
-    return json.dumps({"result": param})
 ```
+Functions must return JSON strings via `json.dumps()` and have docstrings with `:param` documentation.
 
 ---
 
@@ -556,8 +541,10 @@ message = agents_client.messages.create(
 # WRONG - messages have structured content
 for msg in messages:
     print(msg.content)  # WRONG - content is a list of content objects
+```
 
-# CORRECT
+#### ✅ CORRECT: Accessing message content
+```python
 for msg in messages:
     if msg.text_messages:
         last_text = msg.text_messages[-1]
@@ -720,14 +707,8 @@ while run.status in ["queued", "in_progress", "requires_action"]:
 # WRONG - not handling failure
 run = agents_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
 messages = agents_client.messages.list(thread_id=thread.id)  # May fail if run failed
-
-# CORRECT
-run = agents_client.runs.create_and_process(thread_id=thread.id, agent_id=agent.id)
-if run.status == "failed":
-    print(f"Run failed: {run.last_error}")
-else:
-    messages = agents_client.messages.list(thread_id=thread.id)
 ```
+Always check `run.status == "failed"` before accessing messages after a run completes.
 
 #### ❌ INCORRECT: Wrong status values in polling
 ```python
@@ -735,11 +716,8 @@ else:
 while run.status in ["queued", "in_progress"]:  # Missing requires_action
     time.sleep(1)
     run = agents_client.runs.get(thread_id=thread.id, run_id=run.id)
-
-# CORRECT - include all non-terminal states
-while run.status in ["queued", "in_progress", "requires_action"]:
-    ...
 ```
+Include `"requires_action"` in polling loop to handle tool execution requests.
 
 #### ❌ INCORRECT: Not handling tool calls when requires_action
 ```python
@@ -859,12 +837,8 @@ stream = agents_client.runs.stream(thread_id=thread.id, agent_id=agent.id)
 for event_type, event_data, _ in stream:
     print(event_data)
 # Missing: stream cleanup
-
-# CORRECT
-with agents_client.runs.stream(...) as stream:
-    for event_type, event_data, _ in stream:
-        print(event_data)
 ```
+Always use `with` statement to ensure proper stream cleanup.
 
 #### ❌ INCORRECT: Wrong event handler method signatures
 ```python
@@ -987,12 +961,10 @@ async def bad_example():
 ```python
 # WRONG - using sync credential with async client
 from azure.ai.projects.aio import AIProjectClient
-from azure.identity import DefaultAzureCredential  # Should be from .aio
-
-# CORRECT
-from azure.ai.projects.aio import AIProjectClient
-from azure.identity.aio import DefaultAzureCredential
+from azure.identity import DefaultAzureCredential  # Should be from azure.identity.aio
 ```
+
+Use `azure.identity.aio` for async clients.
 
 #### ❌ INCORRECT: Not using async iteration
 ```python
@@ -1000,11 +972,8 @@ from azure.identity.aio import DefaultAzureCredential
 messages = agents_client.messages.list(thread_id=thread.id)
 for msg in messages:  # Wrong - should use async for
     print(msg)
-
-# CORRECT
-async for msg in messages:
-    print(msg)
 ```
+Use `async for` when iterating over async iterators returned by async clients.
 
 ---
 

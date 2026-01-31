@@ -204,12 +204,9 @@ result = client.analyze_sentiment(documents)
 # WRONG - doesn't check is_error
 for doc in result:
     print(doc.sentiment)  # Crashes if doc.is_error is True
-
-# CORRECT
-for doc in result:
-    if not doc.is_error:
-        print(doc.sentiment)
 ```
+
+Always check the `is_error` attribute before accessing document results. If `is_error` is `True`, the analysis failed for that document and accessing `doc.sentiment` will raise an exception. Use an `if not doc.is_error:` guard before accessing any result attributes.
 
 #### ❌ INCORRECT: Accessing wrong attributes
 ```python
@@ -291,11 +288,9 @@ result = client.recognize_pii_entities(
 ```python
 # WRONG - PiiEntityDomain has specific values
 result = client.recognize_pii_entities(documents, domain="PAYMENT")
-
-# CORRECT
-from azure.ai.textanalytics import PiiEntityDomain
-result = client.recognize_pii_entities(documents, domain=PiiEntityDomain.FINANCE)
 ```
+
+The `domain` parameter expects a `PiiEntityDomain` enum value, not a string. Import `PiiEntityDomain` from `azure.ai.textanalytics` and use enum values like `PiiEntityDomain.FINANCE`, `PiiEntityDomain.HEALTH`, or `PiiEntityDomain.RETAIL`.
 
 ---
 
@@ -371,10 +366,9 @@ result = client.detect_language(documents, country_hint="US")
 ```python
 # WRONG - should be iso6391_name, not iso639_name
 print(doc.primary_language.iso639_name)
-
-# CORRECT
-print(doc.primary_language.iso6391_name)
 ```
+
+The correct attribute name is `iso6391_name` (note: "6391", not "639"). This follows the ISO 639-1 standard for language codes. Use `doc.primary_language.iso6391_name` to get the two-letter language code like "en", "es", "fr".
 
 ---
 
@@ -422,11 +416,9 @@ for doc in result:
 # WRONG - begin_analyze_healthcare_entities is long-running
 poller = client.begin_analyze_healthcare_entities(documents)
 result = poller  # WRONG - should call result()
-
-# CORRECT
-poller = client.begin_analyze_healthcare_entities(documents)
-result = poller.result()
 ```
+
+The `begin_analyze_healthcare_entities()` method is a long-running operation that returns a poller object. You must call `.result()` on the poller to wait for the operation to complete and retrieve the actual analysis results. Without calling `.result()`, you only have the poller object, not the document analysis data.
 
 ---
 
@@ -486,14 +478,9 @@ results = poller.result()
 results = poller.result()
 for result in results:
     print(result.sentiment)  # WRONG structure
-
-# CORRECT
-results = poller.result()
-for doc_results in results:
-    for result in doc_results:
-        if result.kind == "SentimentAnalysis":
-            print(result.sentiment)
 ```
+
+The `poller.result()` from `begin_analyze_actions()` returns a nested structure: each element in `results` is itself a list of action results for that document. You must iterate twice: once over documents, then over their actions. Use `for doc_results in results:` then `for result in doc_results:` to properly access individual action results and their properties like `sentiment`.
 
 ---
 
@@ -545,11 +532,9 @@ async def analyze_healthcare():
 # WRONG
 async with TextAnalyticsClient(...) as client:
     result = client.analyze_sentiment(documents)  # Missing await
-
-# CORRECT
-async with TextAnalyticsClient(...) as client:
-    result = await client.analyze_sentiment(documents)
 ```
+
+All async methods on the async client must be awaited. The `analyze_sentiment()` method in the async client (`TextAnalyticsClient` from `azure.ai.textanalytics.aio`) is a coroutine and returns a coroutine object without `await`. You must use `await client.analyze_sentiment(documents)` to get the actual result.
 
 #### ❌ INCORRECT: Wrong credential type
 ```python

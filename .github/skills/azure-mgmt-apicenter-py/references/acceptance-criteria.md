@@ -64,32 +64,25 @@ from azure.mgmt.apicenter.models import MetadataSchema
 ```python
 # WRONG - Service is not in azure.mgmt.apicenter directly
 from azure.mgmt.apicenter import Service
-
-# CORRECT
-from azure.mgmt.apicenter.models import Service
 ```
+
+**Correct approach:** Import from the `models` submodule instead: `from azure.mgmt.apicenter.models import Service`
 
 #### ❌ INCORRECT: Using deprecated paths
 ```python
 # WRONG - Wrong import path
 from azure.mgmt.apicenter.services import Service
-
-# CORRECT
-from azure.mgmt.apicenter.models import Service
 ```
+
+**Correct approach:** Use `models` module: `from azure.mgmt.apicenter.models import Service`
 
 #### ❌ INCORRECT: Mixing subscription and resource group operations
 ```python
 # WRONG - list_by_subscription doesn't exist
 apis = client.apis.list_by_subscription()
-
-# CORRECT - APIs are scoped to resource group + service + workspace
-apis = client.apis.list(
-    resource_group_name="my-rg",
-    service_name="my-api-center",
-    workspace_name="default"
-)
 ```
+
+**Correct approach:** All API operations are scoped to resource group, service, and workspace. Use the `list()` method with all three parameters: `client.apis.list(resource_group_name="my-rg", service_name="my-api-center", workspace_name="default")`
 
 ---
 
@@ -127,13 +120,9 @@ with ApiCenterMgmtClient(
 ```python
 # WRONG - subscription_id is required
 client = ApiCenterMgmtClient(credential=credential)
-
-# CORRECT
-client = ApiCenterMgmtClient(
-    credential=credential,
-    subscription_id=subscription_id
-)
 ```
+
+**Correct approach:** Always pass `subscription_id` as a parameter when creating the client: `client = ApiCenterMgmtClient(credential=credential, subscription_id=subscription_id)`
 
 #### ❌ INCORRECT: Not using environment variable
 ```python
@@ -142,13 +131,9 @@ client = ApiCenterMgmtClient(
     credential=credential,
     subscription_id="12345678-1234-1234-1234-123456789012"
 )
-
-# CORRECT
-client = ApiCenterMgmtClient(
-    credential=credential,
-    subscription_id=os.environ["AZURE_SUBSCRIPTION_ID"]
-)
 ```
+
+**Correct approach:** Always read sensitive values from environment variables instead of hardcoding them. Use `os.environ["AZURE_SUBSCRIPTION_ID"]` to retrieve the subscription ID at runtime.
 
 ---
 
@@ -226,14 +211,9 @@ api_center = client.services.create_or_update(
     service_name="my-api-center",
     resource=Service()  # Missing location
 )
-
-# CORRECT
-api_center = client.services.create_or_update(
-    resource_group_name="my-rg",
-    service_name="my-api-center",
-    resource=Service(location="eastus")
-)
 ```
+
+**Correct approach:** Always specify a location (e.g., "eastus") when creating a Service resource. Location is a required field.
 
 ---
 
@@ -322,16 +302,9 @@ api = client.apis.create_or_update(
     api_name="my-api",
     resource=Api(title="My API", kind=ApiKind.REST)
 )
-
-# CORRECT
-api = client.apis.create_or_update(
-    resource_group_name="my-rg",
-    service_name="my-api-center",
-    workspace_name="default",
-    api_name="my-api",
-    resource=Api(title="My API", kind=ApiKind.REST)
-)
 ```
+
+**Correct approach:** All API operations require `workspace_name` parameter. The default workspace is typically named "default".
 
 #### ❌ INCORRECT: Using wrong ApiKind enum
 ```python
@@ -340,13 +313,9 @@ api = client.apis.create_or_update(
     ...,
     resource=Api(kind="SOAP")  # Wrong
 )
-
-# CORRECT
-api = client.apis.create_or_update(
-    ...,
-    resource=Api(kind=ApiKind.REST)
-)
 ```
+
+**Correct approach:** Use only valid `ApiKind` enum values: `REST`, `GraphQL`, `GRPC`, or `WEBHOOK`. Avoid string literals; use the enum type.
 
 ---
 
@@ -405,17 +374,9 @@ version = client.api_versions.create_or_update(
     api_name="my-api",
     resource=ApiVersion(title="v1")
 )
-
-# CORRECT - version_name is parameter, not in resource
-version = client.api_versions.create_or_update(
-    resource_group_name="my-rg",
-    service_name="my-api-center",
-    workspace_name="default",
-    api_name="my-api",
-    version_name="v1",
-    resource=ApiVersion(title="Version 1.0")
-)
 ```
+
+**Correct approach:** `version_name` is a required parameter passed separately, not inside the resource body. Pass it as: `version_name="v1"` alongside the resource.
 
 ---
 
@@ -500,18 +461,9 @@ definition = client.api_definitions.create_or_update(
     version_name="v1",
     resource=ApiDefinition(title="OpenAPI")
 )
-
-# CORRECT - definition_name is parameter
-definition = client.api_definitions.create_or_update(
-    resource_group_name="my-rg",
-    service_name="my-api-center",
-    workspace_name="default",
-    api_name="my-api",
-    version_name="v1",
-    definition_name="openapi",
-    resource=ApiDefinition(title="OpenAPI Definition")
-)
 ```
+
+**Correct approach:** `definition_name` is a required parameter passed separately to the method call, not inside the resource body. Use: `definition_name="openapi"` alongside the resource.
 
 ---
 
@@ -572,17 +524,9 @@ environment = client.environments.create_or_update(
         description="Prod env"
     )
 )
-
-# CORRECT
-environment = client.environments.create_or_update(
-    ...,
-    resource=Environment(
-        title="Production",
-        description="Prod env",
-        kind=EnvironmentKind.PRODUCTION
-    )
-)
 ```
+
+**Correct approach:** Always specify the `kind` field (e.g., `EnvironmentKind.PRODUCTION`, `EnvironmentKind.STAGING`, etc.) when creating an Environment resource.
 
 ---
 
@@ -635,18 +579,9 @@ deployment = client.deployments.create_or_update(
         definition_id="..."
     )
 )
-
-# CORRECT
-deployment = client.deployments.create_or_update(
-    ...,
-    resource=Deployment(
-        title="Prod",
-        environment_id="...",
-        definition_id="...",
-        state=DeploymentState.ACTIVE
-    )
-)
 ```
+
+**Correct approach:** Always specify the `state` field (e.g., `DeploymentState.ACTIVE`, `DeploymentState.INACTIVE`) when creating a Deployment resource for proper lifecycle tracking.
 
 ---
 
@@ -688,15 +623,9 @@ metadata = client.metadata_schemas.create_or_update(
         schema='invalid json'
     )
 )
-
-# CORRECT
-metadata = client.metadata_schemas.create_or_update(
-    ...,
-    resource=MetadataSchema(
-        schema='{"type": "string", "title": "Data Classification"}'
-    )
-)
 ```
+
+**Correct approach:** Always pass valid JSON for the schema field. The schema should be a properly formatted JSON string that defines the structure and constraints for the metadata.
 
 ---
 

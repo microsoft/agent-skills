@@ -172,9 +172,9 @@ for update in response:
 ### 5.2 ❌ INCORRECT: Treating non-streaming response as stream
 ```python
 # WRONG - missing stream=True
-response = client.complete(messages=[UserMessage(content="Hello")])
-for update in response:
-    print(update)
+non_stream_response = wrong_client.complete(messages=[UserMessage(content="Hello")])
+for wrong_update in non_stream_response:  # WRONG - non-streaming response is not iterable
+    print(wrong_update)
 ```
 
 ---
@@ -223,11 +223,11 @@ async def stream_completion(client):
 ### 6.3 ❌ INCORRECT: Mixing sync credential with async client
 ```python
 # WRONG - async client needs azure.identity.aio DefaultAzureCredential
-from azure.ai.inference.aio import ChatCompletionsClient
-from azure.identity import DefaultAzureCredential
+from azure.ai.inference.aio import ChatCompletionsClient as AsyncChatClient
+from azure.identity import DefaultAzureCredential as SyncCredential  # WRONG - should use .aio
 
-client = ChatCompletionsClient(
-    endpoint=os.environ["AZURE_INFERENCE_ENDPOINT"],
-    credential=DefaultAzureCredential(),
+async_client = AsyncChatClient(
+    endpoint=os.environ["WRONG_ENDPOINT"],
+    credential=SyncCredential(),  # WRONG - sync credential with async client
 )
 ```
