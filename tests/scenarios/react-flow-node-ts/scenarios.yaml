@@ -262,8 +262,8 @@ scenarios:
       Create a factory function that generates new nodes with default
       data and unique IDs.
     expected_patterns:
-      - "defaultData"
-      - "createNode"
+      - "defaultTaskNodeData"
+      - "createTaskNode"
       - "position"
       - "Date.now"
       - "type"
