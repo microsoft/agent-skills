@@ -1,0 +1,307 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for azd-deployment skill evaluation
+# Each scenario tests a specific usage pattern against acceptance criteria
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Basic azure.yaml configuration
+  - name: basic_azure_yaml_config
+    prompt: |
+      Create a basic azure.yaml configuration for a Python FastAPI backend
+      that deploys to Azure Container Apps with remote builds.
+    expected_patterns:
+      - "name:"
+      - "services:"
+      - "host: containerapp"
+      - "remoteBuild: true"
+      - "language: python"
+    forbidden_patterns:
+      - "remoteBuild: false"
+    tags:
+      - basic
+      - azure-yaml
+      - container-apps
+    mock_response: |
+      name: my-fastapi-app
+      services:
+        backend:
+          project: ./src/backend
+          language: python
+          host: containerapp
+          docker:
+            path: ./Dockerfile
+            context: .
+            remoteBuild: true
+
+  # Multi-service configuration
+  - name: multi_service_config
+    prompt: |
+      Create an azure.yaml configuration for a fullstack application with
+      React TypeScript frontend and Python backend, both deploying to
+      Azure Container Apps.
+    expected_patterns:
+      - "frontend:"
+      - "backend:"
+      - "language: ts"
+      - "language: python"
+      - "host: containerapp"
+    tags:
+      - multi-service
+      - fullstack
+    mock_response: |
+      name: fullstack-app
+      metadata:
+        template: fullstack@1.0.0
+
+      services:
+        frontend:
+          project: ./src/frontend
+          language: ts
+          host: containerapp
+          docker:
+            path: ./Dockerfile
+            context: .
+            remoteBuild: true
+
+        backend:
+          project: ./src/backend
+          language: python
+          host: containerapp
+          docker:
+            path: ./Dockerfile
+            context: .
+            remoteBuild: true
+
+  # Bicep main.bicep
+  - name: bicep_main_file
+    prompt: |
+      Create a main.bicep file for azd that provisions a resource group
+      with proper parameters for environmentName and location.
+    expected_patterns:
+      - "targetScope = 'subscription'"
+      - "param environmentName string"
+      - "param location string"
+      - "Microsoft.Resources/resourceGroups"
+      - "azd-env-name"
+    forbidden_patterns:
+      - "'my-hardcoded-rg'"
+      - "'eastus'"
+    tags:
+      - bicep
+      - infrastructure
+    mock_response: |
+      targetScope = 'subscription'
+
+      @minLength(1)
+      @maxLength(64)
+      @description('Name of the environment')
+      param environmentName string
+
+      @minLength(1)
+      @description('Primary location for all resources')
+      param location string
+
+      var abbrs = loadJsonContent('./abbreviations.json')
+      var tags = { 'azd-env-name': environmentName }
+
+      resource rg 'Microsoft.Resources/resourceGroups@2021-04-01' = {
+        name: '${abbrs.resourcesResourceGroups}${environmentName}'
+        location: location
+        tags: tags
+      }
+
+      output AZURE_RESOURCE_GROUP string = rg.name
+
+  # Container App Bicep module
+  - name: container_app_module
+    prompt: |
+      Create a Bicep module for a Container App with ingress configuration
+      and proper azd-service-name tag.
+    expected_patterns:
+      - "Microsoft.App/containerApps"
+      - "azd-service-name"
+      - "managedEnvironmentId"
+      - "ingress:"
+      - "targetPort"
+    forbidden_patterns:
+      - "hardcoded"
+    tags:
+      - bicep
+      - container-apps
+    mock_response: |
+      param name string
+      param location string = resourceGroup().location
+      param tags object = {}
+      param containerAppsEnvironmentId string
+      param imageName string
+      param targetPort int = 8000
+
+      resource app 'Microsoft.App/containerApps@2023-05-01' = {
+        name: name
+        location: location
+        tags: union(tags, { 'azd-service-name': name })
+        properties: {
+          managedEnvironmentId: containerAppsEnvironmentId
+          configuration: {
+            ingress: {
+              external: true
+              targetPort: targetPort
+              transport: 'auto'
+            }
+          }
+          template: {
+            containers: [
+              {
+                image: imageName
+                name: name
+                resources: {
+                  cpu: json('0.5')
+                  memory: '1Gi'
+                }
+              }
+            ]
+            scale: {
+              minReplicas: 0
+              maxReplicas: 10
+            }
+          }
+        }
+      }
+
+      output uri string = 'https://${app.properties.configuration.ingress.fqdn}'
+      output name string = app.name
+
+  # Parameters file
+  - name: parameters_file
+    prompt: |
+      Create a main.parameters.json file for azd that maps environment
+      variables to Bicep parameters including environmentName, location,
+      and an Azure OpenAI endpoint.
+    expected_patterns:
+      - "${AZURE_ENV_NAME}"
+      - "${AZURE_LOCATION"
+      - "environmentName"
+      - "parameters"
+    forbidden_patterns:
+      - "sk-"
+      - "hardcoded"
+    tags:
+      - parameters
+      - environment
+    mock_response: |
+      {
+        "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+        "contentVersion": "1.0.0.0",
+        "parameters": {
+          "environmentName": {
+            "value": "${AZURE_ENV_NAME}"
+          },
+          "location": {
+            "value": "${AZURE_LOCATION=eastus2}"
+          },
+          "openAiEndpoint": {
+            "value": "${AZURE_OPENAI_ENDPOINT}"
+          },
+          "openAiDeploymentName": {
+            "value": "${AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4o-mini}"
+          }
+        }
+      }
+
+  # Hooks configuration
+  - name: hooks_configuration
+    prompt: |
+      Add lifecycle hooks to an azure.yaml file for preprovision,
+      postprovision, and postdeploy stages.
+    expected_patterns:
+      - "hooks:"
+      - "preprovision:"
+      - "postprovision:"
+      - "postdeploy:"
+      - "shell: sh"
+    tags:
+      - hooks
+      - lifecycle
+    mock_response: |
+      name: my-app
+      services:
+        backend:
+          project: ./src/backend
+          language: python
+          host: containerapp
+          docker:
+            path: ./Dockerfile
+            remoteBuild: true
+
+      hooks:
+        preprovision:
+          shell: sh
+          run: |
+            echo "Validating prerequisites..."
+            
+        postprovision:
+          shell: sh
+          run: |
+            echo "Provisioning complete"
+            echo "Resource Group: ${AZURE_RESOURCE_GROUP}"
+            
+        postdeploy:
+          shell: sh
+          run: |
+            echo "Deployment complete!"
+            echo "Backend URL: ${SERVICE_BACKEND_URI}"
+
+  # Environment setup commands
+  - name: environment_setup
+    prompt: |
+      Show the azd CLI commands to create a new environment, set
+      environment variables for Azure OpenAI, and deploy the application.
+    expected_patterns:
+      - "azd env new"
+      - "azd env set"
+      - "azd up"
+    forbidden_patterns:
+      - "sk-"
+      - "hardcoded-key"
+    tags:
+      - cli
+      - environment
+    mock_response: |
+      # Create a new environment
+      azd env new dev
+
+      # Set environment variables
+      azd env set AZURE_OPENAI_ENDPOINT "https://my-openai.openai.azure.com"
+      azd env set AZURE_OPENAI_DEPLOYMENT_NAME "gpt-4o-mini"
+
+      # Deploy the application (provision + deploy)
+      azd up
+
+      # Or run separately:
+      # azd provision  # Infrastructure only
+      # azd deploy     # Application only
+
+  # Cleanup commands
+  - name: cleanup_deployment
+    prompt: |
+      Show the azd CLI commands to clean up a deployment and remove
+      all Azure resources.
+    expected_patterns:
+      - "azd down"
+      - "--purge"
+    tags:
+      - cli
+      - cleanup
+    mock_response: |
+      # Remove all Azure resources for current environment
+      azd down
+
+      # Force delete without confirmation and purge soft-deleted resources
+      azd down --force --purge
+
+      # Delete a specific environment
+      azd env delete dev

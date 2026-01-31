@@ -1,0 +1,521 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for mcp-builder skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # TypeScript tool definition
+  - name: typescript_tool_definition
+    prompt: |
+      Create an MCP tool in TypeScript that retrieves user information
+      by ID with proper Zod schema and error handling.
+    expected_patterns:
+      - "z.object"
+      - "server.tool"
+      - "describe"
+      - "content"
+      - "type: \"text\""
+    forbidden_patterns:
+      - "any"
+    tags:
+      - typescript
+      - tool
+    mock_response: |
+      import { z } from "zod";
+
+      const GetUserSchema = z.object({
+        userId: z.string().describe("The unique identifier of the user"),
+        includeDetails: z.boolean().optional().describe("Include extended profile details")
+      });
+
+      server.tool(
+        "get_user",
+        "Retrieves user information by their unique ID",
+        GetUserSchema,
+        async ({ userId, includeDetails }) => {
+          try {
+            const user = await apiClient.getUser(userId, { includeDetails });
+            return {
+              content: [{ type: "text", text: JSON.stringify(user, null, 2) }]
+            };
+          } catch (error) {
+            if (error.status === 404) {
+              return {
+                content: [{ type: "text", text: `User not found: ${userId}. Verify the user ID exists.` }],
+                isError: true
+              };
+            }
+            throw error;
+          }
+        }
+      );
+
+  # Python tool definition
+  - name: python_tool_definition
+    prompt: |
+      Create an MCP tool in Python using FastMCP that searches for
+      repositories with proper type hints and docstring.
+    expected_patterns:
+      - "@mcp.tool"
+      - "async def"
+      - '"""'
+      - "Args:"
+      - "-> str"
+    tags:
+      - python
+      - tool
+    mock_response: |
+      from mcp.server.fastmcp import FastMCP
+      import json
+
+      mcp = FastMCP("github-search")
+
+      @mcp.tool()
+      async def search_repositories(
+          query: str,
+          language: str | None = None,
+          sort: str = "stars",
+          limit: int = 10
+      ) -> str:
+          """Search GitHub repositories by query.
+
+          Args:
+              query: Search query string
+              language: Filter by programming language (e.g., 'python', 'typescript')
+              sort: Sort by 'stars', 'forks', or 'updated' (default: 'stars')
+              limit: Maximum number of results (default: 10, max: 100)
+          """
+          params = {
+              "q": f"{query} language:{language}" if language else query,
+              "sort": sort,
+              "per_page": min(limit, 100)
+          }
+          
+          results = await github_client.search_repositories(params)
+          
+          return json.dumps({
+              "total_count": results["total_count"],
+              "repositories": [
+                  {
+                      "name": repo["full_name"],
+                      "description": repo["description"],
+                      "stars": repo["stargazers_count"],
+                      "url": repo["html_url"]
+                  }
+                  for repo in results["items"]
+              ]
+          }, indent=2)
+
+  # Error handling
+  - name: error_handling_patterns
+    prompt: |
+      Show proper MCP error handling patterns for TypeScript with
+      actionable error messages for common scenarios.
+    expected_patterns:
+      - "isError: true"
+      - "404"
+      - "401"
+      - "content"
+    forbidden_patterns:
+      - '"Error occurred"'
+      - '"Something went wrong"'
+    tags:
+      - error-handling
+      - typescript
+    mock_response: |
+      server.tool(
+        "get_resource",
+        "Retrieve a resource by ID",
+        GetResourceSchema,
+        async ({ resourceId }) => {
+          try {
+            const resource = await apiClient.getResource(resourceId);
+            return {
+              content: [{ type: "text", text: JSON.stringify(resource, null, 2) }]
+            };
+          } catch (error) {
+            // Not found - suggest alternatives
+            if (error.status === 404) {
+              return {
+                content: [{
+                  type: "text",
+                  text: `Resource '${resourceId}' not found. Use list_resources to see available resources.`
+                }],
+                isError: true
+              };
+            }
+            
+            // Authentication error - guide user
+            if (error.status === 401) {
+              return {
+                content: [{
+                  type: "text",
+                  text: "Authentication failed. Ensure MY_API_KEY environment variable is set correctly."
+                }],
+                isError: true
+              };
+            }
+            
+            // Rate limiting - suggest retry
+            if (error.status === 429) {
+              return {
+                content: [{
+                  type: "text",
+                  text: "Rate limit exceeded. Wait a moment before retrying."
+                }],
+                isError: true
+              };
+            }
+            
+            // Unexpected error - include details
+            return {
+              content: [{
+                type: "text",
+                text: `Unexpected error: ${error.message}. Status: ${error.status}`
+              }],
+              isError: true
+            };
+          }
+        }
+      );
+
+  # Tool annotations
+  - name: tool_annotations
+    prompt: |
+      Show how to add proper annotations to MCP tools indicating
+      whether they are read-only, destructive, or idempotent.
+    expected_patterns:
+      - "annotations"
+      - "readOnlyHint"
+      - "destructiveHint"
+      - "idempotentHint"
+    tags:
+      - annotations
+      - typescript
+    mock_response: |
+      // Read-only tool - safe to call multiple times
+      server.tool(
+        "list_items",
+        "List all items in the collection",
+        ListSchema,
+        async (args) => { /* ... */ },
+        {
+          annotations: {
+            readOnlyHint: true,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false
+          }
+        }
+      );
+
+      // Create tool - not idempotent, creates new resources
+      server.tool(
+        "create_item",
+        "Create a new item",
+        CreateSchema,
+        async (args) => { /* ... */ },
+        {
+          annotations: {
+            readOnlyHint: false,
+            destructiveHint: false,
+            idempotentHint: false,
+            openWorldHint: false
+          }
+        }
+      );
+
+      // Update tool - idempotent, same input = same result
+      server.tool(
+        "update_item",
+        "Update an existing item",
+        UpdateSchema,
+        async (args) => { /* ... */ },
+        {
+          annotations: {
+            readOnlyHint: false,
+            destructiveHint: false,
+            idempotentHint: true,
+            openWorldHint: false
+          }
+        }
+      );
+
+      // Delete tool - destructive, cannot be undone
+      server.tool(
+        "delete_item",
+        "Permanently delete an item",
+        DeleteSchema,
+        async (args) => { /* ... */ },
+        {
+          annotations: {
+            readOnlyHint: false,
+            destructiveHint: true,
+            idempotentHint: true,  // Deleting same item twice = same result
+            openWorldHint: false
+          }
+        }
+      );
+
+  # Transport configuration
+  - name: transport_configuration
+    prompt: |
+      Show how to configure both stdio and HTTP transports for
+      an MCP server in TypeScript.
+    expected_patterns:
+      - "StdioServerTransport"
+      - "connect"
+      - "transport"
+    tags:
+      - transport
+      - configuration
+    mock_response: |
+      import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+      import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+      // Create server
+      const server = new Server({
+        name: "my-mcp-server",
+        version: "1.0.0"
+      }, {
+        capabilities: {
+          tools: {}
+        }
+      });
+
+      // Register tools...
+      // server.tool(...)
+
+      // Use stdio transport for local servers
+      async function runStdio() {
+        const transport = new StdioServerTransport();
+        await server.connect(transport);
+        console.error("MCP server running on stdio");
+      }
+
+      runStdio().catch(console.error);
+
+  # Python FastMCP server
+  - name: python_fastmcp_server
+    prompt: |
+      Create a complete Python MCP server using FastMCP with
+      multiple tools and proper entry point.
+    expected_patterns:
+      - "FastMCP"
+      - "@mcp.tool"
+      - "mcp.run"
+    tags:
+      - python
+      - server
+    mock_response: |
+      # src/my_mcp_server/server.py
+      from mcp.server.fastmcp import FastMCP
+      import json
+      import os
+
+      mcp = FastMCP("my-service")
+
+      @mcp.tool()
+      async def list_items(
+          category: str | None = None,
+          limit: int = 20
+      ) -> str:
+          """List items, optionally filtered by category.
+          
+          Args:
+              category: Filter by category name
+              limit: Maximum items to return (default: 20)
+          """
+          items = await fetch_items(category=category, limit=limit)
+          return json.dumps(items, indent=2)
+
+      @mcp.tool()
+      async def get_item(item_id: str) -> str:
+          """Get detailed information about a specific item.
+          
+          Args:
+              item_id: The unique identifier of the item
+          """
+          item = await fetch_item(item_id)
+          if not item:
+              raise ValueError(f"Item not found: {item_id}")
+          return json.dumps(item, indent=2)
+
+      @mcp.tool()
+      async def create_item(
+          name: str,
+          description: str,
+          category: str
+      ) -> str:
+          """Create a new item.
+          
+          Args:
+              name: Item name
+              description: Item description
+              category: Category to assign
+          """
+          item = await create_new_item(name, description, category)
+          return json.dumps({"created": True, "item": item}, indent=2)
+
+      # Entry point
+      if __name__ == "__main__":
+          mcp.run(transport="stdio")
+
+  # Project structure
+  - name: project_structure_typescript
+    prompt: |
+      Show the recommended project structure for a TypeScript MCP server
+      with multiple tools.
+    expected_patterns:
+      - "package.json"
+      - "tsconfig.json"
+      - "src/"
+      - "index.ts"
+      - "tools/"
+    tags:
+      - structure
+      - typescript
+    mock_response: |
+      my-mcp-server/
+      ├── package.json
+      ├── tsconfig.json
+      ├── src/
+      │   ├── index.ts           # Main entry point, server setup
+      │   ├── tools/
+      │   │   ├── index.ts       # Tool registration
+      │   │   ├── list-tools.ts  # Read-only listing tools
+      │   │   ├── crud-tools.ts  # Create/update/delete tools
+      │   │   └── search-tools.ts
+      │   └── utils/
+      │       ├── api-client.ts  # API client wrapper
+      │       └── formatters.ts  # Response formatters
+      └── README.md
+
+      // package.json
+      {
+        "name": "my-mcp-server",
+        "version": "1.0.0",
+        "type": "module",
+        "main": "dist/index.js",
+        "bin": {
+          "my-mcp-server": "dist/index.js"
+        },
+        "scripts": {
+          "build": "tsc",
+          "start": "node dist/index.js",
+          "dev": "tsc --watch"
+        },
+        "dependencies": {
+          "@modelcontextprotocol/sdk": "^0.6.0",
+          "zod": "^3.22.0"
+        },
+        "devDependencies": {
+          "@types/node": "^20.0.0",
+          "typescript": "^5.0.0"
+        }
+      }
+
+  # Environment configuration
+  - name: environment_configuration
+    prompt: |
+      Show proper environment variable handling for MCP server
+      API credentials.
+    expected_patterns:
+      - "process.env"
+      - "throw new Error"
+      - "API_KEY"
+    forbidden_patterns:
+      - "sk-"
+      - "hardcoded"
+    tags:
+      - environment
+      - security
+    mock_response: |
+      // src/config.ts
+      
+      interface Config {
+        apiKey: string;
+        apiEndpoint: string;
+        maxRetries: number;
+      }
+
+      function loadConfig(): Config {
+        const apiKey = process.env.MY_SERVICE_API_KEY;
+        const apiEndpoint = process.env.MY_SERVICE_ENDPOINT || "https://api.myservice.com";
+        
+        if (!apiKey) {
+          throw new Error(
+            "MY_SERVICE_API_KEY environment variable is required. " +
+            "Set it in your MCP client configuration or shell environment."
+          );
+        }
+
+        return {
+          apiKey,
+          apiEndpoint,
+          maxRetries: parseInt(process.env.MAX_RETRIES || "3", 10)
+        };
+      }
+
+      export const config = loadConfig();
+
+  # Testing with inspector
+  - name: testing_with_inspector
+    prompt: |
+      Show how to test an MCP server using the MCP Inspector tool.
+    expected_patterns:
+      - "npx"
+      - "@modelcontextprotocol/inspector"
+    tags:
+      - testing
+      - inspector
+    mock_response: |
+      # Testing MCP Servers
+
+      ## Using MCP Inspector
+
+      The MCP Inspector provides a web interface to test your server.
+
+      ### TypeScript Server
+      ```bash
+      # Build first
+      npm run build
+
+      # Run with inspector
+      npx @modelcontextprotocol/inspector node dist/index.js
+      ```
+
+      ### Python Server
+      ```bash
+      # Run with inspector
+      npx @modelcontextprotocol/inspector python -m my_mcp_server
+      ```
+
+      ### With Environment Variables
+      ```bash
+      # Pass environment variables
+      MY_API_KEY=your-key npx @modelcontextprotocol/inspector node dist/index.js
+      ```
+
+      ## Pre-flight Checks
+
+      ### TypeScript
+      ```bash
+      # Verify compilation
+      npm run build
+
+      # Check for type errors
+      npx tsc --noEmit
+      ```
+
+      ### Python
+      ```bash
+      # Verify syntax
+      python -m py_compile src/my_mcp_server/server.py
+
+      # Type checking
+      mypy src/my_mcp_server/
+      ```

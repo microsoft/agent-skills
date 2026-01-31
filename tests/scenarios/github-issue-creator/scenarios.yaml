@@ -1,0 +1,291 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for github-issue-creator skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Basic issue from error paste
+  - name: error_paste_to_issue
+    prompt: |
+      Convert this error paste into a GitHub issue:
+      "Error: PERMISSION_DENIED when publishing to Teams channel. Code: 403. Was working yesterday."
+    expected_patterns:
+      - "## Summary"
+      - "## Environment"
+      - "## Reproduction Steps"
+      - "## Expected Behavior"
+      - "## Actual Behavior"
+      - "## Impact"
+      - "403"
+      - "PERMISSION_DENIED"
+    forbidden_patterns:
+      - "N/A"
+    tags:
+      - basic
+      - error
+    mock_response: |
+      ## Summary
+      403 PERMISSION_DENIED error when publishing to Teams channel
+
+      ## Environment
+      - **Product/Service**: Copilot Studio → Teams integration
+      - **Region/Version**: [REGION]
+
+      ## Reproduction Steps
+      1. Configure agent for Teams channel
+      2. Attempt to publish
+
+      ## Expected Behavior
+      Agent publishes successfully to Teams channel
+
+      ## Actual Behavior
+      Returns `PERMISSION_DENIED` with code 403
+
+      ## Error Details
+      ```
+      Error: PERMISSION_DENIED
+      Code: 403
+      ```
+
+      ## Impact
+      **High** - Blocks Teams integration, regression from previous working state
+
+      ## Additional Context
+      Was working yesterday - possible permission/config change or service regression
+
+  # Voice dictation to issue
+  - name: voice_dictation_to_issue
+    prompt: |
+      Convert this voice dictation into a GitHub issue:
+      "so I was trying to deploy the agent and it just failed silently no error nothing 
+      the workflow ran but then poof gone from the list had to refresh and try again three times"
+    expected_patterns:
+      - "## Summary"
+      - "silently"
+      - "## Reproduction Steps"
+      - "1."
+      - "2."
+      - "## Impact"
+    tags:
+      - voice
+      - dictation
+    mock_response: |
+      ## Summary
+      Agent deployment fails silently - no error displayed, agent disappears from list
+
+      ## Environment
+      - **Product/Service**: Azure AI Foundry
+      - **Region/Version**: [REGION]
+
+      ## Reproduction Steps
+      1. Navigate to agent deployment
+      2. Configure and deploy agent
+      3. Observe workflow completes
+      4. Check agent list
+
+      ## Expected Behavior
+      Agent appears in list with deployment status, errors shown if deployment fails
+
+      ## Actual Behavior
+      Agent disappears from list. No error message. Requires page refresh and retry.
+
+      ## Impact
+      **High** - Blocks agent deployment workflow, no feedback on failure cause
+
+      ## Additional Context
+      Required 3 retry attempts before successful deployment
+
+  # Bug with stack trace
+  - name: stack_trace_issue
+    prompt: |
+      Create a GitHub issue from this Python stack trace:
+      ```
+      Traceback (most recent call last):
+        File "main.py", line 42, in process
+          result = client.deploy(config)
+        File "client.py", line 156, in deploy
+          raise DeploymentError("Insufficient permissions")
+      DeploymentError: Insufficient permissions
+      ```
+    expected_patterns:
+      - "## Summary"
+      - "## Error Details"
+      - "```"
+      - "Traceback"
+      - "DeploymentError"
+      - "Insufficient permissions"
+    tags:
+      - stack-trace
+      - python
+    mock_response: |
+      ## Summary
+      DeploymentError: Insufficient permissions when calling client.deploy()
+
+      ## Environment
+      - **Product/Service**: [SERVICE_NAME]
+      - **Language/Version**: Python
+
+      ## Reproduction Steps
+      1. Call `client.deploy(config)` with current configuration
+      2. Observe DeploymentError raised
+
+      ## Expected Behavior
+      Deployment completes successfully or returns actionable error with remediation steps
+
+      ## Actual Behavior
+      Raises `DeploymentError: Insufficient permissions` without specific details
+
+      ## Error Details
+      ```python
+      Traceback (most recent call last):
+        File "main.py", line 42, in process
+          result = client.deploy(config)
+        File "client.py", line 156, in deploy
+          raise DeploymentError("Insufficient permissions")
+      DeploymentError: Insufficient permissions
+      ```
+
+      ## Impact
+      **High** - Blocks deployment workflow, unclear which permissions are missing
+
+      ## Additional Context
+      Error occurs at client.py line 156 in deploy method. Need to identify required permissions.
+
+  # Feature request style
+  - name: feature_request
+    prompt: |
+      Create a GitHub issue for this feature request:
+      "We need the dashboard to show real-time metrics refresh every 30 seconds 
+      instead of requiring manual refresh"
+    expected_patterns:
+      - "## Summary"
+      - "real-time"
+      - "30 seconds"
+      - "## Expected Behavior"
+      - "## Current Behavior"
+    tags:
+      - feature-request
+    mock_response: |
+      ## Summary
+      Add automatic 30-second refresh for dashboard real-time metrics
+
+      ## Environment
+      - **Product/Service**: Dashboard / Metrics View
+      - **Component**: Frontend
+
+      ## Current Behavior
+      Dashboard metrics require manual page refresh to update
+
+      ## Expected Behavior
+      Dashboard automatically refreshes metrics every 30 seconds without user intervention
+
+      ## Proposed Solution
+      - Implement polling interval of 30 seconds for metrics API
+      - Add visual indicator showing last refresh timestamp
+      - Consider WebSocket for true real-time updates in future
+
+      ## Impact
+      **Medium** - Improves user experience, reduces manual effort for monitoring
+
+      ## Additional Context
+      Users monitoring production systems need current data without manual refresh
+
+  # Issue with visual evidence
+  - name: issue_with_screenshots
+    prompt: |
+      Create a GitHub issue for a UI bug where the submit button is cut off 
+      on mobile devices. Include placeholder for screenshot reference.
+    expected_patterns:
+      - "## Summary"
+      - "## Visual Evidence"
+      - "!["
+      - "mobile"
+      - "button"
+    tags:
+      - ui
+      - visual
+      - mobile
+    mock_response: |
+      ## Summary
+      Submit button cut off on mobile devices (viewport < 375px)
+
+      ## Environment
+      - **Product/Service**: Web Application
+      - **Browser/OS**: Mobile Safari / iOS 17, Chrome / Android 14
+      - **Viewport**: < 375px width
+
+      ## Reproduction Steps
+      1. Open application on mobile device (iPhone SE or similar)
+      2. Navigate to form submission page
+      3. Scroll to bottom of form
+      4. Observe submit button
+
+      ## Expected Behavior
+      Submit button fully visible and tappable on all supported mobile viewports
+
+      ## Actual Behavior
+      Submit button partially hidden, right edge cut off by ~20px on narrow viewports
+
+      ## Visual Evidence
+      ![Submit button cut off on iPhone SE](./screenshots/mobile-button-cutoff.png)
+      ![Expected full button visibility](./screenshots/mobile-button-expected.png)
+
+      ## Impact
+      **Medium** - Users on small mobile devices cannot easily submit forms
+
+      ## Additional Context
+      Affects approximately 15% of mobile users based on analytics viewport data
+
+  # Security issue
+  - name: security_issue
+    prompt: |
+      Create a GitHub issue for a security concern where API keys 
+      are being logged in plain text in production logs.
+    expected_patterns:
+      - "## Summary"
+      - "## Impact"
+      - "Critical"
+      - "security"
+      - "API key"
+      - "[REDACTED]"
+    forbidden_patterns:
+      - "sk-"
+      - "actual-api-key"
+    tags:
+      - security
+      - critical
+    mock_response: |
+      ## Summary
+      [SECURITY] API keys logged in plain text in production logs
+
+      ## Environment
+      - **Product/Service**: [SERVICE_NAME]
+      - **Component**: Logging subsystem
+      - **Environment**: Production
+
+      ## Reproduction Steps
+      1. Make API request with authentication
+      2. Check application logs
+      3. Observe API key visible in plain text
+
+      ## Expected Behavior
+      Sensitive credentials (API keys, tokens) should be masked or excluded from logs
+
+      ## Actual Behavior
+      API keys appear in plain text: `Authorization: Bearer [REDACTED]`
+
+      ## Impact
+      **Critical** - Security vulnerability exposing credentials in logs
+      - Credentials could be harvested from log aggregation systems
+      - Potential for unauthorized access if logs are compromised
+
+      ## Recommended Fix
+      - Implement log sanitization for Authorization headers
+      - Add regex pattern to mask `Bearer *`, `api-key: *` patterns
+      - Audit existing logs for credential exposure
+
+      ## Additional Context
+      This is a security-sensitive issue. Consider restricting visibility.

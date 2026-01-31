@@ -1,0 +1,329 @@
+# yaml-language-server: $schema=../skill-scenarios.schema.json
+# Test scenarios for skill-creator skill evaluation
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Basic skill frontmatter
+  - name: skill_frontmatter
+    prompt: |
+      Create the YAML frontmatter for a new Python skill for Azure Cosmos DB
+      that handles document operations.
+    expected_patterns:
+      - "---"
+      - "name:"
+      - "description:"
+      - "-py"
+    forbidden_patterns:
+      - "python"
+      - "-python"
+    tags:
+      - frontmatter
+      - basic
+    mock_response: |
+      ---
+      name: azure-cosmos-db-py
+      description: Azure Cosmos DB SDK for Python. Use when working with NoSQL document operations, container management, or querying Cosmos DB databases. Triggers on Cosmos DB, document database, or NoSQL storage requests.
+      package: azure-cosmos
+      ---
+
+  # SDK skill structure
+  - name: sdk_skill_structure
+    prompt: |
+      Create the basic structure outline for an Azure SDK skill including
+      all required sections.
+    expected_patterns:
+      - "# "
+      - "## Installation"
+      - "## Environment Variables"
+      - "## Authentication"
+      - "DefaultAzureCredential"
+    tags:
+      - structure
+      - sdk
+    mock_response: |
+      # Azure Service SDK
+
+      Brief description of the SDK and its primary use cases.
+
+      ## Installation
+
+      ```bash
+      pip install azure-service-sdk
+      ```
+
+      ## Environment Variables
+
+      ```bash
+      AZURE_SERVICE_ENDPOINT=https://your-resource.azure.com
+      ```
+
+      ## Authentication
+
+      ```python
+      from azure.identity import DefaultAzureCredential
+      
+      credential = DefaultAzureCredential()
+      client = ServiceClient(endpoint, credential)
+      ```
+
+      ## Core Workflow
+
+      ```python
+      # Minimal example showing primary use case
+      result = client.operation()
+      ```
+
+      ## Best Practices
+
+      1. Use DefaultAzureCredential for authentication
+      2. Read configuration from environment variables
+      3. Handle errors with specific exception types
+      4. Close clients properly using context managers
+
+  # Authentication pattern
+  - name: authentication_pattern
+    prompt: |
+      Show the correct authentication pattern for a Python Azure SDK skill
+      using DefaultAzureCredential.
+    expected_patterns:
+      - "DefaultAzureCredential"
+      - "from azure.identity import"
+      - "credential"
+      - "os.environ"
+    forbidden_patterns:
+      - "api_key"
+      - "hardcoded"
+      - '"https://'
+    tags:
+      - authentication
+      - python
+    mock_response: |
+      ```python
+      import os
+      from azure.identity import DefaultAzureCredential
+      from azure.service import ServiceClient
+
+      # Read endpoint from environment
+      endpoint = os.environ["AZURE_SERVICE_ENDPOINT"]
+
+      # Use DefaultAzureCredential for flexible auth
+      credential = DefaultAzureCredential()
+
+      # Create client with credential
+      client = ServiceClient(endpoint=endpoint, credential=credential)
+      ```
+
+  # TypeScript authentication
+  - name: typescript_auth_pattern
+    prompt: |
+      Show the correct authentication pattern for a TypeScript Azure SDK skill.
+    expected_patterns:
+      - "DefaultAzureCredential"
+      - '@azure/identity'
+      - "process.env"
+      - "credential"
+    forbidden_patterns:
+      - "apiKey"
+      - '"sk-'
+    tags:
+      - authentication
+      - typescript
+    mock_response: |
+      ```typescript
+      import { DefaultAzureCredential } from "@azure/identity";
+      import { ServiceClient } from "@azure/service";
+
+      // Read endpoint from environment
+      const endpoint = process.env.AZURE_SERVICE_ENDPOINT!;
+
+      // Use DefaultAzureCredential for flexible auth
+      const credential = new DefaultAzureCredential();
+
+      // Create client with credential
+      const client = new ServiceClient(endpoint, credential);
+      ```
+
+  # Java authentication
+  - name: java_auth_pattern
+    prompt: |
+      Show the correct authentication pattern for a Java Azure SDK skill.
+    expected_patterns:
+      - "DefaultAzureCredentialBuilder"
+      - "TokenCredential"
+      - "System.getenv"
+      - "buildClient"
+    forbidden_patterns:
+      - "hardcoded"
+      - '"https://'
+    tags:
+      - authentication
+      - java
+    mock_response: |
+      ```java
+      import com.azure.identity.DefaultAzureCredentialBuilder;
+      import com.azure.core.credential.TokenCredential;
+      import com.azure.service.ServiceClient;
+      import com.azure.service.ServiceClientBuilder;
+
+      // Read endpoint from environment
+      String endpoint = System.getenv("AZURE_SERVICE_ENDPOINT");
+
+      // Use DefaultAzureCredential for flexible auth
+      TokenCredential credential = new DefaultAzureCredentialBuilder().build();
+
+      // Create client with credential
+      ServiceClient client = new ServiceClientBuilder()
+          .endpoint(endpoint)
+          .credential(credential)
+          .buildClient();
+      ```
+
+  # .NET authentication
+  - name: dotnet_auth_pattern
+    prompt: |
+      Show the correct authentication pattern for a .NET Azure SDK skill.
+    expected_patterns:
+      - "DefaultAzureCredential"
+      - "Azure.Identity"
+      - "Environment.GetEnvironmentVariable"
+    forbidden_patterns:
+      - "hardcoded"
+      - '"https://'
+    tags:
+      - authentication
+      - dotnet
+    mock_response: |
+      ```csharp
+      using Azure.Identity;
+      using Azure.Service;
+
+      // Read endpoint from environment
+      var endpoint = Environment.GetEnvironmentVariable("AZURE_SERVICE_ENDPOINT");
+
+      // Use DefaultAzureCredential for flexible auth
+      var credential = new DefaultAzureCredential();
+
+      // Create client with credential
+      var client = new ServiceClient(new Uri(endpoint), credential);
+      ```
+
+  # Best practices section
+  - name: best_practices_section
+    prompt: |
+      Write a best practices section for an Azure SDK skill.
+    expected_patterns:
+      - "Best Practices"
+      - "1."
+      - "2."
+      - "DefaultAzureCredential"
+      - "environment"
+      - "error"
+    tags:
+      - best-practices
+    mock_response: |
+      ## Best Practices
+
+      1. **Use DefaultAzureCredential** - Works seamlessly across local development (Azure CLI, VS Code) and Azure deployment (Managed Identity)
+
+      2. **Read from environment variables** - Never hardcode endpoints, keys, or connection strings in source code
+
+      3. **Handle errors with specific exceptions** - Catch `HttpResponseException` or SDK-specific exceptions for proper error handling
+
+      4. **Close clients properly** - Use context managers (`with` in Python, `using` in C#) or explicitly close clients
+
+      5. **Use async for I/O operations** - Prefer async clients (`aio` module in Python) for concurrent operations
+
+      6. **Implement retry logic** - Azure SDKs have built-in retry; configure exponential backoff for custom scenarios
+
+  # Directory structure
+  - name: skill_directory_structure
+    prompt: |
+      Show the correct directory structure for a new Azure SDK skill
+      with references and scripts.
+    expected_patterns:
+      - "SKILL.md"
+      - "references/"
+      - "acceptance-criteria.md"
+    forbidden_patterns:
+      - "README.md"
+      - "CHANGELOG.md"
+      - "node_modules"
+    tags:
+      - structure
+      - organization
+    mock_response: |
+      ```
+      azure-service-py/
+      ├── SKILL.md                      # Required - main skill file
+      └── references/                   # Optional - detailed documentation
+          ├── acceptance-criteria.md    # Testing criteria
+          ├── api-reference.md          # Detailed API documentation
+          └── examples.md               # Additional code examples
+      ```
+
+      For skills with reusable scripts:
+      ```
+      azure-service-py/
+      ├── SKILL.md
+      ├── references/
+      │   └── acceptance-criteria.md
+      └── scripts/
+          └── helper.py                 # Reusable utility scripts
+      ```
+
+  # Skill naming convention
+  - name: skill_naming
+    prompt: |
+      Show the correct naming conventions for skills across different languages.
+    expected_patterns:
+      - "-py"
+      - "-dotnet"
+      - "-ts"
+      - "-java"
+    forbidden_patterns:
+      - "-python"
+      - "-csharp"
+      - "-typescript"
+    tags:
+      - naming
+      - conventions
+    mock_response: |
+      ## Skill Naming Conventions
+
+      | Language | Suffix | Example |
+      |----------|--------|---------|
+      | Python | `-py` | `azure-ai-inference-py` |
+      | .NET/C# | `-dotnet` | `azure-ai-inference-dotnet` |
+      | TypeScript | `-ts` | `azure-ai-inference-ts` |
+      | Java | `-java` | `azure-ai-inference-java` |
+      | Cross-language/Core | (none) | `mcp-builder`, `skill-creator` |
+
+      ### Examples
+
+      ```
+      # Python SDK skills
+      azure-cosmos-db-py
+      azure-ai-agents-py
+      azure-search-documents-py
+
+      # .NET SDK skills
+      azure-cosmos-dotnet
+      azure-ai-agents-dotnet
+
+      # TypeScript SDK skills
+      azure-cosmos-ts
+      azure-ai-agents-ts
+
+      # Java SDK skills
+      azure-cosmos-java
+      azure-ai-agents-java
+
+      # Core/cross-language skills
+      azd-deployment
+      mcp-builder
+      skill-creator
+      ```
