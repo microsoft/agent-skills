@@ -16,20 +16,16 @@ This harness:
 ```bash
 # Install dependencies (from tests directory)
 cd tests
-uv sync
-cd ..
+pnpm install
 
 # List available skills with acceptance criteria
-uv run python -m harness.runner --list
+pnpm harness --list
 
 # Run evaluation in mock mode (no Copilot SDK required)
-uv run python -m harness.runner azure-ai-agents-py --mock --verbose
+pnpm harness azure-ai-agents-py --mock --verbose
 
-# Run with pytest
-uv run pytest -v
-
-# Run specific skill tests
-uv run pytest test_skills.py -k "azure_ai_agents" -v
+# Run tests
+pnpm test
 ```
 
 ## Architecture
@@ -37,14 +33,15 @@ uv run pytest test_skills.py -k "azure_ai_agents" -v
 ```
 tests/
 ├── harness/
-│   ├── __init__.py           # Package exports
-│   ├── criteria_loader.py    # Parses acceptance-criteria.md
-│   ├── evaluator.py          # Validates code against patterns
-│   ├── copilot_client.py     # Wraps Copilot SDK (with mock fallback)
-│   ├── runner.py             # Main CLI runner
+│   ├── types.ts              # Type definitions
+│   ├── criteria-loader.ts    # Parses acceptance-criteria.md
+│   ├── evaluator.ts          # Validates code against patterns
+│   ├── copilot-client.ts     # Wraps Copilot SDK (with mock fallback)
+│   ├── runner.ts             # Main CLI runner
+│   ├── index.ts              # Package exports
 │   └── reporters/
-│       ├── console.py        # Pretty console output
-│       └── markdown.py       # Markdown report generation
+│       ├── console.ts        # Pretty console output
+│       └── markdown.ts       # Markdown report generation
 │
 ├── scenarios/
 │   └── <skill-name>/
@@ -52,10 +49,9 @@ tests/
 │
 ├── fixtures/                 # Test fixtures (sample code, etc.)
 ├── reports/                  # Generated reports (gitignored)
-├── conftest.py              # Pytest fixtures
-├── pyproject.toml           # Test dependencies (uv)
-├── test_skills.py           # Main test file
-└── README.md                # This file
+├── package.json              # Dependencies (pnpm)
+├── tsconfig.json             # TypeScript config
+└── README.md                 # This file
 ```
 
 ## Usage
@@ -64,10 +60,10 @@ tests/
 
 ```bash
 # Basic usage
-uv run python -m harness.runner <skill-name>
+pnpm harness <skill-name>
 
 # Options
-uv run python -m harness.runner azure-ai-agents-py \
+pnpm harness azure-ai-agents-py \
     --mock                  # Use mock responses (no Copilot SDK)
     --verbose               # Show detailed output
     --filter basic          # Filter scenarios by name/tag
@@ -75,52 +71,43 @@ uv run python -m harness.runner azure-ai-agents-py \
     --output-file report.json
 ```
 
-### Pytest
+### Tests
 
 ```bash
 # Run all tests
-uv run pytest -v
+pnpm test
 
-# Run tests for a specific skill
-uv run pytest test_skills.py -k "azure_ai_agents" -v
-
-# Run with coverage
-uv run pytest --cov=harness --cov-report=html
-
-# Skip slow tests
-uv run pytest -m "not slow"
-
-# Run in parallel
-uv run pytest -n auto
+# Run typecheck
+pnpm typecheck
 ```
 
 ### Programmatic Usage
 
-```python
-from harness import (
-    AcceptanceCriteriaLoader,
-    CodeEvaluator,
-    SkillEvaluationRunner,
-)
+```typescript
+import {
+  AcceptanceCriteriaLoader,
+  CodeEvaluator,
+  SkillEvaluationRunner,
+} from './harness';
 
-# Load and evaluate code directly
-loader = AcceptanceCriteriaLoader()
-criteria = loader.load("azure-ai-agents-py")
-evaluator = CodeEvaluator(criteria)
+// Load and evaluate code directly
+const loader = new AcceptanceCriteriaLoader();
+const criteria = loader.load('azure-ai-agents-py');
+const evaluator = new CodeEvaluator(criteria);
 
-code = '''
+const code = `
 from azure.identity import DefaultAzureCredential
 from azure.ai.agents import AgentsClient
 # ... your code
-'''
+`;
 
-result = evaluator.evaluate(code, scenario="my-test")
-print(f"Passed: {result.passed}, Score: {result.score}")
+const result = evaluator.evaluate(code, 'my-test');
+console.log(`Passed: ${result.passed}, Score: ${result.score}`);
 
-# Or run full evaluation
-runner = SkillEvaluationRunner(use_mock=True)
-summary = runner.run("azure-ai-agents-py")
-print(f"Pass rate: {summary.passed}/{summary.total_scenarios}")
+// Or run full evaluation
+const runner = new SkillEvaluationRunner({ useMock: true });
+const summary = await runner.run('azure-ai-agents-py');
+console.log(`Pass rate: ${summary.passed}/${summary.totalScenarios}`);
 ```
 
 ## Adding Tests for a New Skill
@@ -196,13 +183,13 @@ scenarios:
 
 ```bash
 # Verify criteria loads correctly
-uv run python -m harness.criteria_loader <skill-name>
+pnpm harness <skill-name> --list
 
 # Run evaluation
-uv run python -m harness.runner <skill-name> --mock --verbose
+pnpm harness <skill-name> --mock --verbose
 
-# Run pytest
-uv run pytest test_skills.py -k "<skill_name>" -v
+# Run all tests
+pnpm test
 ```
 
 ## Evaluation Scoring
@@ -229,36 +216,32 @@ A result **passes** if it has no error-severity findings.
 
 ### Real Mode (Copilot SDK)
 - Generates code using GitHub Copilot SDK
-- Requires `uv add github-copilot-sdk` (or install in optional group)
 - Requires Copilot CLI authentication
 - Tests actual generation quality
 
 ```bash
-# Check if Copilot is available
-uv run python -m harness.copilot_client
-
 # Run with real Copilot (if available)
-uv run python -m harness.runner azure-ai-agents-py
+pnpm harness azure-ai-agents-py
 ```
 
 ## Reports
 
 ### Console Output
 ```bash
-uv run python -m tests.harness.runner azure-ai-agents-py --verbose
+pnpm harness azure-ai-agents-py --verbose
 ```
 
 ### Markdown Report
-```python
-from harness.reporters import MarkdownReporter
+```typescript
+import { MarkdownReporter } from './harness/reporters/markdown';
 
-reporter = MarkdownReporter(output_dir=Path("tests/reports"))
-report_path = reporter.generate_report(summary)
+const reporter = new MarkdownReporter({ outputDir: 'tests/reports' });
+const reportPath = reporter.generateReport(summary);
 ```
 
 ### JSON Output
 ```bash
-uv run python -m tests.harness.runner azure-ai-agents-py --output json > report.json
+pnpm harness azure-ai-agents-py --output json > report.json
 ```
 
 ## Key Classes

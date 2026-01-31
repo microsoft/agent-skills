@@ -555,13 +555,13 @@ cd tests
 uv sync
 
 # List skills with test coverage
-uv run python -m tests.harness.runner --list
+uv run python -m harness.runner --list
 
 # Run tests for a specific skill (mock mode for CI)
-uv run python -m tests.harness.runner azure-ai-projects-py --mock --verbose
+uv run python -m harness.runner azure-ai-projects-py --mock --verbose
 
 # Run all pytest tests
-uv run pytest tests/test_skills.py -v
+uv run pytest test_skills.py -v
 ```
 
 ### Test Coverage Summary

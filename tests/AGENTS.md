@@ -18,7 +18,7 @@ This folder contains a test harness for evaluating AI-generated code against acc
 | `azure-ai-agents-py` | ✅ Complete | ✅ Complete | Passing |
 | `azure-ai-projects-py` | ✅ Complete | ✅ Complete | Passing |
 
-Run `uv run --project tests python -m tests.harness.runner --list` to see all skills with criteria.
+Run `pnpm harness --list` from the `tests/` directory to see all skills with criteria.
 
 ---
 
@@ -93,19 +93,19 @@ scenarios:
 
 ```bash
 # Install dependencies (from tests directory)
-cd tests && uv sync && cd ..
+cd tests && pnpm install
 
 # Check skill is discovered
-uv run --project tests python -m tests.harness.runner --list
+pnpm harness --list
 
 # Run in mock mode (fast, deterministic)
-uv run --project tests python -m tests.harness.runner <skill-name> --mock --verbose
+pnpm harness <skill-name> --mock --verbose
 
 # Run specific scenario
-uv run --project tests python -m tests.harness.runner <skill-name> --mock --filter scenario_name
+pnpm harness <skill-name> --mock --filter scenario_name
 
-# Run pytest
-uv run --project tests pytest tests/test_skills.py -v
+# Run tests
+pnpm test
 ```
 
 **Success criteria:**
@@ -120,11 +120,15 @@ uv run --project tests pytest tests/test_skills.py -v
 ```
 tests/
 ├── harness/
-│   ├── criteria_loader.py    # Parses acceptance-criteria.md
-│   ├── evaluator.py          # Validates code against patterns
-│   ├── copilot_client.py     # Code generation (mock/real)
-│   ├── runner.py             # CLI: uv run --project tests python -m tests.harness.runner
+│   ├── types.ts              # Type definitions
+│   ├── criteria-loader.ts    # Parses acceptance-criteria.md
+│   ├── evaluator.ts          # Validates code against patterns
+│   ├── copilot-client.ts     # Code generation (mock/real)
+│   ├── runner.ts             # CLI: pnpm harness
+│   ├── index.ts              # Package exports
 │   └── reporters/            # Output formatters
+│       ├── console.ts        # Console output
+│       └── markdown.ts       # Markdown reports
 │
 ├── scenarios/
 │   ├── azure-ai-agents-py/
@@ -132,8 +136,8 @@ tests/
 │   └── azure-ai-projects-py/
 │       └── scenarios.yaml    # 12 scenarios
 │
-├── pyproject.toml            # Dependencies (uv)
-├── test_skills.py            # Pytest integration
+├── package.json              # Dependencies (pnpm)
+├── tsconfig.json             # TypeScript config
 └── README.md                 # Detailed documentation
 ```
 
@@ -171,24 +175,23 @@ tests/
 
 ## Commands Reference
 
+All commands should be run from the `tests/` directory after `pnpm install`.
+
 ```bash
 # List available skills
-uv run --project tests python -m tests.harness.runner --list
+pnpm harness --list
 
 # Run all scenarios for a skill (mock mode)
-uv run --project tests python -m tests.harness.runner <skill> --mock --verbose
+pnpm harness <skill> --mock --verbose
 
 # Run filtered scenarios
-uv run --project tests python -m tests.harness.runner <skill> --mock --filter <name-or-tag>
+pnpm harness <skill> --mock --filter <name-or-tag>
 
-# Run pytest (all tests)
-uv run --project tests pytest tests/ -v
+# Run tests (all tests)
+pnpm test
 
-# Run pytest (specific skill)
-uv run --project tests pytest tests/test_skills.py -k "<skill_name>" -v
-
-# Check if criteria loads correctly
-uv run --project tests python -c "from tests.harness import AcceptanceCriteriaLoader; print(AcceptanceCriteriaLoader().load('<skill>'))"
+# Run typecheck
+pnpm typecheck
 ```
 
 ---
@@ -215,3 +218,149 @@ Priority skills without test coverage (check with `--list`):
 5. `azure-ai-voicelive-py` — Real-time voice AI
 
 For each, follow the 3-step process above.
+
+---
+
+## Ralph Loop Development
+
+> **Task Plan:** `.sisyphus/plans/ralph-loop-quality-tasks.md`
+
+The Ralph Loop is an iterative code generation and improvement system that re-generates code until quality thresholds are met. This section guides agents working on Ralph Loop implementation across multiple sessions.
+
+### What is Ralph Loop?
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Ralph Loop Controller                     │
+│   (Orchestrates iterations, tracks progress, manages state)     │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐   ┌─────────────┐   ┌─────────────────────┐   │
+│  │   Generate  │──>│  Evaluate   │──>│  Analyze Failures   │   │
+│  │    Code     │   │   (Score)   │   │  (Build Feedback)   │   │
+│  └─────────────┘   └─────────────┘   └─────────────────────┘   │
+│         ^                                      │                 │
+│         └──────────────────────────────────────┘                 │
+│                     (Loop until threshold met)                   │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Core flow:**
+1. **Generate** code for a given skill/scenario
+2. **Evaluate** against acceptance criteria (score 0-100)
+3. **Analyze** failures and determine corrective actions
+4. **Re-generate** with feedback until quality threshold is met (or max iterations)
+5. **Report** on quality improvements across iterations
+
+### Development Phases
+
+| Phase | Description | Priority | Status |
+|-------|-------------|----------|--------|
+| **Phase 1** | Core Ralph Loop Implementation | High | 🔲 Not Started |
+| **Phase 2** | Extended Quality Scoring | Medium | 🔲 Blocked by Phase 1 |
+| **Phase 3** | Advanced Features | Low | 🔲 Blocked by Phase 2 |
+| **Phase 4** | Integration & Automation | Medium | 🔲 Blocked by Phase 1 |
+
+### Multi-Session Workflow
+
+#### Before Starting
+
+1. **Read the task plan** — `.sisyphus/plans/ralph-loop-quality-tasks.md`
+2. **Check phase dependencies** — Don't start Phase 2 until Phase 1 is complete
+3. **Check task status** — Look for `🔄 In Progress` markers in the task plan
+4. **Claim your task** — Add your session ID to the task you're working on
+
+#### Claiming a Task
+
+Edit the task plan to mark your task as in-progress:
+
+```markdown
+### Task 1.1: Create Ralph Loop Controller
+**Status:** 🔄 In Progress (session: abc123)
+**Started:** 2026-01-31
+```
+
+#### Completing a Task
+
+Before marking complete:
+- [ ] Implementation complete
+- [ ] Tests written and passing (`tests/test_*.py`)
+- [ ] Documentation updated (docstrings, inline comments)
+- [ ] This file (`tests/AGENTS.md`) updated if public API changed
+- [ ] Task plan updated with completion status
+
+Update the task plan:
+```markdown
+### Task 1.1: Create Ralph Loop Controller
+**Status:** ✅ Complete (session: abc123)
+**Completed:** 2026-01-31
+```
+
+### Phase 1 Tasks (Start Here)
+
+| Task | File | Description |
+|------|------|-------------|
+| 1.1 | `harness/ralph_loop.py` | Core loop controller with config, iteration tracking |
+| 1.2 | `harness/feedback_builder.py` | Build LLM-actionable feedback from findings |
+| 1.3 | `harness/runner.py` (modify) | Add `--ralph` CLI flag and loop mode |
+| 1.4 | `harness/reporters/ralph_reporter.py` | Iteration progress reporting |
+
+**Start with Task 1.1** — All other Phase 1 tasks depend on it.
+
+### Key Patterns to Follow
+
+#### Match Existing Style
+
+Look at these files for patterns:
+- `harness/evaluator.py` — Scoring logic, `EvaluationResult` structure
+- `harness/criteria_loader.py` — File loading, parsing
+- `harness/runner.py` — CLI integration, `SkillEvaluationRunner`
+
+#### Test-Driven Development
+
+Create tests alongside implementation:
+```bash
+# Example for Task 1.1
+tests/
+├── harness/
+│   └── ralph_loop.py         # Implementation
+└── test_ralph_loop.py        # Tests
+```
+
+Run tests:
+```bash
+cd tests
+uv sync
+uv run pytest test_ralph_loop.py -v
+```
+
+### Commands Reference
+
+```bash
+# Install dependencies
+cd tests && uv sync
+
+# List skills with test coverage
+uv run python -m harness.runner --list
+
+# Run existing harness (verify nothing broken)
+uv run python -m harness.runner azure-ai-agents-py --mock --verbose
+
+# Run tests
+uv run pytest test_*.py -v
+
+# After Ralph Loop is implemented:
+uv run python -m harness.runner azure-ai-agents-py --ralph --max-iterations 5 --threshold 85
+```
+
+### Success Criteria
+
+**Phase 1 is complete when:**
+- [ ] `--ralph` flag runs iterative loop on any skill
+- [ ] Feedback mechanism improves scores across iterations
+- [ ] Markdown reports show iteration progress
+- [ ] All new code has test coverage
+
+**Full implementation success:**
+- 127 skills can run through Ralph Loop
+- Average convergence in <5 iterations
+- Quality scores improve by >20% from iteration 1 to final
