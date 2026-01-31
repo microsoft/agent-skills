@@ -33,6 +33,12 @@ npx tailwindcss init -p
 ## Project Structure
 
 ```
+public/
+├── favicon.ico                    # Classic favicon (32x32)
+├── favicon.svg                    # Modern SVG favicon
+├── apple-touch-icon.png           # iOS home screen (180x180)
+├── og-image.png                   # Social sharing image (1200x630)
+└── site.webmanifest               # PWA manifest
 src/
 ├── assets/
 │   └── fonts/
@@ -60,6 +66,66 @@ src/
 ```
 
 ## Configuration
+
+### index.html
+
+The HTML entry point with mobile viewport, favicons, and social meta tags:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Favicons -->
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Theme color for mobile browser chrome -->
+    <meta name="theme-color" content="#18181B" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="App Name" />
+    <meta property="og:description" content="App description" />
+    <meta property="og:image" content="https://example.com/og-image.png" />
+    <meta property="og:url" content="https://example.com" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="App Name" />
+    <meta name="twitter:description" content="App description" />
+    <meta name="twitter:image" content="https://example.com/og-image.png" />
+    
+    <title>App Name</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+### public/site.webmanifest
+
+PWA manifest for installable web apps:
+
+```json
+{
+  "name": "App Name",
+  "short_name": "App",
+  "icons": [
+    { "src": "/favicon.ico", "sizes": "32x32", "type": "image/x-icon" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "theme_color": "#18181B",
+  "background_color": "#18181B",
+  "display": "standalone"
+}
+```
 
 ### tailwind.config.js
 
@@ -143,6 +209,20 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(-10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+      },
+      // Mobile: safe area insets for notched devices
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
+      // Mobile: minimum touch target sizes (44px per Apple/Google guidelines)
+      minHeight: {
+        'touch': '44px',
+      },
+      minWidth: {
+        'touch': '44px',
       },
     },
   },

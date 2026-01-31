@@ -27,6 +27,206 @@ export function AppShell({ children }: AppShellProps) {
 }
 ```
 
+---
+
+## Responsive App Shell
+
+Mobile-responsive layout: desktop shows fixed sidebar, mobile shows hamburger menu with slide-in drawer.
+
+**Breakpoint:** `lg` (1024px) — sidebar visible on desktop, hidden on mobile.
+
+```tsx
+import { motion, AnimatePresence } from 'framer-motion';
+import { type ReactNode, useState } from 'react';
+import { Sidebar } from './Sidebar';
+import { MobileHeader } from './MobileHeader';
+import { MobileDrawer } from './MobileDrawer';
+
+interface ResponsiveAppShellProps {
+  children: ReactNode;
+}
+
+export function ResponsiveAppShell({ children }: ResponsiveAppShellProps) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  return (
+    <div className="flex min-h-screen bg-neutral-bg1">
+      {/* Desktop sidebar - hidden on mobile */}
+      <div className="hidden lg:block">
+        <Sidebar />
+      </div>
+
+      {/* Mobile header - visible only on mobile */}
+      <MobileHeader onMenuClick={() => setDrawerOpen(true)} />
+
+      {/* Mobile drawer */}
+      <MobileDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
+
+      {/* Main content - adjusted margins for desktop sidebar and mobile header */}
+      <main className="flex-1 lg:ml-64 pt-14 lg:pt-0 pb-safe-bottom">
+        {children}
+      </main>
+    </div>
+  );
+}
+```
+
+---
+
+## Mobile Header
+
+Fixed top header for mobile with hamburger menu toggle. Uses 44px minimum touch target.
+
+```tsx
+import { Bars3Icon } from '@heroicons/react/24/outline';
+
+interface MobileHeaderProps {
+  onMenuClick: () => void;
+}
+
+export function MobileHeader({ onMenuClick }: MobileHeaderProps) {
+  return (
+    <header className="fixed top-0 left-0 right-0 h-14 glass-panel flex items-center justify-between px-4 lg:hidden z-40">
+      {/* Logo */}
+      <div className="flex items-center gap-2">
+        <img src="/logo.svg" alt="Logo" className="w-6 h-6" />
+        <span className="text-base font-semibold text-text-primary">AppName</span>
+      </div>
+
+      {/* Hamburger menu - 44px touch target */}
+      <button
+        onClick={onMenuClick}
+        className="min-w-touch min-h-touch flex items-center justify-center rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
+        aria-label="Open menu"
+      >
+        <Bars3Icon className="w-6 h-6 text-text-primary" />
+      </button>
+    </header>
+  );
+}
+```
+
+---
+
+## Mobile Drawer
+
+Animated slide-in navigation drawer for mobile. Includes backdrop and close button.
+
+```tsx
+import { motion, AnimatePresence } from 'framer-motion';
+import { XMarkIcon } from '@heroicons/react/24/outline';
+import { NavLink, useLocation } from 'react-router-dom';
+import { clsx } from 'clsx';
+import {
+  HomeIcon,
+  ChartBarIcon,
+  Cog6ToothIcon,
+  UsersIcon,
+  FolderIcon,
+} from '@heroicons/react/24/outline';
+
+const navItems = [
+  { path: '/', label: 'Dashboard', icon: HomeIcon },
+  { path: '/analytics', label: 'Analytics', icon: ChartBarIcon },
+  { path: '/projects', label: 'Projects', icon: FolderIcon },
+  { path: '/team', label: 'Team', icon: UsersIcon },
+  { path: '/settings', label: 'Settings', icon: Cog6ToothIcon },
+];
+
+interface MobileDrawerProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function MobileDrawer({ open, onClose }: MobileDrawerProps) {
+  const location = useLocation();
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 lg:hidden"
+            onClick={onClose}
+          />
+
+          {/* Drawer */}
+          <motion.aside
+            initial={{ x: '-100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '-100%' }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="fixed left-0 top-0 bottom-0 w-72 glass-panel p-4 flex flex-col z-50 lg:hidden pl-safe-left"
+          >
+            {/* Header with close button */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <img src="/logo.svg" alt="Logo" className="w-8 h-8" />
+                <span className="text-lg font-semibold text-text-primary">AppName</span>
+              </div>
+              <button
+                onClick={onClose}
+                className="min-w-touch min-h-touch flex items-center justify-center rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
+                aria-label="Close menu"
+              >
+                <XMarkIcon className="w-6 h-6 text-text-primary" />
+              </button>
+            </div>
+
+            {/* Navigation */}
+            <nav className="flex-1 space-y-1">
+              {navItems.map((item) => {
+                const isActive = location.pathname === item.path;
+                const Icon = item.icon;
+
+                return (
+                  <NavLink key={item.path} to={item.path} onClick={onClose}>
+                    <motion.div
+                      className={clsx(
+                        'relative flex items-center gap-3 px-3 py-3 rounded-lg',
+                        'text-base font-medium transition-colors duration-150',
+                        'min-h-touch', // 44px touch target
+                        isActive
+                          ? 'text-text-primary bg-brand/20 border border-brand/30'
+                          : 'text-text-muted hover:text-text-secondary hover:bg-white/5 active:bg-white/10'
+                      )}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Icon className={clsx('w-5 h-5', isActive && 'text-brand')} />
+                      <span>{item.label}</span>
+                    </motion.div>
+                  </NavLink>
+                );
+              })}
+            </nav>
+
+            {/* User profile at bottom */}
+            <div className="mt-auto pt-4 border-t border-white/10 pb-safe-bottom">
+              <div className="flex items-center gap-3 px-3 py-2">
+                <div className="w-10 h-10 rounded-full bg-brand-subtle flex items-center justify-center">
+                  <span className="text-sm font-medium text-brand">JD</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-text-primary truncate">John Doe</p>
+                  <p className="text-xs text-text-muted truncate">john@example.com</p>
+                </div>
+              </div>
+            </div>
+          </motion.aside>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}
+```
+
+---
+
 ## Sidebar Navigation
 
 Glass-effect sidebar with animated navigation items:

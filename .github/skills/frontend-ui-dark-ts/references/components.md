@@ -28,10 +28,11 @@ const variants: Record<ButtonVariant, string> = {
   danger: 'bg-status-error text-white hover:bg-red-600 active:bg-red-700',
 };
 
+// Size variants - all sizes meet 44px minimum height on mobile for touch targets
 const sizes: Record<ButtonSize, string> = {
-  sm: 'h-8 px-3 text-xs gap-1.5 rounded',
-  md: 'h-10 px-4 text-sm gap-2 rounded-lg',
-  lg: 'h-12 px-6 text-base gap-2.5 rounded-lg',
+  sm: 'h-8 min-h-touch px-3 text-xs gap-1.5 rounded',      // 32px desktop, 44px mobile minimum
+  md: 'h-10 min-h-touch px-4 text-sm gap-2 rounded-lg',    // 40px desktop, 44px mobile minimum
+  lg: 'h-12 px-6 text-base gap-2.5 rounded-lg',            // 48px already exceeds 44px
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -138,7 +139,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             id={inputId}
             className={clsx(
-              'w-full h-10 px-3 rounded-lg text-sm text-text-primary',
+              'w-full h-10 min-h-touch px-3 rounded-lg text-sm text-text-primary', // min-h-touch for 44px mobile touch target
               'bg-neutral-bg2 border border-border',
               'placeholder:text-text-muted',
               'focus:outline-none focus:border-brand focus:bg-neutral-bg3',
