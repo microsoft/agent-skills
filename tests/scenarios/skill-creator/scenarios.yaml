@@ -1,0 +1,459 @@
+# Test scenarios for skill-creator skill evaluation
+# Each scenario tests skill creation patterns and best practices
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # SKILL.md with Frontmatter
+  - name: skill_md_frontmatter
+    prompt: |
+      Create a SKILL.md file for an Azure Cosmos DB Python skill.
+      Include proper YAML frontmatter with name and description that
+      includes trigger phrases. Add basic installation and authentication.
+    expected_patterns:
+      - "^---"
+      - "name:"
+      - "description:"
+      - "---$"
+      - "pip install"
+      - "DefaultAzureCredential"
+      - "Triggers?:|Use when"
+    forbidden_patterns:
+      - "api_key.*=.*[\"']sk-"  # Hardcoded credentials
+      - "README.md"
+    tags:
+      - frontmatter
+      - basic
+    mock_response: |
+      ---
+      name: azure-cosmos-db-py
+      description: |
+        Azure Cosmos DB SDK for Python. Use for NoSQL database operations,
+        document CRUD, queries, and container management.
+        Triggers: "cosmos db", "nosql", "document database", "azure cosmos".
+      ---
+
+      # Azure Cosmos DB SDK
+
+      ## Installation
+
+      ```bash
+      pip install azure-cosmos
+      ```
+
+      ## Environment Variables
+
+      ```bash
+      AZURE_COSMOS_ENDPOINT=https://<account>.documents.azure.com:443/
+      AZURE_COSMOS_DATABASE=my-database
+      ```
+
+      ## Authentication
+
+      ```python
+      from azure.identity import DefaultAzureCredential
+      from azure.cosmos import CosmosClient
+      import os
+
+      credential = DefaultAzureCredential()
+      client = CosmosClient(
+          url=os.environ["AZURE_COSMOS_ENDPOINT"],
+          credential=credential
+      )
+      ```
+
+      ## Core Workflow
+
+      ```python
+      # Get database and container
+      database = client.get_database_client(os.environ["AZURE_COSMOS_DATABASE"])
+      container = database.get_container_client("items")
+
+      # Create document
+      item = {"id": "1", "name": "example", "category": "test"}
+      container.upsert_item(item)
+
+      # Query documents
+      for item in container.query_items(
+          query="SELECT * FROM c WHERE c.category = @cat",
+          parameters=[{"name": "@cat", "value": "test"}]
+      ):
+          print(item)
+
+      # Delete document
+      container.delete_item(item="1", partition_key="test")
+      ```
+
+  # Azure SDK Skill Structure
+  - name: azure_sdk_skill_structure
+    prompt: |
+      Create a complete SKILL.md for an Azure AI Inference SDK skill in Python.
+      Follow the standard section order: Installation, Environment, Authentication,
+      Core Workflow, Features, Best Practices, and References.
+    expected_patterns:
+      - "## Installation"
+      - "## Environment"
+      - "## Authentication"
+      - "## Core Workflow"
+      - "DefaultAzureCredential"
+      - "## Reference"
+      - "\\|.*\\|"  # Table format
+    forbidden_patterns:
+      - "api_key.*hardcoded"
+    tags:
+      - azure-sdk
+      - structure
+    mock_response: |
+      ---
+      name: azure-ai-inference-py
+      description: |
+        Azure AI Inference SDK for Python. Use for chat completions, embeddings,
+        and model inference with Azure AI Foundry endpoints.
+        Triggers: "chat completion", "embeddings", "inference", "azure ai foundry".
+      ---
+
+      # Azure AI Inference SDK
+
+      ## Installation
+
+      ```bash
+      pip install azure-ai-inference
+      ```
+
+      ## Environment Variables
+
+      ```bash
+      AZURE_AI_ENDPOINT=https://<resource>.services.ai.azure.com
+      AZURE_AI_MODEL_DEPLOYMENT=gpt-4o
+      ```
+
+      ## Authentication
+
+      ```python
+      from azure.identity import DefaultAzureCredential
+      from azure.ai.inference import ChatCompletionsClient
+      import os
+
+      credential = DefaultAzureCredential()
+      client = ChatCompletionsClient(
+          endpoint=os.environ["AZURE_AI_ENDPOINT"],
+          credential=credential
+      )
+      ```
+
+      ## Core Workflow
+
+      ```python
+      from azure.ai.inference.models import SystemMessage, UserMessage
+
+      response = client.complete(
+          model=os.environ["AZURE_AI_MODEL_DEPLOYMENT"],
+          messages=[
+              SystemMessage(content="You are a helpful assistant."),
+              UserMessage(content="Hello, how are you?")
+          ]
+      )
+
+      print(response.choices[0].message.content)
+      ```
+
+      ## Features
+
+      | Feature | Method | Description |
+      |---------|--------|-------------|
+      | Chat | `client.complete()` | Chat completions |
+      | Streaming | `client.complete(stream=True)` | Streaming responses |
+      | Embeddings | `EmbeddingsClient.embed()` | Text embeddings |
+
+      ## Best Practices
+
+      1. Always use `DefaultAzureCredential` for authentication
+      2. Use context managers: `with client:` or `async with client:`
+      3. Handle rate limits with exponential backoff
+      4. Close clients explicitly when not using context managers
+
+      ## Reference Files
+
+      | File | Contents |
+      |------|----------|
+      | [references/streaming.md](references/streaming.md) | Streaming patterns |
+      | [references/embeddings.md](references/embeddings.md) | Embedding operations |
+
+  # Description with Triggers
+  - name: description_with_triggers
+    prompt: |
+      Write YAML frontmatter for a FastAPI router skill. Include a description
+      that explains what the skill does, when to use it, and trigger phrases.
+    expected_patterns:
+      - "name.*fastapi"
+      - "description"
+      - "Triggers?:|Use when|Use for"
+      - "router|endpoint|API"
+    forbidden_patterns:
+      - "description:$"  # Empty description
+    tags:
+      - frontmatter
+      - triggers
+    mock_response: |
+      ---
+      name: fastapi-router-py
+      description: |
+        FastAPI router patterns for Python. Use for creating CRUD endpoints,
+        authentication dependencies, response models, and API organization.
+        Triggers: "create router", "FastAPI endpoint", "API route", "CRUD operations".
+      ---
+
+  # Cross-Language Skill
+  - name: cross_language_skill
+    prompt: |
+      Create SKILL.md frontmatter and introduction for the azd-deployment skill.
+      This is a cross-language skill, so it should NOT have a language suffix.
+      Include azure.yaml, Bicep, and Container Apps focus areas.
+    expected_patterns:
+      - "name: azd-deployment"
+      - "azure.yaml|Bicep|Container Apps"
+      - "azd|Azure Developer CLI"
+    forbidden_patterns:
+      - "name.*-py$"
+      - "name.*-dotnet$"
+      - "name.*-ts$"
+    tags:
+      - cross-language
+      - naming
+    mock_response: |
+      ---
+      name: azd-deployment
+      description: |
+        Deploy containerized applications to Azure Container Apps using Azure Developer CLI (azd).
+        Use when setting up azd projects, writing azure.yaml configuration, creating Bicep
+        infrastructure, or troubleshooting azd up failures.
+        Triggers: "azd", "azure.yaml", "container apps deployment", "bicep infrastructure".
+      ---
+
+      # Azure Developer CLI (azd) Deployment
+
+      Deploy containerized frontend + backend applications to Azure Container Apps with
+      remote builds, managed identity, and idempotent infrastructure.
+
+      ## Quick Start
+
+      ```bash
+      azd auth login
+      azd init
+      azd env new dev
+      azd up
+      ```
+
+  # Skill with References
+  - name: skill_with_references
+    prompt: |
+      Create a SKILL.md that demonstrates progressive disclosure by keeping
+      the main content concise and linking to reference files for detailed
+      patterns. Include a reference table at the end.
+    expected_patterns:
+      - "## Reference"
+      - "references/"
+      - "\\[.*\\]\\(references/.*\\.md\\)"
+      - "\\|.*\\|.*\\|"
+    forbidden_patterns:
+      - "1000.*lines"  # Skill too long
+    tags:
+      - references
+      - progressive-disclosure
+    mock_response: |
+      ---
+      name: azure-ai-agents-py
+      description: |
+        Azure AI Agents SDK for Python. Use for creating agents with tools,
+        threads, streaming, and function calling.
+        Triggers: "create agent", "agent tools", "streaming agent", "function calling".
+      ---
+
+      # Azure AI Agents SDK
+
+      ## Quick Start
+
+      ```python
+      from azure.identity import DefaultAzureCredential
+      from azure.ai.agents import AgentsClient
+
+      client = AgentsClient(
+          endpoint=os.environ["PROJECT_ENDPOINT"],
+          credential=DefaultAzureCredential()
+      )
+
+      agent = client.create_agent(
+          model="gpt-4o",
+          name="my-agent",
+          instructions="You are helpful."
+      )
+      ```
+
+      ## Tools Overview
+
+      | Tool | Use Case |
+      |------|----------|
+      | FunctionTool | Custom functions |
+      | CodeInterpreterTool | Python execution |
+      | FileSearchTool | RAG over documents |
+
+      For detailed tool configurations, see [references/tools.md](references/tools.md).
+
+      ## Streaming
+
+      For streaming patterns, see [references/streaming.md](references/streaming.md).
+
+      ## Reference Files
+
+      | File | Contents |
+      |------|----------|
+      | [references/tools.md](references/tools.md) | Tool configurations |
+      | [references/streaming.md](references/streaming.md) | Event streaming |
+      | [references/async.md](references/async.md) | Async patterns |
+      | [references/acceptance-criteria.md](references/acceptance-criteria.md) | Test criteria |
+
+  # Authentication Section
+  - name: authentication_section
+    prompt: |
+      Create the Authentication section for an Azure SDK skill that shows
+      the correct pattern using DefaultAzureCredential. Include environment
+      variable usage and context manager pattern.
+    expected_patterns:
+      - "DefaultAzureCredential"
+      - "os.environ"
+      - "credential"
+      - "with.*client:|async with"
+    forbidden_patterns:
+      - "api_key.*=.*['\"][a-zA-Z0-9]"  # Hardcoded key
+      - "password"
+    tags:
+      - authentication
+      - security
+    mock_response: |
+      ## Authentication
+
+      Always use `DefaultAzureCredential` for flexible authentication across environments:
+
+      ```python
+      from azure.identity import DefaultAzureCredential
+      from azure.ai.agents import AgentsClient
+      import os
+
+      credential = DefaultAzureCredential()
+
+      # Sync client with context manager
+      with AgentsClient(
+          endpoint=os.environ["PROJECT_ENDPOINT"],
+          credential=credential
+      ) as client:
+          agent = client.create_agent(
+              model="gpt-4o",
+              name="my-agent"
+          )
+          # Client automatically closed
+
+      # Or async client
+      from azure.ai.agents.aio import AgentsClient as AsyncAgentsClient
+      from azure.identity.aio import DefaultAzureCredential as AsyncCredential
+
+      async with AsyncAgentsClient(
+          endpoint=os.environ["PROJECT_ENDPOINT"],
+          credential=AsyncCredential()
+      ) as client:
+          agent = await client.create_agent(...)
+      ```
+
+      **Never hardcode credentials.** Use environment variables for all sensitive values.
+
+  # Complete Example with Cleanup
+  - name: complete_example_with_cleanup
+    prompt: |
+      Write a Core Workflow section that shows a complete, runnable example
+      including imports, initialization, main operations, and proper cleanup.
+    expected_patterns:
+      - "import"
+      - "DefaultAzureCredential"
+      - "client"
+      - "delete|cleanup|close"
+    forbidden_patterns:
+      - "\\.\\.\\.\\)"  # Incomplete parameters
+      - "# TODO"
+    tags:
+      - examples
+      - cleanup
+    mock_response: |
+      ## Core Workflow
+
+      ```python
+      import os
+      from azure.identity import DefaultAzureCredential
+      from azure.ai.agents import AgentsClient
+
+      # Initialize client
+      credential = DefaultAzureCredential()
+      client = AgentsClient(
+          endpoint=os.environ["PROJECT_ENDPOINT"],
+          credential=credential
+      )
+
+      try:
+          # Create agent
+          agent = client.create_agent(
+              model="gpt-4o",
+              name="helper-agent",
+              instructions="You are a helpful assistant."
+          )
+          print(f"Created agent: {agent.id}")
+
+          # Create thread and message
+          thread = client.threads.create()
+          client.messages.create(
+              thread_id=thread.id,
+              role="user",
+              content="Hello!"
+          )
+
+          # Run and get response
+          run = client.runs.create_and_process(
+              thread_id=thread.id,
+              agent_id=agent.id
+          )
+
+          if run.status == "completed":
+              messages = client.messages.list(thread_id=thread.id)
+              for msg in messages:
+                  if msg.role == "assistant":
+                      print(msg.content[0].text.value)
+
+      finally:
+          # Cleanup - always delete test resources
+          client.delete_agent(agent.id)
+          client.close()
+      ```
+
+  # Best Practices List
+  - name: best_practices_list
+    prompt: |
+      Write a Best Practices section for an Azure SDK skill with
+      numbered, actionable recommendations.
+    expected_patterns:
+      - "## Best Practices"
+      - "1\\."
+      - "2\\."
+      - "DefaultAzureCredential|context manager|async"
+    tags:
+      - best-practices
+    mock_response: |
+      ## Best Practices
+
+      1. **Always use `DefaultAzureCredential`** for authentication - it works across local dev, CI/CD, and production
+      2. **Use context managers** (`with client:` or `async with client:`) to ensure proper cleanup
+      3. **Prefer async clients** for high-throughput scenarios with `azure.ai.agents.aio`
+      4. **Use `create_or_update_*`** methods for idempotent operations when available
+      5. **Handle pagination** with `for item in client.list_*():` - it handles continuation automatically
+      6. **Close clients explicitly** if not using context managers
+      7. **Check SDK version** with `pip show azure-*` before using - APIs change between versions
+      8. **Search `microsoft-docs` MCP** for current API patterns if documentation seems outdated

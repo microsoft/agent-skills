@@ -1,0 +1,409 @@
+# Test scenarios for github-issue-creator skill evaluation
+# Each scenario tests transforming raw input into structured GitHub issues
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Voice Dictation Transformation
+  - name: voice_dictation_bug
+    prompt: |
+      Transform this voice dictation into a structured GitHub issue:
+      
+      "so I was trying to deploy the agent and it just failed silently 
+      no error nothing the workflow ran but then poof gone from the list 
+      had to refresh and try again three times"
+    expected_patterns:
+      - "## Summary"
+      - "## Reproduction Steps"
+      - "## Expected Behavior"
+      - "## Actual Behavior"
+      - "## Impact"
+      - "silently"
+      - "\\*\\*High\\*\\*|\\*\\*Medium\\*\\*"
+    forbidden_patterns:
+      - "## Summary\\s*\\n\\s*\\n"  # Empty summary
+      - "It doesn't work"
+    tags:
+      - voice-dictation
+      - transformation
+    mock_response: |
+      ## Summary
+      Agent deployment fails silently - no error displayed, agent disappears from list
+
+      ## Environment
+      - **Product/Service**: Azure AI Foundry
+      - **Region/Version**: [REGION]
+
+      ## Reproduction Steps
+      1. Navigate to agent deployment
+      2. Configure and deploy agent
+      3. Observe workflow completes
+      4. Check agent list
+
+      ## Expected Behavior
+      Agent appears in list with deployment status, errors shown if deployment fails
+
+      ## Actual Behavior
+      Agent disappears from list. No error message. Requires page refresh and retry.
+
+      ## Impact
+      **High** - Blocks agent deployment workflow, no feedback on failure cause
+
+      ## Additional Context
+      Required 3 retry attempts before successful deployment
+
+  # Error Log Transformation
+  - name: error_log_transformation
+    prompt: |
+      Transform this error message into a structured GitHub issue:
+      
+      "Error: PERMISSION_DENIED when publishing to Teams channel. 
+      Code: 403. Was working yesterday."
+    expected_patterns:
+      - "## Summary"
+      - "403"
+      - "PERMISSION_DENIED"
+      - "## Error Details"
+      - "```"
+      - "Teams"
+      - "\\*\\*High\\*\\*"
+    forbidden_patterns:
+      - "## Summary\\s*Error:"
+    tags:
+      - error-log
+      - transformation
+    mock_response: |
+      ## Summary
+      403 PERMISSION_DENIED error when publishing to Teams channel
+
+      ## Environment
+      - **Product/Service**: Copilot Studio → Teams integration
+      - **Region/Version**: [REGION]
+
+      ## Reproduction Steps
+      1. Configure agent for Teams channel
+      2. Attempt to publish
+
+      ## Expected Behavior
+      Agent publishes successfully to Teams channel
+
+      ## Actual Behavior
+      Returns `PERMISSION_DENIED` with code 403
+
+      ## Error Details
+      ```
+      Error: PERMISSION_DENIED
+      Code: 403
+      ```
+
+      ## Impact
+      **High** - Blocks Teams integration, regression from previous working state
+
+      ## Additional Context
+      Was working yesterday - possible permission/config change or service regression
+
+  # API Error with Stack Trace
+  - name: api_error_stack_trace
+    prompt: |
+      Transform this Python error into a GitHub issue:
+      
+      ```
+      Traceback (most recent call last):
+        File "agent.py", line 42, in create_agent
+          response = client.agents.create(model="gpt-4o", name="test")
+      azure.core.exceptions.HttpResponseError: (429) Rate limit exceeded
+      Request ID: abc-123-def
+      ```
+    expected_patterns:
+      - "## Summary"
+      - "429"
+      - "Rate limit"
+      - "## Error Details"
+      - "```"
+      - "Traceback"
+      - "azure.core.exceptions"
+    forbidden_patterns:
+      - "## Error Details\\s*\\n\\s*Traceback"  # Should be in code block
+    tags:
+      - api-error
+      - stack-trace
+    mock_response: |
+      ## Summary
+      429 Rate limit exceeded when creating agent via Azure AI SDK
+
+      ## Environment
+      - **Product/Service**: Azure AI Agents SDK
+      - **SDK Version**: azure-ai-agents
+      - **Python Version**: [VERSION]
+
+      ## Reproduction Steps
+      1. Initialize AgentsClient
+      2. Call `client.agents.create(model="gpt-4o", name="test")`
+      3. Observe rate limit error
+
+      ## Expected Behavior
+      Agent is created successfully or a clear retry-after header is provided
+
+      ## Actual Behavior
+      Throws `HttpResponseError` with 429 status code
+
+      ## Error Details
+      ```python
+      Traceback (most recent call last):
+        File "agent.py", line 42, in create_agent
+          response = client.agents.create(model="gpt-4o", name="test")
+      azure.core.exceptions.HttpResponseError: (429) Rate limit exceeded
+      Request ID: abc-123-def
+      ```
+
+      ## Impact
+      **Medium** - Blocks agent creation during high load, retry logic needed
+
+      ## Additional Context
+      Consider implementing exponential backoff or checking for Retry-After header
+
+  # Performance Issue
+  - name: performance_issue
+    prompt: |
+      Transform this into a GitHub issue:
+      
+      "The search API is super slow now. Used to return in like 200ms 
+      but now it takes 5-10 seconds. Started happening after the 
+      Tuesday deployment."
+    expected_patterns:
+      - "## Summary"
+      - "search"
+      - "200ms|5.*seconds|10.*seconds"
+      - "## Impact"
+      - "Tuesday|deployment"
+      - "performance|latency|slow"
+    tags:
+      - performance
+      - regression
+    mock_response: |
+      ## Summary
+      Search API response time degraded from 200ms to 5-10 seconds after Tuesday deployment
+
+      ## Environment
+      - **Product/Service**: Search API
+      - **Region/Version**: Production
+
+      ## Reproduction Steps
+      1. Make request to search API endpoint
+      2. Measure response time
+      3. Compare with pre-Tuesday baseline
+
+      ## Expected Behavior
+      Search API returns results within ~200ms
+
+      ## Actual Behavior
+      Response times increased to 5-10 seconds (25-50x slower)
+
+      ## Impact
+      **High** - Significant user experience degradation, affects all search functionality
+
+      ## Additional Context
+      - Regression started after Tuesday deployment
+      - Pre-deployment baseline: ~200ms
+      - Current performance: 5-10 seconds
+      - Potential causes: new indexing logic, database changes, increased load
+
+  # UI/Visual Bug
+  - name: ui_visual_bug
+    prompt: |
+      Transform this into a GitHub issue:
+      
+      "the modal dialog is showing behind the overlay so users can't 
+      see the buttons. happens on chrome on mac only. firefox is fine."
+    expected_patterns:
+      - "## Summary"
+      - "modal"
+      - "overlay"
+      - "Chrome"
+      - "macOS|Mac"
+      - "## Environment"
+      - "z-index|CSS|visual"
+    forbidden_patterns:
+      - "\\*\\*Critical\\*\\*"  # UI bug should be Medium or Low
+    tags:
+      - ui
+      - visual
+      - browser-specific
+    mock_response: |
+      ## Summary
+      Modal dialog renders behind overlay on Chrome/macOS - buttons inaccessible
+
+      ## Environment
+      - **Product/Service**: Web Application
+      - **Browser/OS**: Chrome / macOS
+      - **Working On**: Firefox (all platforms)
+
+      ## Reproduction Steps
+      1. Open application in Chrome on macOS
+      2. Trigger action that opens modal dialog
+      3. Observe modal appears behind overlay
+
+      ## Expected Behavior
+      Modal dialog appears above overlay with accessible buttons
+
+      ## Actual Behavior
+      Modal dialog is hidden behind overlay layer, buttons cannot be clicked
+
+      ## Visual Evidence
+      ![Modal behind overlay](modal-z-index-issue.png)
+
+      ## Impact
+      **Medium** - Blocks modal interactions on Chrome/macOS, workaround: use Firefox
+
+      ## Additional Context
+      Likely CSS z-index stacking issue specific to Chrome's rendering on macOS
+
+  # Security Concern
+  - name: security_concern
+    prompt: |
+      Transform this into a GitHub issue:
+      
+      "noticed that API responses include internal server paths 
+      in error messages like /home/deploy/app/src/auth.py line 42. 
+      this could leak info to attackers."
+    expected_patterns:
+      - "## Summary"
+      - "security|sensitive"
+      - "internal.*path|server.*path"
+      - "\\*\\*Critical\\*\\*|\\*\\*High\\*\\*"
+      - "\\[.*\\]"  # Placeholder syntax for sensitive data
+    forbidden_patterns:
+      - "/home/deploy/app"  # Should be redacted
+    tags:
+      - security
+      - information-disclosure
+    mock_response: |
+      ## Summary
+      API error responses expose internal server file paths - information disclosure risk
+
+      ## Environment
+      - **Product/Service**: REST API
+      - **Region/Version**: Production
+
+      ## Reproduction Steps
+      1. Trigger an API error (e.g., invalid input)
+      2. Observe error response body
+
+      ## Expected Behavior
+      Error messages contain user-friendly descriptions without internal details
+
+      ## Actual Behavior
+      Error responses include internal server paths:
+      ```
+      Error at [INTERNAL_PATH] line [LINE_NUMBER]
+      ```
+
+      ## Impact
+      **High** - Information disclosure vulnerability could aid attackers in reconnaissance
+
+      ## Additional Context
+      - Internal paths reveal server structure and technology stack
+      - Should sanitize error messages before returning to clients
+      - Consider custom error handler that strips internal details
+
+  # Feature Request
+  - name: feature_request
+    prompt: |
+      Transform this into a GitHub issue (feature request):
+      
+      "would be nice if we could export agent configs to JSON 
+      for backup and version control. currently no way to do this 
+      without manually copying everything."
+    expected_patterns:
+      - "## Summary"
+      - "export"
+      - "JSON"
+      - "backup|version control"
+      - "## Expected Behavior|## Proposed Solution"
+    forbidden_patterns:
+      - "\\*\\*Critical\\*\\*"
+      - "bug|error|broken"
+    tags:
+      - feature-request
+      - enhancement
+    mock_response: |
+      ## Summary
+      Feature request: Export agent configurations to JSON for backup and version control
+
+      ## Current Behavior
+      No automated way to export agent configurations. Manual copying required.
+
+      ## Proposed Solution
+      Add an "Export to JSON" option that:
+      1. Exports complete agent configuration
+      2. Includes all tools, prompts, and settings
+      3. Produces a file suitable for version control
+
+      ## Use Cases
+      - Backup agent configurations before changes
+      - Version control agent definitions in Git
+      - Migrate agents between environments
+      - Share configurations across teams
+
+      ## Impact
+      **Enhancement** - Improves developer workflow and disaster recovery
+
+      ## Additional Context
+      Related to infrastructure-as-code practices. Consider also adding import functionality.
+
+  # Multi-Step Complex Bug
+  - name: multi_step_complex_bug
+    prompt: |
+      Transform this into a GitHub issue:
+      
+      "ok so weird one - if you create an agent, add a file search tool, 
+      upload a PDF, then delete the PDF and upload a different one, 
+      the agent still uses the old PDF content. only fix is to delete 
+      the whole agent and start over. super frustrating."
+    expected_patterns:
+      - "## Summary"
+      - "file search"
+      - "PDF"
+      - "## Reproduction Steps"
+      - "1\\."
+      - "2\\."
+      - "3\\."
+      - "cache|stale|old"
+    tags:
+      - complex
+      - multi-step
+      - caching
+    mock_response: |
+      ## Summary
+      File search tool caches old PDF content after file replacement - requires agent recreation
+
+      ## Environment
+      - **Product/Service**: Azure AI Foundry Agents
+      - **Region/Version**: [REGION]
+
+      ## Reproduction Steps
+      1. Create a new agent
+      2. Add file search tool to agent
+      3. Upload PDF document "doc1.pdf"
+      4. Test agent - correctly uses doc1.pdf content
+      5. Delete doc1.pdf from agent
+      6. Upload different PDF "doc2.pdf"
+      7. Test agent - still returns content from doc1.pdf
+
+      ## Expected Behavior
+      After replacing the PDF, agent should use content from the new document
+
+      ## Actual Behavior
+      Agent continues to use cached content from the original PDF despite file replacement
+
+      ## Workaround
+      Delete entire agent and recreate from scratch
+
+      ## Impact
+      **High** - Blocks iterative development workflow, significant time cost to recreate agents
+
+      ## Additional Context
+      Likely vector store caching issue. File deletion may not be clearing indexed content.

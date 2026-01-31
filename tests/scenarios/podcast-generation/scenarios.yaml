@@ -1,0 +1,416 @@
+# Test scenarios for podcast-generation skill evaluation
+# Each scenario tests podcast/audio generation patterns
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # WebSocket Client Setup
+  - name: websocket_client_setup
+    prompt: |
+      Create Python code to set up an AsyncOpenAI client for Azure OpenAI's
+      Realtime API. Convert the HTTPS endpoint to WebSocket URL and configure
+      proper authentication.
+    expected_patterns:
+      - "AsyncOpenAI"
+      - "websocket_base_url"
+      - "wss://"
+      - "replace.*https.*wss"
+      - "api_key"
+    forbidden_patterns:
+      - "base_url"
+      - "https://.*openai/v1"
+    tags:
+      - setup
+      - websocket
+    mock_response: |
+      from openai import AsyncOpenAI
+      import os
+
+      # Get configuration from environment
+      endpoint = os.environ["AZURE_OPENAI_AUDIO_ENDPOINT"]
+      api_key = os.environ["AZURE_OPENAI_AUDIO_API_KEY"]
+
+      # Convert HTTPS endpoint to WebSocket URL for Realtime API
+      ws_url = endpoint.replace("https://", "wss://") + "/openai/v1"
+
+      # Create async client with WebSocket configuration
+      client = AsyncOpenAI(
+          websocket_base_url=ws_url,
+          api_key=api_key
+      )
+
+  # Audio Session Configuration
+  - name: audio_session_config
+    prompt: |
+      Configure an Azure OpenAI Realtime session for generating podcast audio.
+      Set the output modality to audio, choose a voice, and provide narrator
+      instructions.
+    expected_patterns:
+      - "session.update"
+      - "output_modalities.*audio"
+      - "voice"
+      - "instructions"
+      - "realtime.connect"
+    forbidden_patterns:
+      - "text.*modalities"
+    tags:
+      - session
+      - configuration
+    mock_response: |
+      async with client.realtime.connect(model="gpt-realtime-mini") as conn:
+          # Configure session for audio output
+          await conn.session.update(session={
+              "output_modalities": ["audio"],
+              "voice": "alloy",  # Options: alloy, echo, fable, onyx, nova, shimmer
+              "instructions": "You are a professional podcast narrator. Speak naturally and engagingly with clear enunciation. Pause appropriately between sections."
+          })
+
+  # Sending Content for Narration
+  - name: send_narration_content
+    prompt: |
+      Send a text script to the Azure OpenAI Realtime API for narration.
+      Create a conversation item with the script and trigger response generation.
+    expected_patterns:
+      - "conversation.item.create"
+      - "type.*message"
+      - "role.*user"
+      - "input_text"
+      - "response.create"
+    forbidden_patterns:
+      - '"type": "text"'  # Should be input_text
+    tags:
+      - content
+      - narration
+    mock_response: |
+      script = """
+      Welcome to Tech Insights, your weekly podcast about the future of AI.
+      Today we're exploring how generative models are transforming content creation.
+      """
+
+      # Send text content for narration
+      await conn.conversation.item.create(item={
+          "type": "message",
+          "role": "user",
+          "content": [{
+              "type": "input_text",
+              "text": f"Please narrate the following podcast script naturally: {script}"
+          }]
+      })
+
+      # Trigger response generation
+      await conn.response.create()
+
+  # Streaming Event Processing
+  - name: streaming_event_handler
+    prompt: |
+      Process streaming events from Azure OpenAI Realtime API to collect
+      audio chunks and transcript. Handle audio deltas, transcript deltas,
+      completion, and error events.
+    expected_patterns:
+      - "async for event"
+      - "response.output_audio.delta"
+      - "response.output_audio_transcript.delta"
+      - "response.done"
+      - "error"
+      - "base64.b64decode"
+      - "audio_chunks"
+      - "transcript_parts"
+    forbidden_patterns:
+      - "event.audio"  # Wrong property access
+    tags:
+      - streaming
+      - events
+    mock_response: |
+      import base64
+
+      audio_chunks = []
+      transcript_parts = []
+
+      async for event in conn:
+          if event.type == "response.output_audio.delta":
+              # Decode base64 audio chunk and collect
+              audio_chunks.append(base64.b64decode(event.delta))
+          
+          elif event.type == "response.output_audio_transcript.delta":
+              # Collect transcript text
+              transcript_parts.append(event.delta)
+          
+          elif event.type == "response.done":
+              # Response complete
+              break
+          
+          elif event.type == "error":
+              # Handle API errors
+              raise Exception(f"Realtime API error: {event.error.message}")
+
+      # Combine results
+      pcm_audio = b''.join(audio_chunks)
+      transcript = ''.join(transcript_parts)
+
+  # PCM to WAV Conversion
+  - name: pcm_to_wav_conversion
+    prompt: |
+      Create a function to convert raw PCM audio data to WAV format.
+      Use 24kHz sample rate (required for Realtime API), 16-bit depth, mono channel.
+      Include proper WAV header structure.
+    expected_patterns:
+      - "def.*pcm_to_wav"
+      - "24000"
+      - "struct.pack"
+      - "RIFF"
+      - "WAVE"
+      - "fmt"
+      - "data"
+      - "16.*bits|bits.*16"
+    forbidden_patterns:
+      - "44100"
+      - "48000"
+    tags:
+      - audio
+      - conversion
+    mock_response: |
+      import struct
+
+      def pcm_to_wav(pcm_data: bytes, sample_rate: int = 24000) -> bytes:
+          """Convert raw PCM audio to WAV format.
+          
+          Args:
+              pcm_data: Raw PCM audio bytes (16-bit, mono)
+              sample_rate: Sample rate in Hz (24000 for Realtime API)
+          
+          Returns:
+              Complete WAV file as bytes
+          """
+          num_channels = 1
+          bits_per_sample = 16
+          byte_rate = sample_rate * num_channels * bits_per_sample // 8
+          block_align = num_channels * bits_per_sample // 8
+          data_size = len(pcm_data)
+          
+          # Build WAV header
+          wav_header = struct.pack(
+              '<4sI4s4sIHHIIHH4sI',
+              b'RIFF',
+              36 + data_size,      # File size minus 8 bytes
+              b'WAVE',
+              b'fmt ',
+              16,                  # Subchunk1Size for PCM
+              1,                   # AudioFormat (1 = PCM)
+              num_channels,
+              sample_rate,
+              byte_rate,
+              block_align,
+              bits_per_sample,
+              b'data',
+              data_size
+          )
+          
+          return wav_header + pcm_data
+
+  # Frontend Audio Playback
+  - name: frontend_audio_playback
+    prompt: |
+      Create JavaScript/TypeScript code to play base64-encoded WAV audio
+      in the browser. Convert base64 to blob, create object URL, and
+      ensure proper cleanup to prevent memory leaks.
+    expected_patterns:
+      - "atob"
+      - "Uint8Array"
+      - "Blob"
+      - "audio/wav"
+      - "createObjectURL"
+      - "revokeObjectURL"
+      - "Audio"
+    forbidden_patterns:
+      - "// Missing.*revoke"
+    tags:
+      - frontend
+      - playback
+    mock_response: |
+      /**
+       * Convert base64 string to Blob for audio playback
+       */
+      const base64ToBlob = (base64: string, mimeType: string): Blob => {
+        const bytes = atob(base64);
+        const arr = new Uint8Array(bytes.length);
+        for (let i = 0; i < bytes.length; i++) {
+          arr[i] = bytes.charCodeAt(i);
+        }
+        return new Blob([arr], { type: mimeType });
+      };
+
+      /**
+       * Play audio from base64-encoded WAV data
+       */
+      const playAudio = async (base64Audio: string): Promise<void> => {
+        const blob = base64ToBlob(base64Audio, 'audio/wav');
+        const url = URL.createObjectURL(blob);
+        
+        const audio = new Audio(url);
+        
+        // Clean up object URL after playback to prevent memory leak
+        audio.onended = () => {
+          URL.revokeObjectURL(url);
+        };
+        
+        audio.onerror = () => {
+          URL.revokeObjectURL(url);
+          console.error('Audio playback failed');
+        };
+        
+        await audio.play();
+      };
+
+  # FastAPI Podcast Endpoint
+  - name: fastapi_podcast_endpoint
+    prompt: |
+      Create a FastAPI endpoint for podcast generation that accepts a script
+      and voice selection, generates audio using Azure OpenAI Realtime API,
+      and returns base64 audio with transcript.
+    expected_patterns:
+      - "@router.post"
+      - "PodcastRequest"
+      - "PodcastResponse"
+      - "BaseModel"
+      - "audio_data"
+      - "transcript"
+      - "HTTPException"
+      - "async def"
+    forbidden_patterns:
+      - "def generate"  # Should be async
+    tags:
+      - fastapi
+      - endpoint
+    mock_response: |
+      from fastapi import APIRouter, HTTPException
+      from pydantic import BaseModel, Field
+
+      router = APIRouter(prefix="/api", tags=["podcast"])
+
+      class PodcastRequest(BaseModel):
+          script: str = Field(..., min_length=1, max_length=10000)
+          voice: str = Field(default="alloy", pattern="^(alloy|echo|fable|onyx|nova|shimmer)$")
+
+      class PodcastResponse(BaseModel):
+          audio_data: str  # Base64-encoded WAV
+          transcript: str
+          duration_seconds: float
+
+      @router.post("/podcast/generate", response_model=PodcastResponse)
+      async def generate_podcast(request: PodcastRequest) -> PodcastResponse:
+          """Generate podcast audio from script.
+          
+          Args:
+              request: Podcast generation request with script and voice
+          
+          Returns:
+              Generated audio as base64 WAV with transcript
+          """
+          try:
+              audio_data, transcript = await generate_audio(
+                  script=request.script,
+                  voice=request.voice
+              )
+              
+              # Calculate duration from audio length
+              audio_bytes = base64.b64decode(audio_data)
+              duration = len(audio_bytes) / (24000 * 2)  # 24kHz, 16-bit
+              
+              return PodcastResponse(
+                  audio_data=audio_data,
+                  transcript=transcript,
+                  duration_seconds=round(duration, 2)
+              )
+          except ConnectionError as e:
+              raise HTTPException(status_code=503, detail="Audio service unavailable")
+          except Exception as e:
+              raise HTTPException(status_code=500, detail=f"Audio generation failed: {str(e)}")
+
+  # Complete Generation Function
+  - name: complete_generation_function
+    prompt: |
+      Create a complete async function that generates podcast audio from a script
+      using Azure OpenAI Realtime API. Include WebSocket connection, session config,
+      event handling, and audio conversion. Return base64 audio and transcript.
+    expected_patterns:
+      - "async def.*generate"
+      - "AsyncOpenAI"
+      - "wss://"
+      - "realtime.connect"
+      - "session.update"
+      - "output_modalities.*audio"
+      - "conversation.item.create"
+      - "response.create"
+      - "async for event"
+      - "pcm_to_wav"
+      - "base64.b64encode"
+    tags:
+      - complete
+      - integration
+    mock_response: |
+      import os
+      import base64
+      from openai import AsyncOpenAI
+
+      async def generate_podcast(script: str, voice: str = "alloy") -> tuple[str, str]:
+          """Generate podcast audio from script using Azure OpenAI Realtime API.
+          
+          Args:
+              script: Text content to convert to speech
+              voice: Voice selection (alloy, echo, fable, onyx, nova, shimmer)
+          
+          Returns:
+              Tuple of (base64_audio, transcript)
+          """
+          endpoint = os.environ["AZURE_OPENAI_AUDIO_ENDPOINT"]
+          api_key = os.environ["AZURE_OPENAI_AUDIO_API_KEY"]
+          
+          # Convert to WebSocket URL
+          ws_url = endpoint.replace("https://", "wss://") + "/openai/v1"
+          
+          client = AsyncOpenAI(
+              websocket_base_url=ws_url,
+              api_key=api_key
+          )
+          
+          audio_chunks = []
+          transcript_parts = []
+          
+          async with client.realtime.connect(model="gpt-realtime-mini") as conn:
+              # Configure session for audio generation
+              await conn.session.update(session={
+                  "output_modalities": ["audio"],
+                  "voice": voice,
+                  "instructions": "You are a professional podcast narrator. Read naturally."
+              })
+              
+              # Send script for narration
+              await conn.conversation.item.create(item={
+                  "type": "message",
+                  "role": "user",
+                  "content": [{"type": "input_text", "text": script}]
+              })
+              
+              await conn.response.create()
+              
+              # Process streaming events
+              async for event in conn:
+                  if event.type == "response.output_audio.delta":
+                      audio_chunks.append(base64.b64decode(event.delta))
+                  elif event.type == "response.output_audio_transcript.delta":
+                      transcript_parts.append(event.delta)
+                  elif event.type == "response.done":
+                      break
+                  elif event.type == "error":
+                      raise Exception(f"API error: {event.error.message}")
+          
+          # Convert PCM to WAV
+          pcm_audio = b''.join(audio_chunks)
+          wav_audio = pcm_to_wav(pcm_audio, sample_rate=24000)
+          audio_base64 = base64.b64encode(wav_audio).decode('utf-8')
+          transcript = ''.join(transcript_parts)
+          
+          return audio_base64, transcript

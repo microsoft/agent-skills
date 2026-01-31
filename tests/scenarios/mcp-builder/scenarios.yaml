@@ -1,0 +1,563 @@
+# Test scenarios for mcp-builder skill evaluation
+# Each scenario tests MCP server implementation patterns
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # Basic Python MCP Server
+  - name: basic_python_mcp_server
+    prompt: |
+      Create a basic MCP server in Python using FastMCP that provides
+      a single tool to search for documents by query. Include proper
+      docstrings and type hints.
+    expected_patterns:
+      - "from mcp import FastMCP"
+      - "FastMCP\\("
+      - "@mcp.tool\\(\\)"
+      - "def.*query.*str"
+      - '""".*"""'
+      - "Args:"
+      - "Returns:"
+      - "mcp.run\\(\\)"
+    forbidden_patterns:
+      - "def.*query\\)"  # Missing type hint
+      - "@mcp.tool$"     # Missing parentheses
+    tags:
+      - python
+      - basic
+    mock_response: |
+      from mcp import FastMCP
+      import json
+
+      mcp = FastMCP("document-search")
+
+      @mcp.tool()
+      def search_documents(query: str, limit: int = 10) -> str:
+          """Search for documents matching the query.
+          
+          Args:
+              query: The search query string
+              limit: Maximum number of results to return
+          
+          Returns:
+              JSON string with matching documents
+          """
+          # Simulate document search
+          results = [
+              {"id": f"doc_{i}", "title": f"Document about {query} #{i}"}
+              for i in range(min(limit, 5))
+          ]
+          return json.dumps({"total": len(results), "results": results})
+
+      if __name__ == "__main__":
+          mcp.run()
+
+  # TypeScript MCP Server
+  - name: typescript_mcp_server
+    prompt: |
+      Create an MCP server in TypeScript that provides a tool to
+      create and list items. Use proper input schemas with Zod
+      and include tool annotations.
+    expected_patterns:
+      - "import.*Server"
+      - "import.*StdioServerTransport"
+      - "registerTool"
+      - "inputSchema"
+      - "description"
+      - "handler"
+      - "type.*object"
+      - "properties"
+      - "required"
+    forbidden_patterns:
+      - "any"  # Should use proper types
+    tags:
+      - typescript
+      - basic
+    mock_response: |
+      import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+      import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+      const server = new Server({
+        name: "item-manager",
+        version: "1.0.0",
+      });
+
+      // Store items in memory
+      const items: Map<string, { name: string; description: string }> = new Map();
+
+      server.registerTool({
+        name: "items_create",
+        description: "Create a new item with a name and description",
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: false,
+        },
+        inputSchema: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Item name" },
+            description: { type: "string", description: "Item description" }
+          },
+          required: ["name", "description"]
+        },
+        handler: async (params) => {
+          const id = `item_${Date.now()}`;
+          items.set(id, { name: params.name, description: params.description });
+          return { 
+            content: [{ 
+              type: "text", 
+              text: JSON.stringify({ id, ...params }) 
+            }] 
+          };
+        }
+      });
+
+      server.registerTool({
+        name: "items_list",
+        description: "List all items",
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+        },
+        inputSchema: {
+          type: "object",
+          properties: {},
+          required: []
+        },
+        handler: async () => {
+          const allItems = Array.from(items.entries()).map(([id, item]) => ({
+            id,
+            ...item
+          }));
+          return { 
+            content: [{ 
+              type: "text", 
+              text: JSON.stringify(allItems) 
+            }] 
+          };
+        }
+      });
+
+      const transport = new StdioServerTransport();
+      await server.connect(transport);
+
+  # Error Handling Pattern
+  - name: error_handling_mcp
+    prompt: |
+      Create an MCP tool in Python that fetches a user by ID,
+      with proper error handling that returns actionable error
+      messages when the user is not found or there's a connection error.
+    expected_patterns:
+      - "@mcp.tool\\(\\)"
+      - "def.*user_id.*str"
+      - "error"
+      - "suggestion"
+      - "try:"
+      - "except"
+      - "json.dumps"
+    forbidden_patterns:
+      - 'return "Error"'
+      - "pass$"
+    tags:
+      - python
+      - error-handling
+    mock_response: |
+      import json
+
+      @mcp.tool()
+      def get_user(user_id: str) -> str:
+          """Retrieve a user by their unique identifier.
+          
+          Args:
+              user_id: The unique user identifier (e.g., 'user_123')
+          
+          Returns:
+              JSON string with user details or error information
+          """
+          try:
+              user = fetch_user_from_database(user_id)
+              if user is None:
+                  return json.dumps({
+                      "error": "User not found",
+                      "user_id": user_id,
+                      "suggestion": "Verify the user ID or use list_users() to find valid IDs"
+                  })
+              return json.dumps({
+                  "id": user.id,
+                  "name": user.name,
+                  "email": user.email,
+                  "role": user.role
+              })
+          except ConnectionError:
+              return json.dumps({
+                  "error": "Database connection failed",
+                  "suggestion": "Check network connectivity and retry in a few seconds"
+              })
+          except Exception as e:
+              return json.dumps({
+                  "error": f"Unexpected error: {str(e)}",
+                  "suggestion": "Contact support if the issue persists"
+              })
+
+  # Tool with Pydantic Validation
+  - name: pydantic_validation_mcp
+    prompt: |
+      Create an MCP tool in Python that creates a new project,
+      using Pydantic for input validation. The project should
+      have a name (required, 1-100 chars) and optional description.
+    expected_patterns:
+      - "from pydantic import"
+      - "BaseModel"
+      - "Field"
+      - "min_length|max_length|ge|le"
+      - "class.*Params|class.*Input|class.*Request"
+      - "@mcp.tool"
+    forbidden_patterns:
+      - "def.*\\*\\*kwargs"  # Should use typed model
+    tags:
+      - python
+      - validation
+    mock_response: |
+      from pydantic import BaseModel, Field
+      from typing import Optional
+      import json
+      import uuid
+
+      class CreateProjectParams(BaseModel):
+          """Parameters for creating a new project."""
+          name: str = Field(..., min_length=1, max_length=100, description="Project name")
+          description: Optional[str] = Field(None, max_length=500, description="Project description")
+
+      @mcp.tool()
+      def create_project(params: CreateProjectParams) -> str:
+          """Create a new project with the given parameters.
+          
+          Args:
+              params: Project creation parameters including name and optional description
+          
+          Returns:
+              JSON string with the created project details
+          """
+          project = {
+              "id": str(uuid.uuid4()),
+              "name": params.name,
+              "description": params.description,
+              "status": "active",
+              "created_at": "2024-01-15T10:00:00Z"
+          }
+          return json.dumps(project)
+
+  # Resource Definition
+  - name: resource_definition_mcp
+    prompt: |
+      Create an MCP server in Python that exposes a configuration
+      resource at 'config://settings' and a dynamic resource
+      pattern for user profiles at 'users://{user_id}'.
+    expected_patterns:
+      - "@mcp.resource"
+      - "config://settings"
+      - "users://"
+      - "def.*settings"
+      - "json.dumps"
+    tags:
+      - python
+      - resources
+    mock_response: |
+      from mcp import FastMCP
+      import json
+
+      mcp = FastMCP("resource-server")
+
+      @mcp.resource("config://settings")
+      def get_settings() -> str:
+          """Server configuration settings.
+          
+          Returns:
+              JSON string with current server settings
+          """
+          return json.dumps({
+              "api_version": "1.0.0",
+              "features": ["search", "analytics", "export"],
+              "limits": {
+                  "max_results": 1000,
+                  "rate_limit": "100/minute"
+              }
+          })
+
+      @mcp.resource("users://{user_id}")
+      def get_user_profile(user_id: str) -> str:
+          """Get user profile by ID.
+          
+          Args:
+              user_id: The user identifier
+          
+          Returns:
+              JSON string with user profile data
+          """
+          # In real implementation, fetch from database
+          return json.dumps({
+              "id": user_id,
+              "name": f"User {user_id}",
+              "email": f"{user_id}@example.com",
+              "preferences": {"theme": "dark", "language": "en"}
+          })
+
+      if __name__ == "__main__":
+          mcp.run()
+
+  # Async Tool Implementation
+  - name: async_tool_mcp
+    prompt: |
+      Create an async MCP tool in Python that fetches data from
+      an external API using aiohttp. Include proper async/await
+      patterns and error handling.
+    expected_patterns:
+      - "async def"
+      - "await"
+      - "aiohttp"
+      - "ClientSession"
+      - "@mcp.tool"
+      - "async with"
+    forbidden_patterns:
+      - "import requests"
+      - "requests.get"
+    tags:
+      - python
+      - async
+    mock_response: |
+      import aiohttp
+      import json
+      from mcp import FastMCP
+
+      mcp = FastMCP("async-api-server")
+
+      @mcp.tool()
+      async def fetch_weather(city: str) -> str:
+          """Fetch current weather for a city from external API.
+          
+          Args:
+              city: City name to get weather for
+          
+          Returns:
+              JSON string with weather data
+          """
+          try:
+              async with aiohttp.ClientSession() as session:
+                  url = f"https://api.weather.example/v1/current?city={city}"
+                  async with session.get(url) as response:
+                      if response.status == 200:
+                          data = await response.json()
+                          return json.dumps({
+                              "city": city,
+                              "temperature": data["temp"],
+                              "conditions": data["conditions"],
+                              "humidity": data["humidity"]
+                          })
+                      elif response.status == 404:
+                          return json.dumps({
+                              "error": "City not found",
+                              "suggestion": f"Check spelling of '{city}' or try a nearby major city"
+                          })
+                      else:
+                          return json.dumps({
+                              "error": f"API error: {response.status}",
+                              "suggestion": "Try again in a few moments"
+                          })
+          except aiohttp.ClientError as e:
+              return json.dumps({
+                  "error": "Network error",
+                  "details": str(e),
+                  "suggestion": "Check network connectivity"
+              })
+
+      if __name__ == "__main__":
+          mcp.run()
+
+  # Multi-Tool Server with Consistent Naming
+  - name: multi_tool_naming_mcp
+    prompt: |
+      Create an MCP server in Python for GitHub operations with
+      tools to create, list, and close issues. Use consistent
+      naming convention with 'github_' prefix.
+    expected_patterns:
+      - "github_create_issue"
+      - "github_list_issues"
+      - "github_close_issue"
+      - "@mcp.tool\\(\\)"
+      - "def github_"
+    forbidden_patterns:
+      - "createIssue"
+      - "listIssues"
+      - "def create_issue"  # Missing prefix
+    tags:
+      - python
+      - naming
+      - multi-tool
+    mock_response: |
+      from mcp import FastMCP
+      import json
+
+      mcp = FastMCP("github-issues")
+
+      @mcp.tool()
+      def github_create_issue(repo: str, title: str, body: str, labels: list[str] = []) -> str:
+          """Create a new GitHub issue in the specified repository.
+          
+          Args:
+              repo: Repository in format 'owner/repo'
+              title: Issue title
+              body: Issue body/description
+              labels: Optional list of label names
+          
+          Returns:
+              JSON with created issue details
+          """
+          # Simulate GitHub API call
+          issue = {
+              "number": 42,
+              "title": title,
+              "body": body,
+              "labels": labels,
+              "state": "open",
+              "url": f"https://github.com/{repo}/issues/42"
+          }
+          return json.dumps(issue)
+
+      @mcp.tool()
+      def github_list_issues(repo: str, state: str = "open", limit: int = 30) -> str:
+          """List issues in a GitHub repository.
+          
+          Args:
+              repo: Repository in format 'owner/repo'
+              state: Issue state filter ('open', 'closed', 'all')
+              limit: Maximum number of issues to return
+          
+          Returns:
+              JSON array of issue summaries
+          """
+          # Simulate GitHub API response
+          issues = [
+              {"number": i, "title": f"Issue #{i}", "state": state}
+              for i in range(1, min(limit, 5) + 1)
+          ]
+          return json.dumps({"total": len(issues), "issues": issues})
+
+      @mcp.tool()
+      def github_close_issue(repo: str, issue_number: int) -> str:
+          """Close a GitHub issue by number.
+          
+          Args:
+              repo: Repository in format 'owner/repo'
+              issue_number: The issue number to close
+          
+          Returns:
+              JSON with updated issue state
+          """
+          return json.dumps({
+              "number": issue_number,
+              "state": "closed",
+              "closed_at": "2024-01-15T12:00:00Z"
+          })
+
+      if __name__ == "__main__":
+          mcp.run()
+
+  # Tool Annotations
+  - name: tool_annotations_mcp
+    prompt: |
+      Create MCP tools in TypeScript with proper annotations:
+      - A read-only tool to list items (readOnlyHint: true)
+      - A destructive tool to delete items (destructiveHint: true)
+      - An idempotent tool to upsert items (idempotentHint: true)
+    expected_patterns:
+      - "annotations"
+      - "readOnlyHint.*true"
+      - "destructiveHint.*true"
+      - "idempotentHint.*true"
+      - "registerTool"
+    tags:
+      - typescript
+      - annotations
+    mock_response: |
+      import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+
+      const server = new Server({
+        name: "annotated-server",
+        version: "1.0.0",
+      });
+
+      // Read-only tool - safe to call anytime
+      server.registerTool({
+        name: "items_list",
+        description: "List all items in the system",
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          idempotentHint: true,
+          openWorldHint: false,
+        },
+        inputSchema: {
+          type: "object",
+          properties: {
+            filter: { type: "string", description: "Optional filter" }
+          },
+          required: []
+        },
+        handler: async (params) => {
+          const items = await listItems(params.filter);
+          return { content: [{ type: "text", text: JSON.stringify(items) }] };
+        }
+      });
+
+      // Destructive tool - permanently removes data
+      server.registerTool({
+        name: "items_delete",
+        description: "Permanently delete an item by ID",
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: true,  // Deleting twice is same as once
+          openWorldHint: false,
+        },
+        inputSchema: {
+          type: "object",
+          properties: {
+            item_id: { type: "string", description: "Item ID to delete" }
+          },
+          required: ["item_id"]
+        },
+        handler: async (params) => {
+          await deleteItem(params.item_id);
+          return { content: [{ type: "text", text: "Item deleted" }] };
+        }
+      });
+
+      // Idempotent upsert tool
+      server.registerTool({
+        name: "items_upsert",
+        description: "Create or update an item",
+        annotations: {
+          readOnlyHint: false,
+          destructiveHint: false,
+          idempotentHint: true,  // Same input always produces same result
+          openWorldHint: false,
+        },
+        inputSchema: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Item ID" },
+            name: { type: "string", description: "Item name" },
+            data: { type: "object", description: "Item data" }
+          },
+          required: ["id", "name"]
+        },
+        handler: async (params) => {
+          const item = await upsertItem(params.id, params.name, params.data);
+          return { content: [{ type: "text", text: JSON.stringify(item) }] };
+        }
+      });
