@@ -494,6 +494,93 @@ function summaryToDict(summary: EvaluationSummary): Record<string, unknown> {
   };
 }
 
+/**
+ * Convert all-skills summary to a plain object for JSON serialization.
+ */
+function allSkillsSummaryToDict(summary: AllSkillsSummary): Record<string, unknown> {
+  return {
+    total_skills: summary.totalSkills,
+    passed_skills: summary.passedSkills,
+    failed_skills: summary.failedSkills,
+    total_scenarios: summary.totalScenarios,
+    passed_scenarios: summary.passedScenarios,
+    failed_scenarios: summary.failedScenarios,
+    avg_score: summary.avgScore,
+    duration_ms: summary.durationMs,
+    mode: summary.mode,
+    skills: summary.skills.map(s => summaryToDict(s)),
+  };
+}
+
+/**
+ * Format all-skills summary as a markdown table for GitHub Actions job summary.
+ */
+function formatAllSkillsMarkdown(summary: AllSkillsSummary): string {
+  const lines: string[] = [];
+  
+  // Header
+  lines.push("# Skill Evaluation Results");
+  lines.push("");
+  lines.push(`**Mode:** ${summary.mode}`);
+  lines.push(`**Duration:** ${(summary.durationMs / 1000).toFixed(1)}s`);
+  lines.push("");
+  
+  // Summary stats
+  lines.push("## Summary");
+  lines.push("");
+  lines.push(`| Metric | Value |`);
+  lines.push(`|--------|-------|`);
+  lines.push(`| Total Skills | ${summary.totalSkills} |`);
+  lines.push(`| Passed Skills | ${summary.passedSkills} |`);
+  lines.push(`| Failed Skills | ${summary.failedSkills} |`);
+  lines.push(`| Pass Rate | ${((summary.passedSkills / summary.totalSkills) * 100).toFixed(1)}% |`);
+  lines.push(`| Total Scenarios | ${summary.totalScenarios} |`);
+  lines.push(`| Passed Scenarios | ${summary.passedScenarios} |`);
+  lines.push(`| Average Score | ${summary.avgScore.toFixed(1)} |`);
+  lines.push("");
+  
+  // Skills table
+  lines.push("## Skills");
+  lines.push("");
+  lines.push("| Skill | Scenarios | Passed | Failed | Score | Status |");
+  lines.push("|-------|-----------|--------|--------|-------|--------|");
+  
+  for (const skill of summary.skills) {
+    const passRate = skill.totalScenarios > 0 
+      ? ((skill.passed / skill.totalScenarios) * 100).toFixed(0)
+      : "N/A";
+    const status = skill.failed === 0 ? "✅" : "❌";
+    lines.push(
+      `| ${skill.skillName} | ${skill.totalScenarios} | ${skill.passed} | ${skill.failed} | ${skill.avgScore.toFixed(1)} (${passRate}%) | ${status} |`
+    );
+  }
+  
+  // Failed skills details (if any)
+  const failedSkills = summary.skills.filter(s => s.failed > 0);
+  if (failedSkills.length > 0) {
+    lines.push("");
+    lines.push("## Failed Scenarios");
+    lines.push("");
+    
+    for (const skill of failedSkills) {
+      lines.push(`### ${skill.skillName}`);
+      lines.push("");
+      for (const result of skill.results) {
+        if (!result.passed) {
+          lines.push(`- **${result.scenario}** (score: ${result.score.toFixed(1)})`);
+          const errors = result.findings.filter(f => f.severity === Severity.ERROR);
+          for (const err of errors.slice(0, 3)) { // Limit to 3 errors per scenario
+            lines.push(`  - ${err.message}`);
+          }
+        }
+      }
+      lines.push("");
+    }
+  }
+  
+  return lines.join("\n");
+}
+
 function convertRalphToSummary(ralph: RalphLoopSummary): EvaluationSummary {
   const results: EvaluationResult[] = [];
   
@@ -532,6 +619,7 @@ function convertRalphToSummary(ralph: RalphLoopSummary): EvaluationSummary {
 
 interface CLIOptions {
   list?: boolean;
+  all?: boolean;
   filter?: string;
   mock?: boolean;
   verbose?: boolean;
@@ -542,6 +630,19 @@ interface CLIOptions {
   threshold?: number;
 }
 
+interface AllSkillsSummary {
+  totalSkills: number;
+  passedSkills: number;
+  failedSkills: number;
+  totalScenarios: number;
+  passedScenarios: number;
+  failedScenarios: number;
+  avgScore: number;
+  durationMs: number;
+  mode: string;
+  skills: EvaluationSummary[];
+}
+
 async function main(): Promise<number> {
   const program = new Command();
 
@@ -550,10 +651,11 @@ async function main(): Promise<number> {
     .description("Run skill evaluations against acceptance criteria")
     .argument("[skill]", "Skill name to evaluate (e.g., azure-ai-agents-py)")
     .option("--list", "List available skills with test scenarios")
+    .option("--all", "Run evaluation on all available skills")
     .option("--filter <pattern>", "Filter scenarios by name or tag")
     .option("--mock", "Use mock responses instead of Copilot SDK")
     .option("-v, --verbose", "Verbose output")
-    .option("--output <format>", "Output format (text/json)", "text")
+    .option("--output <format>", "Output format (text/json/markdown)", "text")
     .option("--output-file <file>", "Write results to file")
     .option("--ralph", "Enable Ralph Loop iterative improvement mode")
     .option("--max-iterations <n>", "Max iterations for Ralph Loop (default: 5)", parseInt)
@@ -596,6 +698,125 @@ async function main(): Promise<number> {
       }
     }
     return 0;
+  }
+
+  if (options.all) {
+    const skills = runner.listAvailableSkills();
+    if (skills.length === 0) {
+      console.log(chalk.red("No skills with both acceptance criteria and test scenarios found."));
+      return 1;
+    }
+
+    console.log(`Running evaluation on ${chalk.cyan(skills.length.toString())} skills`);
+    console.log(`Mode: ${useMock ? chalk.yellow("mock") : chalk.green("copilot")}`);
+    console.log("-".repeat(50));
+
+    const startTime = Date.now();
+    const skillResults: EvaluationSummary[] = [];
+    let passedSkills = 0;
+    let failedSkills = 0;
+
+    for (const skillName of skills) {
+      if (options.verbose) {
+        console.log(`\n${chalk.cyan(skillName)}:`);
+      } else {
+        process.stdout.write(`${skillName}... `);
+      }
+
+      try {
+        const summary = await runner.run(skillName, options.filter);
+        skillResults.push(summary);
+
+        if (summary.failed === 0) {
+          passedSkills++;
+          if (!options.verbose) {
+            console.log(chalk.green(`✓ ${summary.avgScore.toFixed(0)}`));
+          }
+        } else {
+          failedSkills++;
+          if (!options.verbose) {
+            console.log(chalk.red(`✗ ${summary.passed}/${summary.totalScenarios}`));
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        failedSkills++;
+        skillResults.push({
+          skillName,
+          totalScenarios: 0,
+          passed: 0,
+          failed: 1,
+          avgScore: 0,
+          durationMs: 0,
+          results: [],
+        });
+        if (!options.verbose) {
+          console.log(chalk.red(`✗ Error: ${message}`));
+        } else {
+          console.log(chalk.red(`  Error: ${message}`));
+        }
+      }
+    }
+
+    const durationMs = Date.now() - startTime;
+    const totalScenarios = skillResults.reduce((sum, s) => sum + s.totalScenarios, 0);
+    const passedScenarios = skillResults.reduce((sum, s) => sum + s.passed, 0);
+    const failedScenarios = skillResults.reduce((sum, s) => sum + s.failed, 0);
+    const avgScore = skillResults.length > 0
+      ? skillResults.reduce((sum, s) => sum + s.avgScore, 0) / skillResults.length
+      : 0;
+
+    const allSummary: AllSkillsSummary = {
+      totalSkills: skills.length,
+      passedSkills,
+      failedSkills,
+      totalScenarios,
+      passedScenarios,
+      failedScenarios,
+      avgScore,
+      durationMs,
+      mode: useMock ? "mock" : "copilot",
+      skills: skillResults,
+    };
+
+    let output: string;
+    if (options.output === "json") {
+      output = JSON.stringify(allSkillsSummaryToDict(allSummary), null, 2);
+    } else if (options.output === "markdown") {
+      output = formatAllSkillsMarkdown(allSummary);
+    } else {
+      const passRate = ((passedSkills / skills.length) * 100).toFixed(1);
+      const lines = [
+        "",
+        "=".repeat(50),
+        `All Skills Evaluation Summary`,
+        "=".repeat(50),
+        `Skills: ${skills.length} (${chalk.green(passedSkills.toString())} passed, ${failedSkills > 0 ? chalk.red(failedSkills.toString()) : "0"} failed)`,
+        `Scenarios: ${totalScenarios} (${passedScenarios} passed, ${failedScenarios} failed)`,
+        `Pass Rate: ${passRate}%`,
+        `Average Score: ${avgScore.toFixed(1)}`,
+        `Duration: ${(durationMs / 1000).toFixed(1)}s`,
+      ];
+
+      if (failedSkills > 0) {
+        lines.push("");
+        lines.push(chalk.red("Failed Skills:"));
+        for (const skill of skillResults.filter(s => s.failed > 0)) {
+          lines.push(`  - ${skill.skillName}: ${skill.passed}/${skill.totalScenarios} passed (score: ${skill.avgScore.toFixed(1)})`);
+        }
+      }
+
+      output = lines.join("\n");
+    }
+
+    if (options.outputFile) {
+      writeFileSync(options.outputFile, output);
+      console.log(`\nResults written to: ${options.outputFile}`);
+    } else {
+      console.log(output);
+    }
+
+    return failedSkills === 0 ? 0 : 1;
   }
 
   if (!skillArg) {

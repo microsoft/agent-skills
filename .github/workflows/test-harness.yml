@@ -29,10 +29,31 @@ jobs:
         working-directory: tests
         run: pnpm typecheck
 
-      - name: Run tests
+      - name: Run unit tests
         working-directory: tests
         run: pnpm test:run
 
-      - name: Run harness
+      - name: Run skill evaluations (all skills)
         working-directory: tests
-        run: pnpm harness azure-ai-agents-py
+        run: |
+          pnpm harness --all --mock --output markdown --output-file results.md
+          pnpm harness --all --mock --output json --output-file results.json
+
+      - name: Write job summary
+        if: always()
+        working-directory: tests
+        run: |
+          if [ -f results.md ]; then
+            cat results.md >> $GITHUB_STEP_SUMMARY
+          else
+            echo "⚠️ No results file found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evaluation-results
+          path: |
+            tests/results.md
+            tests/results.json
