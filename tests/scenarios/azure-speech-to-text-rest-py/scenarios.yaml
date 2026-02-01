@@ -1,0 +1,423 @@
+config:
+  max_tokens: 2000
+  model: gpt-4
+  temperature: 0.3
+scenarios:
+- expected_patterns:
+  - requests\.post
+  - stt\.speech\.microsoft\.com
+  - Ocp-Apim-Subscription-Key
+  - Content-Type
+  - audio/wav; codecs=audio/pcm; samplerate=16000
+  - language
+  forbidden_patterns:
+  - SpeechRecognizer
+  - SpeechConfig
+  - azure\.cognitiveservices\.speech
+  - DefaultAzureCredential
+  - AzureKeyCredential
+  mock_response: |
+    import os
+    import requests
+
+    def transcribe_audio(audio_file_path: str, language: str = "en-US") -> dict:
+        """Transcribe short audio file (max 60 seconds) using REST API."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json"
+        }
+        
+        params = {"language": language}
+        
+        with open(audio_file_path, "rb") as audio_file:
+            response = requests.post(url, headers=headers, params=params, data=audio_file)
+        
+        response.raise_for_status()
+        return response.json()
+
+    # Usage
+    result = transcribe_audio("audio.wav", "en-US")
+    print(result["DisplayText"])
+  name: basic_transcription
+  prompt: |
+    Create a basic speech-to-text transcription function using Azure Speech REST API.
+    Use the requests library to make an HTTP POST request to transcribe a WAV audio file.
+    Include proper authentication with subscription key from environment variables.
+  tags:
+  - basic
+  - authentication
+- expected_patterns:
+  - format.*detailed
+  - NBest
+  - Confidence
+  - Display
+  - RecognitionStatus
+  forbidden_patterns:
+  - format.*simple
+  mock_response: |
+    import os
+    import requests
+
+    def transcribe_detailed(audio_file_path: str, language: str = "en-US") -> dict:
+        """Transcribe audio with detailed response including NBest alternatives."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json"
+        }
+        
+        params = {
+            "language": language,
+            "format": "detailed"
+        }
+        
+        with open(audio_file_path, "rb") as audio_file:
+            response = requests.post(url, headers=headers, params=params, data=audio_file)
+        
+        response.raise_for_status()
+        result = response.json()
+        
+        if result.get("RecognitionStatus") == "Success":
+            for item in result.get("NBest", []):
+                print(f"Text: {item['Display']}")
+                print(f"Confidence: {item['Confidence']}")
+        
+        return result
+  name: detailed_format_response
+  prompt: |
+    Create a speech-to-text function that uses the detailed response format.
+    Parse the NBest array to extract multiple recognition alternatives with confidence scores.
+    Print each alternative's Display text and Confidence score.
+  tags:
+  - detailed
+  - nbest
+- expected_patterns:
+  - Transfer-Encoding.*chunked
+  - Expect.*100-continue
+  - yield
+  - chunk
+  - generate_chunks|def.*chunk
+  forbidden_patterns:
+  - data=audio_file\.read\(\)
+  mock_response: |
+    import os
+    import requests
+
+    def transcribe_chunked(audio_file_path: str, language: str = "en-US") -> dict:
+        """Stream audio in chunks for lower latency."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json",
+            "Transfer-Encoding": "chunked",
+            "Expect": "100-continue"
+        }
+        
+        params = {"language": language, "format": "detailed"}
+        
+        def generate_chunks(file_path: str, chunk_size: int = 1024):
+            with open(file_path, "rb") as f:
+                while chunk := f.read(chunk_size):
+                    yield chunk
+        
+        response = requests.post(
+            url, 
+            headers=headers, 
+            params=params, 
+            data=generate_chunks(audio_file_path)
+        )
+        
+        response.raise_for_status()
+        return response.json()
+  name: chunked_transfer
+  prompt: |
+    Create a speech-to-text function that uses chunked transfer encoding for lower latency.
+    Stream the audio file in chunks using a generator function.
+    Include the Transfer-Encoding and Expect headers required for chunked transfer.
+  tags:
+  - chunked
+  - streaming
+  - latency
+- expected_patterns:
+  - sts/v1\.0/issueToken
+  - Bearer
+  - Authorization
+  - get_access_token|get_token|fetch_token
+  forbidden_patterns:
+  - Ocp-Apim-Subscription-Key.*stt\.speech
+  mock_response: |
+    import os
+    import requests
+
+    def get_access_token() -> str:
+        """Get access token from the token endpoint."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        token_url = f"https://{region}.api.cognitive.microsoft.com/sts/v1.0/issueToken"
+        
+        response = requests.post(
+            token_url,
+            headers={
+                "Ocp-Apim-Subscription-Key": api_key,
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Content-Length": "0"
+            }
+        )
+        response.raise_for_status()
+        return response.text
+
+    def transcribe_with_token(audio_file_path: str, language: str = "en-US") -> dict:
+        """Transcribe audio using bearer token authentication."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        token = get_access_token()
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json"
+        }
+        
+        params = {"language": language}
+        
+        with open(audio_file_path, "rb") as audio_file:
+            response = requests.post(url, headers=headers, params=params, data=audio_file)
+        
+        response.raise_for_status()
+        return response.json()
+  name: bearer_token_auth
+  prompt: |
+    Create a speech-to-text function that uses bearer token authentication instead of subscription key.
+    First obtain an access token from the token endpoint, then use it in the Authorization header.
+    The token endpoint is at {region}.api.cognitive.microsoft.com/sts/v1.0/issueToken.
+  tags:
+  - authentication
+  - bearer-token
+- expected_patterns:
+  - aiohttp
+  - async def
+  - await
+  - ClientSession
+  - async with
+  forbidden_patterns:
+  - requests\.post
+  - requests\.get
+  mock_response: |
+    import os
+    import aiohttp
+    import asyncio
+
+    async def transcribe_async(audio_file_path: str, language: str = "en-US") -> dict:
+        """Async version using aiohttp."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json"
+        }
+        
+        params = {"language": language, "format": "detailed"}
+        
+        async with aiohttp.ClientSession() as session:
+            with open(audio_file_path, "rb") as f:
+                audio_data = f.read()
+            
+            async with session.post(url, headers=headers, params=params, data=audio_data) as response:
+                response.raise_for_status()
+                return await response.json()
+
+    # Usage
+    result = asyncio.run(transcribe_async("audio.wav", "en-US"))
+    print(result["DisplayText"])
+  name: async_transcription
+  prompt: |
+    Create an async speech-to-text function using aiohttp instead of requests.
+    Use async/await patterns with ClientSession for non-blocking HTTP requests.
+    Do not use the blocking requests library.
+  tags:
+  - async
+  - aiohttp
+- expected_patterns:
+  - 'try:'
+  - except
+  - status_code.*200
+  - status_code.*400|status_code.*401|status_code.*403
+  - RecognitionStatus
+  - RequestException|requests\.exceptions
+  forbidden_patterns:
+  - return response\.json\(\)\["DisplayText"\]
+  mock_response: |
+    import os
+    import requests
+
+    def transcribe_with_error_handling(audio_path: str, language: str = "en-US") -> dict | None:
+        """Transcribe with proper error handling."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        try:
+            with open(audio_path, "rb") as audio_file:
+                response = requests.post(
+                    url,
+                    headers={
+                        "Ocp-Apim-Subscription-Key": api_key,
+                        "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+                        "Accept": "application/json"
+                    },
+                    params={"language": language, "format": "detailed"},
+                    data=audio_file
+                )
+            
+            if response.status_code == 200:
+                result = response.json()
+                if result.get("RecognitionStatus") == "Success":
+                    return result
+                else:
+                    print(f"Recognition failed: {result.get('RecognitionStatus')}")
+                    return None
+            elif response.status_code == 400:
+                print("Bad request: Check language code or audio format")
+            elif response.status_code == 401:
+                print("Unauthorized: Check API key or token")
+            elif response.status_code == 403:
+                print("Forbidden: Missing authorization header")
+            else:
+                print(f"Error {response.status_code}: {response.text}")
+            
+            return None
+            
+        except requests.exceptions.RequestException as e:
+            print(f"Request failed: {e}")
+            return None
+  name: error_handling
+  prompt: |
+    Create a speech-to-text function with comprehensive error handling.
+    Handle HTTP status codes (200, 400, 401, 403) and RecognitionStatus values.
+    Also handle requests.exceptions.RequestException for network errors.
+  tags:
+  - error-handling
+  - production
+- expected_patterns:
+  - profanity
+  - masked|removed|raw
+  - params.*profanity|profanity.*params
+  forbidden_patterns: []
+  mock_response: |
+    import os
+    import requests
+
+    def transcribe_with_profanity_filter(
+        audio_file_path: str, 
+        language: str = "en-US",
+        profanity_mode: str = "masked"
+    ) -> dict:
+        """Transcribe audio with configurable profanity handling.
+        
+        Args:
+            profanity_mode: "masked" (asterisks), "removed" (omit), or "raw" (include)
+        """
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": "audio/wav; codecs=audio/pcm; samplerate=16000",
+            "Accept": "application/json"
+        }
+        
+        params = {
+            "language": language,
+            "format": "detailed",
+            "profanity": profanity_mode
+        }
+        
+        with open(audio_file_path, "rb") as audio_file:
+            response = requests.post(url, headers=headers, params=params, data=audio_file)
+        
+        response.raise_for_status()
+        return response.json()
+
+    # Usage examples
+    result_masked = transcribe_with_profanity_filter("audio.wav", profanity_mode="masked")
+    result_raw = transcribe_with_profanity_filter("audio.wav", profanity_mode="raw")
+  name: profanity_handling
+  prompt: |
+    Create a speech-to-text function with configurable profanity handling.
+    Support the three profanity modes: "masked" (asterisks), "removed" (omit), and "raw" (include).
+    Pass the profanity parameter in the query string.
+  tags:
+  - profanity
+  - content-filtering
+- expected_patterns:
+  - audio/ogg; codecs=opus
+  - Content-Type.*ogg
+  forbidden_patterns:
+  - audio/wav; codecs=audio/pcm
+  - samplerate=16000
+  mock_response: |
+    import os
+    import requests
+
+    def transcribe_ogg_opus(audio_file_path: str, language: str = "en-US") -> dict:
+        """Transcribe OGG OPUS audio file (smaller file size than WAV)."""
+        region = os.environ["AZURE_SPEECH_REGION"]
+        api_key = os.environ["AZURE_SPEECH_KEY"]
+        
+        url = f"https://{region}.stt.speech.microsoft.com/speech/recognition/conversation/cognitiveservices/v1"
+        
+        headers = {
+            "Ocp-Apim-Subscription-Key": api_key,
+            "Content-Type": "audio/ogg; codecs=opus",
+            "Accept": "application/json"
+        }
+        
+        params = {
+            "language": language,
+            "format": "detailed"
+        }
+        
+        with open(audio_file_path, "rb") as audio_file:
+            response = requests.post(url, headers=headers, params=params, data=audio_file)
+        
+        response.raise_for_status()
+        return response.json()
+
+    # Usage
+    result = transcribe_ogg_opus("audio.ogg", "en-US")
+    if result.get("RecognitionStatus") == "Success":
+        print(result.get("DisplayText"))
+  name: ogg_opus_format
+  prompt: |
+    Create a speech-to-text function for OGG OPUS audio format instead of WAV.
+    Use the correct Content-Type header for OGG OPUS files.
+    This format has smaller file sizes compared to WAV PCM.
+  tags:
+  - audio-format
+  - ogg
+  - opus
