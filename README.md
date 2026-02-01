@@ -54,7 +54,7 @@ npx ctx7 skills install /microsoft/agent-skills azure-ai-projects-py
 
 | Resource | Description |
 |----------|-------------|
-| **[128 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
+| **[129 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
@@ -71,12 +71,12 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ## Skill Catalog
 
-> 128 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
+> 129 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
 
 | Language | Count | Suffix | 
 |----------|-------|--------|
 | [Core](#core) | 5 | — |
-| [Python](#python) | 41 | `-py` |
+| [Python](#python) | 42 | `-py` |
 | [.NET](#net) | 29 | `-dotnet` |
 | [TypeScript](#typescript) | 25 | `-ts` |
 | [Java](#java) | 28 | `-java` |
@@ -99,7 +99,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### Python
 
-> 41 skills • suffix: `-py`
+> 42 skills • suffix: `-py`
 
 <details>
 <summary><strong>Foundry & AI</strong> (7 skills)</summary>
@@ -117,7 +117,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 </details>
 
 <details>
-<summary><strong>AI Services</strong> (8 skills)</summary>
+<summary><strong>AI Services</strong> (9 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
@@ -129,6 +129,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 | [azure-ai-translation-text-py](.github/skills/azure-ai-translation-text-py/) | Text Translation — real-time translation, transliteration, language detection. |
 | [azure-ai-vision-imageanalysis-py](.github/skills/azure-ai-vision-imageanalysis-py/) | Vision SDK — captions, tags, objects, OCR, people detection, smart cropping. |
 | [azure-ai-voicelive-py](.github/skills/azure-ai-voicelive-py/) | Voice Live SDK — real-time bidirectional voice AI with WebSocket, VAD, avatars. |
+| [azure-speech-to-text-rest-py](.github/skills/azure-speech-to-text-rest-py/) | Speech to Text REST API — transcribe short audio (≤60 seconds) via HTTP without Speech SDK. |
 
 </details>
 
