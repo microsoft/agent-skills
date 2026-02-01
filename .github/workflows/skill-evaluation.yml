@@ -1,4 +1,4 @@
-name: Skill Evaluation (Real SDK)
+name: Copilot SDK Tests
 
 on:
   schedule:
@@ -24,7 +24,7 @@ on:
         description: 'Max Ralph Loop iterations'
         required: false
         type: number
-        default: 5
+        default: 2
 
 jobs:
   evaluate:
@@ -72,7 +72,7 @@ jobs:
           SKILL_ARG="${{ inputs.skill }}"
           RALPH_FLAG=""
           THRESHOLD="${{ inputs.threshold || 80 }}"
-          MAX_ITER="${{ inputs.max_iterations || 5 }}"
+          MAX_ITER="${{ inputs.max_iterations || 2 }}"
           
           if [ "${{ inputs.ralph }}" = "true" ]; then
             RALPH_FLAG="--ralph --threshold $THRESHOLD --max-iterations $MAX_ITER"
@@ -85,9 +85,9 @@ jobs:
             pnpm harness "$SKILL_ARG" $RALPH_FLAG --output json --output-file results.json
           else
             # All skills evaluation
-            pnpm harness --all $RALPH_FLAG --output markdown --output-file results.md
+            pnpm harness --all $RALPH_FLAG --verbose --output markdown --output-file results.md
             HARNESS_EXIT=$?
-            pnpm harness --all $RALPH_FLAG --output json --output-file results.json
+            pnpm harness --all $RALPH_FLAG --verbose --output json --output-file results.json
           fi
           
           set -e
@@ -98,11 +98,11 @@ jobs:
         if: always()
         working-directory: tests
         run: |
-          echo "## Skill Evaluation Results (Real SDK)" >> $GITHUB_STEP_SUMMARY
+          echo "## Copilot SDK Tests Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Mode:** Real Copilot SDK evaluation" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** Real Copilot SDK evaluation (nightly)" >> $GITHUB_STEP_SUMMARY
           if [ "${{ inputs.ralph }}" = "true" ]; then
-            echo "**Ralph Loop:** Enabled (threshold: ${{ inputs.threshold || 80 }}, max iterations: ${{ inputs.max_iterations || 5 }})" >> $GITHUB_STEP_SUMMARY
+            echo "**Ralph Loop:** Enabled (threshold: ${{ inputs.threshold || 80 }}, max iterations: ${{ inputs.max_iterations || 2 }})" >> $GITHUB_STEP_SUMMARY
           fi
           echo "" >> $GITHUB_STEP_SUMMARY
           

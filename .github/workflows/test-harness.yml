@@ -1,7 +1,7 @@
-name: Test Harness (Mock Mode)
+name: Smoke Test
 
 # Fast, deterministic testing for PRs and pushes
-# For real SDK evaluation, see skill-evaluation.yml (scheduled/manual trigger)
+# Full evaluation with real SDK runs nightly via skill-evaluation.yml
 
 on:
   pull_request:
@@ -63,10 +63,15 @@ jobs:
             echo "⚠️ No results file found" >> $GITHUB_STEP_SUMMARY
           fi
           
-          # Show overall status
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "---" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "ℹ️ This is a **smoke test** using mock responses for fast CI feedback." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Full evaluation with real Copilot SDK runs **nightly at 2 AM UTC** via [Skill Evaluation](../actions/workflows/skill-evaluation.yml)." >> $GITHUB_STEP_SUMMARY
+          
           if [ "${{ steps.harness.outputs.exit_code }}" != "0" ]; then
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "---" >> $GITHUB_STEP_SUMMARY
             echo "⚠️ **Some skills have failing scenarios.** See details above." >> $GITHUB_STEP_SUMMARY
           fi
 

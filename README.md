@@ -1,6 +1,7 @@
 # Agent Skills
 
-[![Evals & Tests](https://github.com/microsoft/agent-skills/actions/workflows/test-harness.yml/badge.svg?branch=main)](https://github.com/microsoft/agent-skills/actions/workflows/test-harness.yml)
+[![Evals & Tests](https://img.shields.io/github/actions/workflow/status/microsoft/agent-skills/test-harness.yml?branch=main&label=Evals%20%26%20Tests)](https://github.com/microsoft/agent-skills/actions/workflows/test-harness.yml)
+[![Copilot SDK Tests](https://img.shields.io/github/actions/workflow/status/microsoft/agent-skills/skill-evaluation.yml?branch=main&label=Copilot%20SDK%20Tests)](https://github.com/microsoft/agent-skills/actions/workflows/skill-evaluation.yml)
 [![Install via skills.sh](https://img.shields.io/badge/skills.sh-install-blue)](https://skills.sh/microsoft/agent-skills)
 [![Browse on Context7](https://img.shields.io/badge/Context7-browse%20skills-purple)](https://context7.com/microsoft/agent-skills?tab=skills)
 
