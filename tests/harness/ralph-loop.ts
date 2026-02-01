@@ -4,6 +4,14 @@
  * Iterative code generation and improvement system that re-generates code
  * until quality thresholds are met or max iterations reached.
  *
+ * This implementation is inspired by the Sensei iterative quality improvement
+ * patterns developed by Shayne Boyer (@spboyer) for the GitHub Copilot for Azure
+ * extension. The core insight: LLMs improve dramatically when given structured
+ * feedback about what went wrong and specific guidance on how to fix it.
+ *
+ * @see https://github.com/microsoft/GitHub-Copilot-for-Azure/tree/main/.github/skills/sensei
+ * @author Shayne Boyer <shayne.boyer@microsoft.com> - Original Sensei technique
+ *
  * Flow:
  * 1. Generate code for a given skill/scenario
  * 2. Evaluate against acceptance criteria (score 0-100)
