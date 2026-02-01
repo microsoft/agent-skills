@@ -3,7 +3,7 @@
   "description": "129 skills for AI coding agents working with Azure SDKs and Microsoft AI Foundry. Python, .NET, TypeScript, Java patterns.",
   "folders": [".github/skills", ".github/prompts", ".github/agents", ".github/docs", "output"],
   "excludeFolders": ["skills", ".claude", ".opencode", "node_modules"],
-  "excludeFiles": ["SECURITY.md", "blog.wordpress.xml", "AGENTS.md"],
+  "excludeFiles": ["SECURITY.md", "blog.wordpress.xml", "AGENTS.md", "README.md"],
   "rules": [
     "Load skills selectively - only those relevant to current task to avoid context rot",
     "Always use DefaultAzureCredential for Azure SDK authentication",
