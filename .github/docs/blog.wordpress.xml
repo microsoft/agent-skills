@@ -1,6 +1,8 @@
 Code will be generated, not written. Most enterprise AI workloads are net-new microservices. Modular, greenfield work. Perfect for coding agents.
 
-The catch? Out-of-the-box agents lack domain knowledge about your SDKs and patterns. But frontier LLMs are extraordinarily sample efficient. The patterns you need are already encoded in their latent space from pretraining. All you need is the right activation context. That is what skills do, and <a href="https://github.com/microsoft/agent-skills">Agent Skills</a> ships 127 of them for Azure and Microsoft Foundry development.
+The catch? Out-of-the-box agents lack domain knowledge about your SDKs and patterns. But frontier LLMs are extraordinarily sample efficient. The patterns you need are already encoded in their latent space from pretraining. All you need is the right activation context. That is what skills do, and <a href="https://github.com/microsoft/agent-skills">Agent Skills</a> ships 129 of them for Azure and Microsoft Foundry development.
+
+<strong>New:</strong> Browse all skills, agents, and documentation at <a href="https://microsoft.github.io/agent-skills/">microsoft.github.io/agent-skills</a>.
 <h2>What's in Agent Skills?</h2>
 <a href="https://github.com/microsoft/agent-skills">github.com/microsoft/agent-skills</a> is a collection of skills, prompts, agents, and MCP configurations that provide the activation context to specialize coding agents for Microsoft Foundry and Azure development.
 
@@ -8,11 +10,12 @@ The catch? Out-of-the-box agents lack domain knowledge about your SDKs and patte
 
 The repo contains:
 <ul>
- 	<li><strong>Skills</strong>: Modular knowledge packages for specific domains (Cosmos DB, Foundry IQ, AZD Deployment, etc.)</li>
+ 	<li><strong>Skills</strong>: 129 modular knowledge packages for specific domains (Cosmos DB, Foundry IQ, AZD Deployment, Voice Live, etc.)</li>
  	<li><strong>Prompts</strong>: Reusable templates for code reviews, component creation, endpoints</li>
- 	<li><strong>Agents</strong>: Persona definitions (backend, frontend, planner)</li>
+ 	<li><strong>Agents</strong>: Persona definitions (backend, frontend, infrastructure, planner, presenter, scaffolder)</li>
  	<li><strong>MCP Servers</strong>: Pre-configured servers for GitHub, Playwright, Microsoft Docs, Context7</li>
  	<li><strong>Context7 Integration</strong>: Indexed Foundry documentation at <a href="https://context7.com/microsoft/agent-skills">context7.com/microsoft/agent-skills</a></li>
+ 	<li><strong>GitHub Pages Site</strong>: Browse skills at <a href="https://microsoft.github.io/agent-skills/">microsoft.github.io/agent-skills</a></li>
 </ul>
 <h2>Systems Thinking First, Then Skills</h2>
 Before loading skills into your agent, you need a mental model of what you are building, reducing your unknown-unknowns. Skills amplify your direction, they do not replace it.
@@ -83,43 +86,40 @@ For real-time Foundry documentation access, add the Context7 MCP server or use d
 
 A GitHub workflow runs weekly to sync the latest Foundry documentation updates automatically.
 <h2>Available Skills</h2>
-<strong>127 skills total</strong> — 14 core (auto-discovered) + 113 extended (copy as needed).
+<strong>129 skills total</strong> — 5 core + 124 language-specific (Python, .NET, TypeScript, Java).
+
+Browse all skills with install commands at <a href="https://microsoft.github.io/agent-skills/">microsoft.github.io/agent-skills</a>.
 <h3>Core Skills</h3>
-Auto-discovered from <code>.github/skills/</code>:
+Language-agnostic tooling and infrastructure:
 <table>
 <tbody>
 <tr>
-<th>Category</th>
-<th>Skills</th>
+<th>Skill</th>
+<th>Description</th>
 </tr>
 <tr>
-<td><strong>AI Foundry</strong></td>
-<td><code>foundry-sdk-python</code>, <code>foundry-iq-python</code>, <code>azure-ai-agents-python</code>, <code>agent-framework-azure-hosted-agents</code></td>
-</tr>
-<tr>
-<td><strong>AI Services</strong></td>
-<td><code>azure-ai-search-python</code>, <code>azure-ai-voicelive</code></td>
-</tr>
-<tr>
-<td><strong>Backend</strong></td>
-<td><code>fastapi-router</code>, <code>pydantic-models</code>, <code>cosmos-db-python-skill</code></td>
-</tr>
-<tr>
-<td><strong>Infrastructure</strong></td>
 <td><code>azd-deployment</code></td>
+<td>Deploy to Azure Container Apps with Azure Developer CLI, Bicep infrastructure</td>
 </tr>
 <tr>
-<td><strong>Tooling</strong></td>
-<td><code>skill-creator</code>, <code>mcp-builder</code>, <code>github-issue-creator</code></td>
+<td><code>mcp-builder</code></td>
+<td>Build MCP servers for LLM tool integration (Python, Node, C#)</td>
 </tr>
 <tr>
-<td><strong>Other</strong></td>
+<td><code>skill-creator</code></td>
+<td>Guide for creating effective skills for AI coding agents</td>
+</tr>
+<tr>
+<td><code>github-issue-creator</code></td>
+<td>Convert notes, error logs, or screenshots into structured GitHub issues</td>
+</tr>
+<tr>
 <td><code>podcast-generation</code></td>
+<td>Generate podcast-style audio with Azure OpenAI Realtime API</td>
 </tr>
 </tbody>
 </table>
-<h3>Extended Catalog</h3>
-113 skills in <code>skills/</code> organized by language. Copy what you need:
+<h3>Language-Specific Skills</h3>
 <table>
 <tbody>
 <tr>
@@ -129,27 +129,55 @@ Auto-discovered from <code>.github/skills/</code>:
 </tr>
 <tr>
 <td><strong>Python</strong></td>
-<td>33</td>
-<td>AI, Data, Messaging, Monitoring, Identity, Security, Integration</td>
+<td>42</td>
+<td>Foundry agents, AI services, Cosmos DB, Search, Storage, Messaging, Monitoring</td>
 </tr>
 <tr>
 <td><strong>.NET</strong></td>
 <td>29</td>
-<td>Foundry, AI, Data, Messaging, Identity, Security, Partner</td>
+<td>Foundry, AI, ARM resource management, Messaging, Identity, Security</td>
 </tr>
 <tr>
 <td><strong>TypeScript</strong></td>
-<td>23</td>
-<td>Foundry, AI, Data, Messaging, Frontend, Identity</td>
+<td>25</td>
+<td>Foundry, AI, React Flow, Zustand, Storage, Messaging, Frontend patterns</td>
 </tr>
 <tr>
 <td><strong>Java</strong></td>
 <td>28</td>
-<td>Foundry, AI, Data, Messaging, Communication, Identity</td>
+<td>Foundry, AI, Communication Services, Cosmos, Messaging, Monitoring</td>
 </tr>
 </tbody>
 </table>
-See the full catalog at <a href="https://github.com/microsoft/agent-skills/blob/main/CATALOG.md">CATALOG.md</a>.
+<h3>Featured Skills by Category</h3>
+<table>
+<tbody>
+<tr>
+<th>Category</th>
+<th>Skills</th>
+</tr>
+<tr>
+<td><strong>AI Foundry</strong></td>
+<td><code>azure-ai-projects-py</code>, <code>azure-ai-agents-py</code>, <code>agent-framework-azure-ai-py</code>, <code>foundry-iq-py</code></td>
+</tr>
+<tr>
+<td><strong>AI Services</strong></td>
+<td><code>azure-search-documents-py</code>, <code>azure-ai-voicelive-py</code>, <code>azure-ai-inference-py</code>, <code>azure-ai-evaluation-py</code></td>
+</tr>
+<tr>
+<td><strong>Backend</strong></td>
+<td><code>fastapi-router-py</code>, <code>pydantic-models-py</code>, <code>azure-cosmos-db-py</code></td>
+</tr>
+<tr>
+<td><strong>Frontend</strong></td>
+<td><code>frontend-ui-dark-ts</code>, <code>react-flow-node-ts</code>, <code>zustand-store-ts</code></td>
+</tr>
+<tr>
+<td><strong>Infrastructure</strong></td>
+<td><code>azd-deployment</code>, <code>azure-identity-py</code>, <code>azure-monitor-opentelemetry-py</code></td>
+</tr>
+</tbody>
+</table>
 <h2>Scaling Beyond Static Skills</h2>
 For larger codebases where static skills are not enough:
 <ul>

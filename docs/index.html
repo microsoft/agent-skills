@@ -398,18 +398,48 @@
       margin-top: 0.75rem;
       padding-top: 0.75rem;
       border-top: 1px solid var(--border);
+      position: relative;
     }
 
     .skill-install code {
       font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
       font-size: 0.7rem;
       background: var(--bg-primary);
-      padding: 0.25rem 0.5rem;
+      padding: 0.375rem 2.5rem 0.375rem 0.5rem;
       border-radius: 4px;
       color: var(--text-muted);
       display: block;
       overflow-x: auto;
       white-space: nowrap;
+    }
+
+    .skill-copy-btn {
+      position: absolute;
+      top: 0.75rem;
+      right: 0;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.25rem 0.4rem;
+      border-radius: 0 4px 4px 0;
+      cursor: pointer;
+      font-size: 0.7rem;
+      transition: all 0.15s ease;
+      height: calc(100% - 0.75rem);
+      display: flex;
+      align-items: center;
+    }
+
+    .skill-copy-btn:hover {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: white;
+    }
+
+    .skill-copy-btn.copied {
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
     }
 
     /* Agents & MCP */
@@ -962,7 +992,9 @@
         return matchesFilter && matchesSearch;
       });
 
-      grid.innerHTML = filtered.map(skill => `
+      grid.innerHTML = filtered.map(skill => {
+        const cmd = `npx skills add microsoft/agent-skills --skill ${skill.name}`;
+        return `
         <div class="skill-card" data-lang="${skill.lang}">
           <div class="skill-header">
             <span class="skill-name">${skill.name}</span>
@@ -970,10 +1002,16 @@
           </div>
           <div class="skill-desc">${skill.desc}</div>
           <div class="skill-install">
-            <code>npx skills add microsoft/agent-skills --skill ${skill.name}</code>
+            <code>${cmd}</code>
+            <button class="skill-copy-btn" onclick="copySkillCmd(this, '${cmd}')" title="Copy to clipboard">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/>
+                <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/>
+              </svg>
+            </button>
           </div>
         </div>
-      `).join('');
+      `}).join('');
     }
 
     function getLangLabel(lang) {
@@ -1009,6 +1047,17 @@
         const btn = event.target;
         btn.textContent = 'Copied!';
         setTimeout(() => btn.textContent = 'Copy', 2000);
+      });
+    }
+
+    function copySkillCmd(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0Z"/></svg>';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z"/><path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z"/></svg>';
+        }, 2000);
       });
     }
 
