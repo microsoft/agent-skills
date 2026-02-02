@@ -138,78 +138,6 @@
       font-size: 0.75rem;
     }
 
-    /* Hero Star CTA */
-    .hero-star-cta {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.75rem;
-      margin: 2.5rem auto 0;
-      padding: 1.5rem 2rem;
-      background: linear-gradient(135deg, rgba(240, 193, 75, 0.1) 0%, rgba(218, 165, 32, 0.05) 100%);
-      border: 1px solid rgba(240, 193, 75, 0.3);
-      border-radius: 12px;
-      max-width: 400px;
-    }
-
-    .hero-star-cta p {
-      margin: 0;
-      font-size: 0.9rem;
-      color: var(--text-secondary);
-    }
-
-    .hero-star-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      background: linear-gradient(135deg, #f0c14b 0%, #e6b800 50%, #daa520 100%);
-      padding: 0.875rem 2rem;
-      border-radius: 8px;
-      border: none;
-      color: #1a1a1a;
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-decoration: none;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 15px rgba(240, 193, 75, 0.3);
-      animation: subtle-pulse 2s ease-in-out infinite;
-    }
-
-    .hero-star-btn:hover {
-      transform: translateY(-2px) scale(1.02);
-      color: #1a1a1a;
-      box-shadow: 0 6px 25px rgba(240, 193, 75, 0.5);
-    }
-
-    .hero-star-btn svg {
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.2));
-    }
-
-    .hero-star-count {
-      background: rgba(0,0,0,0.12);
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    @keyframes subtle-pulse {
-      0%, 100% { box-shadow: 0 4px 15px rgba(240, 193, 75, 0.3); }
-      50% { box-shadow: 0 4px 25px rgba(240, 193, 75, 0.5); }
-    }
-
-    .star-social-proof {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
-    .star-social-proof svg {
-      color: #f0c14b;
-    }
-
     /* Hero */
     .hero {
       padding: 4rem 1.5rem;
@@ -738,24 +666,6 @@
       </span>
     </div>
 
-    <!-- Hero Star CTA -->
-    <div class="hero-star-cta">
-      <p>Love these skills? Show your support!</p>
-      <a href="https://github.com/microsoft/agent-skills" class="hero-star-btn" id="heroStarBtn">
-        <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
-        </svg>
-        Star on GitHub
-        <span class="hero-star-count" id="heroStarCount">—</span>
-      </a>
-      <div class="star-social-proof">
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
-        </svg>
-        <span>Join developers who starred this repo</span>
-      </div>
-    </div>
-
     <div class="quick-start">
       <div class="quick-start-header">
         <span class="quick-start-title">Quick Start</span>
@@ -1198,7 +1108,6 @@
           const count = data.stargazers_count;
           const formatted = count >= 1000 ? (count / 1000).toFixed(1) + 'k' : count.toString();
           document.getElementById('headerStarCount').textContent = formatted;
-          document.getElementById('heroStarCount').textContent = formatted;
         }
       } catch (e) {
         // Silently fail, keep showing dash
