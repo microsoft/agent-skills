@@ -15,7 +15,6 @@ This folder contains a test harness for evaluating AI-generated code against acc
 
 | Skill | Criteria | Scenarios | Status |
 |-------|----------|-----------|--------|
-| `azure-ai-agents-py` | Complete | Complete | Passing |
 | `azure-ai-projects-py` | Complete | Complete | Passing |
 
 Run `pnpm harness --list` from the `tests/` directory to see all skills with criteria.
@@ -133,10 +132,8 @@ tests/
 │       └── markdown.ts       # Markdown reports
 │
 ├── scenarios/
-│   ├── azure-ai-agents-py/
-│   │   └── scenarios.yaml    # 7 scenarios
-│   └── azure-ai-projects-py/
-│       └── scenarios.yaml    # 12 scenarios
+│   ├── azure-ai-projects-py/
+│   │   └── scenarios.yaml    # 12 scenarios
 │
 ├── package.json              # Dependencies (pnpm)
 ├── tsconfig.json             # TypeScript config
@@ -219,11 +216,10 @@ pnpm typecheck
 
 Priority skills without test coverage (check with `--list`):
 
-1. `azure-ai-inference-py` — Chat completions, embeddings
-2. `azure-cosmos-db-py` — Cosmos DB patterns
-3. `azure-search-documents-py` — Vector search, hybrid search
-4. `azure-identity-py` — Authentication patterns
-5. `azure-ai-voicelive-py` — Real-time voice AI
+1. `azure-cosmos-db-py` — Cosmos DB patterns
+2. `azure-search-documents-py` — Vector search, hybrid search
+3. `azure-identity-py` — Authentication patterns
+4. `azure-ai-voicelive-py` — Real-time voice AI
 
 For each, follow the 3-step process above.
 
@@ -272,10 +268,10 @@ The Ralph Loop is an iterative code generation and improvement system that re-ge
 
 ```bash
 # Basic usage
-pnpm harness azure-ai-agents-py --ralph --mock
+pnpm harness azure-ai-projects-py --ralph --mock
 
 # With custom settings
-pnpm harness azure-ai-agents-py --ralph --max-iterations 5 --threshold 85 --mock --verbose
+pnpm harness azure-ai-projects-py --ralph --max-iterations 5 --threshold 85 --mock --verbose
 ```
 
 **Stop conditions:**

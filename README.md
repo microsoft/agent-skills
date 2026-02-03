@@ -62,7 +62,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 | Resource | Description |
 |----------|-------------|
-| **[130 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
+| **[123 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
@@ -72,15 +72,15 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ## Skill Catalog
 
-> 130 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
+> 123 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
 
 | Language | Count | Suffix | 
 |----------|-------|--------|
 | [Core](#core) | 5 | — |
-| [Python](#python) | 43 | `-py` |
-| [.NET](#net) | 29 | `-dotnet` |
-| [TypeScript](#typescript) | 25 | `-ts` |
-| [Java](#java) | 28 | `-java` |
+| [Python](#python) | 41 | `-py` |
+| [.NET](#net) | 28 | `-dotnet` |
+| [TypeScript](#typescript) | 23 | `-ts` |
+| [Java](#java) | 26 | `-java` |
 
 ---
 
@@ -100,15 +100,14 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### Python
 
-> 43 skills • suffix: `-py`
+> 41 skills • suffix: `-py`
 
 <details>
-<summary><strong>Foundry & AI</strong> (8 skills)</summary>
+<summary><strong>Foundry & AI</strong> (7 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
 | [agent-framework-azure-ai-py](.github/skills/agent-framework-azure-ai-py/) | Agent Framework SDK — persistent agents, hosted tools, MCP servers, streaming. |
-| [azure-ai-agents-py](.github/skills/azure-ai-agents-py/) | Low-level agents SDK — threads, messages, streaming, tools (File Search, Code Interpreter, Bing, OpenAPI). |
 | [azure-ai-contentsafety-py](.github/skills/azure-ai-contentsafety-py/) | Content Safety SDK — detect harmful content in text/images with multi-severity classification. |
 | [azure-ai-contentunderstanding-py](.github/skills/azure-ai-contentunderstanding-py/) | Content Understanding SDK — multimodal extraction from documents, images, audio, video. |
 | [azure-ai-evaluation-py](.github/skills/azure-ai-evaluation-py/) | Evaluation SDK — quality, safety, and custom evaluators for generative AI apps. |
@@ -119,11 +118,10 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 </details>
 
 <details>
-<summary><strong>AI Services</strong> (9 skills)</summary>
+<summary><strong>AI Services</strong> (8 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
-| [azure-ai-inference-py](.github/skills/azure-ai-inference-py/) | Inference SDK — chat completions, embeddings with Azure AI Foundry endpoints. |
 | [azure-ai-ml-py](.github/skills/azure-ai-ml-py/) | ML SDK v2 — workspaces, jobs, models, datasets, compute, pipelines. |
 | [azure-ai-textanalytics-py](.github/skills/azure-ai-textanalytics-py/) | Text Analytics — sentiment, entities, key phrases, PII detection, healthcare NLP. |
 | [azure-ai-transcription-py](.github/skills/azure-ai-transcription-py/) | Transcription SDK — real-time and batch speech-to-text with timestamps, diarization. |
@@ -213,16 +211,15 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### .NET
 
-> 29 skills • suffix: `-dotnet`
+> 28 skills • suffix: `-dotnet`
 
 <details>
-<summary><strong>Foundry & AI</strong> (8 skills)</summary>
+<summary><strong>Foundry & AI</strong> (7 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
 | [azure-ai-agents-persistent-dotnet](.github/skills/azure-ai-agents-persistent-dotnet/) | Agents Persistent SDK — agent CRUD, threads, runs, streaming, function calling. |
 | [azure-ai-document-intelligence-dotnet](.github/skills/azure-ai-document-intelligence-dotnet/) | Document Intelligence — extract text, tables from invoices, receipts, IDs, forms. |
-| [azure-ai-inference-dotnet](.github/skills/azure-ai-inference-dotnet/) | Inference SDK — chat completions, embeddings for Azure AI Foundry endpoints. |
 | [azure-ai-openai-dotnet](.github/skills/azure-ai-openai-dotnet/) | Azure OpenAI — chat, embeddings, image generation, audio, assistants. |
 | [azure-ai-projects-dotnet](.github/skills/azure-ai-projects-dotnet/) | AI Projects SDK — Foundry project client, agents, connections, evals. |
 | [azure-ai-voicelive-dotnet](.github/skills/azure-ai-voicelive-dotnet/) | Voice Live — real-time voice AI with bidirectional WebSocket. |
@@ -296,17 +293,15 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### TypeScript
 
-> 25 skills • suffix: `-ts`
+> 23 skills • suffix: `-ts`
 
 <details>
-<summary><strong>Foundry & AI</strong> (9 skills)</summary>
+<summary><strong>Foundry & AI</strong> (7 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
-| [azure-ai-agents-ts](.github/skills/azure-ai-agents-ts/) | Agents SDK — tools (Code Interpreter, File Search), threads, streaming. |
 | [azure-ai-contentsafety-ts](.github/skills/azure-ai-contentsafety-ts/) | Content Safety — moderate text/images, detect harmful content. |
 | [azure-ai-document-intelligence-ts](.github/skills/azure-ai-document-intelligence-ts/) | Document Intelligence — extract from invoices, receipts, IDs, forms. |
-| [azure-ai-inference-ts](.github/skills/azure-ai-inference-ts/) | Inference REST client — chat completions, embeddings, function tools. |
 | [azure-ai-projects-ts](.github/skills/azure-ai-projects-ts/) | AI Projects SDK — Foundry client, agents, connections, evals. |
 | [azure-ai-translation-ts](.github/skills/azure-ai-translation-ts/) | Translation — text translation, transliteration, document batch. |
 | [azure-ai-voicelive-ts](.github/skills/azure-ai-voicelive-ts/) | Voice Live — real-time voice AI with WebSocket, Node.js or browser. |
@@ -367,19 +362,17 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### Java
 
-> 28 skills • suffix: `-java`
+> 26 skills • suffix: `-java`
 
 <details>
-<summary><strong>Foundry & AI</strong> (9 skills)</summary>
+<summary><strong>Foundry & AI</strong> (7 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
-| [azure-ai-agents-java](.github/skills/azure-ai-agents-java/) | Agents SDK — models, tools, OpenAI capabilities. |
 | [azure-ai-agents-persistent-java](.github/skills/azure-ai-agents-persistent-java/) | Agents Persistent — threads, messages, runs, streaming. |
 | [azure-ai-anomalydetector-java](.github/skills/azure-ai-anomalydetector-java/) | Anomaly Detector — univariate/multivariate time-series analysis. |
 | [azure-ai-contentsafety-java](.github/skills/azure-ai-contentsafety-java/) | Content Safety — text/image analysis, blocklist management. |
 | [azure-ai-formrecognizer-java](.github/skills/azure-ai-formrecognizer-java/) | Form Recognizer — extract text, tables, key-value pairs from documents. |
-| [azure-ai-inference-java](.github/skills/azure-ai-inference-java/) | Inference SDK — chat completions, embeddings with Foundry endpoints. |
 | [azure-ai-projects-java](.github/skills/azure-ai-projects-java/) | AI Projects — Foundry project management, connections, datasets. |
 | [azure-ai-vision-imageanalysis-java](.github/skills/azure-ai-vision-imageanalysis-java/) | Vision SDK — captions, OCR, object detection, tagging. |
 | [azure-ai-voicelive-java](.github/skills/azure-ai-voicelive-java/) | Voice Live — real-time voice conversations with WebSocket. |
@@ -453,7 +446,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 AGENTS.md                # Agent configuration template
 
 .github/
-├── skills/              # All 127 skills (flat structure)
+├── skills/              # All 123 skills (flat structure)
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions
 ├── scripts/             # Automation scripts (doc scraping)
@@ -587,15 +580,15 @@ pnpm test
 
 ### Test Coverage Summary
 
-**130 skills with 1176 test scenarios** — all skills have acceptance criteria and test scenarios.
+**123 skills with 1114 test scenarios** — all skills have acceptance criteria and test scenarios.
 
 | Language | Skills | Scenarios | Top Skills by Scenarios |
 |----------|--------|-----------|-------------------------|
-| Core | 5 | 40 | `azd-deployment` (8), `github-issue-creator` (8), `mcp-builder` (8) |
-| Python | 43 | 374 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
-| .NET | 29 | 296 | `azure-resource-manager-redis-dotnet` (14), `azure-resource-manager-sql-dotnet` (14), `azure-ai-projects-dotnet` (13) |
-| TypeScript | 25 | 255 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `azure-ai-contentsafety-ts` (12) |
-| Java | 28 | 179 | `azure-identity-java` (12), `azure-storage-blob-java` (12), `azure-ai-agents-persistent-java` (11) |
+| Core | 5 | 51 | `azd-deployment` (8), `github-issue-creator` (8), `mcp-builder` (8) |
+| Python | 41 | 333 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
+| .NET | 28 | 286 | `azure-resource-manager-redis-dotnet` (14), `azure-resource-manager-sql-dotnet` (14), `azure-ai-projects-dotnet` (13) |
+| TypeScript | 23 | 249 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `azure-ai-contentsafety-ts` (12) |
+| Java | 26 | 195 | `azure-identity-java` (12), `azure-storage-blob-java` (12), `azure-ai-agents-persistent-java` (11) |
 
 ### Adding Test Coverage
 
@@ -637,7 +630,7 @@ New skills must follow the full workflow to ensure quality and discoverability:
 **Workflow:**
 
 1. **Create skill** in `.github/skills/<skill-name>/SKILL.md`
-   - Naming: `azure-<service>-<language>` (e.g., `azure-ai-agents-py`)
+   - Naming: `azure-<service>-<language>` (e.g., `azure-ai-projects-py`)
    - Include YAML frontmatter with `name` and `description`
    - Reference official docs via `microsoft-docs` MCP
 
@@ -645,7 +638,7 @@ New skills must follow the full workflow to ensure quality and discoverability:
    ```bash
    # Example: Python AI agent skill in foundry category
    cd skills/python/foundry
-   ln -s ../../../.github/skills/azure-ai-agents-py agents
+   ln -s ../../../.github/skills/azure-ai-projects-py projects
    ```
    
    Categories: `foundry`, `data`, `messaging`, `monitoring`, `identity`, `security`, `integration`, `compute`, `container`

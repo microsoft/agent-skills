@@ -289,3 +289,4 @@ agent = client.agents.create_agent(
 - [references/deployments.md](references/deployments.md): Deployment enumeration
 - [references/datasets-indexes.md](references/datasets-indexes.md): Dataset and index operations
 - [references/async-patterns.md](references/async-patterns.md): Async client usage
+- [references/api-reference.md](references/api-reference.md): Complete API reference for all 373 SDK exports (v2.0.0b4)

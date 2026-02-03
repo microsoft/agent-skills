@@ -6,7 +6,7 @@
 cd tests
 pnpm install
 pnpm harness --list                              # List available skills
-pnpm harness azure-ai-agents-py --mock --verbose # Run evaluation
+pnpm harness azure-ai-projects-py --mock --verbose # Run evaluation
 pnpm test                                        # Run unit tests
 ```
 
@@ -55,7 +55,7 @@ tests/
 pnpm harness <skill-name>
 
 # Options
-pnpm harness azure-ai-agents-py \
+pnpm harness azure-ai-projects-py \
     --mock                  # Use mock responses (no Copilot SDK)
     --verbose               # Show detailed output
     --filter basic          # Filter scenarios by name/tag
@@ -63,7 +63,7 @@ pnpm harness azure-ai-agents-py \
     --output-file report.json
 
 # Ralph Loop (iterative improvement)
-pnpm harness azure-ai-agents-py \
+pnpm harness azure-ai-projects-py \
     --ralph                 # Enable iterative improvement
     --max-iterations 5      # Max iterations per scenario
     --threshold 80          # Quality threshold (0-100)
@@ -100,7 +100,7 @@ import {
 
 // Simple evaluation
 const loader = new AcceptanceCriteriaLoader();
-const criteria = loader.load('azure-ai-agents-py');
+const criteria = loader.load('azure-ai-projects-py');
 const evaluator = new CodeEvaluator(criteria);
 
 const result = evaluator.evaluate(code, 'my-test');
@@ -108,10 +108,10 @@ console.log(`Score: ${result.score}`);
 
 // Full runner
 const runner = new SkillEvaluationRunner({ useMock: true });
-const summary = await runner.run('azure-ai-agents-py');
+const summary = await runner.run('azure-ai-projects-py');
 
 // With Ralph Loop
-const ralphSummary = await runner.runWithLoop('azure-ai-agents-py', undefined, {
+const ralphSummary = await runner.runWithLoop('azure-ai-projects-py', undefined, {
   maxIterations: 5,
   qualityThreshold: 80,
 });
@@ -185,15 +185,15 @@ A result **passes** if it has no error-severity findings.
 
 ## Test Coverage
 
-**127 skills with 1128 test scenarios**
+**123 skills with 1114 test scenarios**
 
 | Language | Skills | Scenarios |
 |----------|--------|-----------|
-| Core | 5 | 40 |
-| Python | 41 | 358 |
-| .NET | 29 | 296 |
-| TypeScript | 24 | 255 |
-| Java | 28 | 179 |
+| Core | 5 | 51 |
+| Python | 41 | 333 |
+| .NET | 28 | 286 |
+| TypeScript | 23 | 249 |
+| Java | 26 | 195 |
 
 ```bash
 pnpm harness --list  # See all available skills
@@ -215,7 +215,7 @@ The harness supports two authentication methods for real Copilot SDK evaluation:
 
 1. Install Copilot CLI: `npm install -g @github/copilot`
 2. Run `copilot` and authenticate via `/login`
-3. Run without `--mock`: `pnpm harness azure-ai-agents-py --verbose`
+3. Run without `--mock`: `pnpm harness azure-ai-projects-py --verbose`
 
 ### CI/CD (PAT Authentication)
 
@@ -227,7 +227,7 @@ For automated pipelines, use a Personal Access Token:
 
 ```bash
 export GH_TOKEN="your-pat-with-copilot-requests-permission"
-pnpm harness azure-ai-agents-py --verbose
+pnpm harness azure-ai-projects-py --verbose
 ```
 
 ### GitHub Actions Workflows
