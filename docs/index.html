@@ -368,6 +368,37 @@
                 background: rgba(0, 0, 0, 0.2);
             }
 
+            .category-tabs {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.5rem;
+                margin-bottom: 1.5rem;
+                justify-content: center;
+            }
+
+            .cat-btn {
+                background: var(--bg-secondary);
+                border: 1px solid var(--border);
+                color: var(--text-secondary);
+                padding: 0.375rem 0.75rem;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 0.75rem;
+                font-weight: 500;
+                transition: all 0.15s ease;
+            }
+
+            .cat-btn:hover {
+                border-color: #8b5cf6;
+                color: var(--text-primary);
+            }
+
+            .cat-btn.active {
+                background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+                border-color: transparent;
+                color: white;
+            }
+
             .skills-grid {
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -822,6 +853,42 @@
                     </button>
                 </div>
 
+                <div class="category-tabs">
+                    <button class="cat-btn active" onclick="showCategoryTab('all')">
+                        All Areas
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('foundry')">
+                        Foundry
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('ai-services')">
+                        AI Services
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('data')">
+                        Data
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('messaging')">
+                        Messaging
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('monitoring')">
+                        Monitoring
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('identity')">
+                        Identity
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('security')">
+                        Security
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('integration')">
+                        Integration
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('compute')">
+                        Compute
+                    </button>
+                    <button class="cat-btn" onclick="showCategoryTab('patterns')">
+                        Patterns
+                    </button>
+                </div>
+
                 <div class="skills-grid" id="skillsGrid">
                     <!-- Skills will be populated by JavaScript -->
                 </div>
@@ -1039,26 +1106,31 @@
                 {
                     name: "azd-deployment",
                     lang: "core",
+                    category: "core",
                     desc: "Deploy to Azure Container Apps with Azure Developer CLI (azd)",
                 },
                 {
                     name: "github-issue-creator",
                     lang: "core",
+                    category: "core",
                     desc: "Convert raw notes, error logs, or screenshots into structured GitHub issues",
                 },
                 {
                     name: "mcp-builder",
                     lang: "core",
+                    category: "core",
                     desc: "Build MCP servers for LLM tool integration (Python, Node, C#)",
                 },
                 {
                     name: "podcast-generation",
                     lang: "core",
+                    category: "core",
                     desc: "Generate podcast-style audio with Azure OpenAI Realtime API",
                 },
                 {
                     name: "skill-creator",
                     lang: "core",
+                    category: "core",
                     desc: "Guide for creating effective skills for AI coding agents",
                 },
 
@@ -1066,221 +1138,265 @@
                 {
                     name: "agent-framework-azure-ai-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Agent Framework SDK — persistent agents, hosted tools, MCP servers",
                 },
                 {
                     name: "azure-ai-agents-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Low-level agents SDK — threads, messages, streaming, tools",
                 },
                 {
                     name: "azure-ai-contentsafety-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Content Safety SDK — detect harmful content in text/images",
                 },
                 {
                     name: "azure-ai-contentunderstanding-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Content Understanding SDK — multimodal extraction",
                 },
                 {
                     name: "azure-ai-evaluation-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Evaluation SDK — quality, safety, and custom evaluators",
                 },
                 {
                     name: "hosted-agents-v2-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Hosted Agents SDK — container-based agents with custom images",
                 },
                 {
                     name: "azure-ai-projects-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "High-level Foundry SDK — project client, versioned agents",
                 },
                 {
                     name: "azure-search-documents-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "AI Search SDK — vector, hybrid, semantic search",
                 },
                 {
                     name: "azure-ai-inference-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Inference SDK — chat completions, embeddings",
                 },
                 {
                     name: "azure-ai-ml-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "ML SDK v2 — workspaces, jobs, models, datasets",
                 },
                 {
                     name: "azure-ai-textanalytics-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Text Analytics — sentiment, entities, key phrases",
                 },
                 {
                     name: "azure-ai-transcription-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Transcription SDK — real-time and batch speech-to-text",
                 },
                 {
                     name: "azure-ai-translation-document-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Document Translation — batch translate with format preservation",
                 },
                 {
                     name: "azure-ai-translation-text-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Text Translation — real-time translation, transliteration",
                 },
                 {
                     name: "azure-ai-vision-imageanalysis-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Vision SDK — captions, tags, objects, OCR",
                 },
                 {
                     name: "azure-ai-voicelive-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Voice Live SDK — real-time bidirectional voice AI",
                 },
                 {
                     name: "azure-speech-to-text-rest-py",
                     lang: "py",
+                    category: "ai-services",
                     desc: "Speech to Text REST API — transcribe short audio",
                 },
                 {
                     name: "azure-cosmos-db-py",
                     lang: "py",
+                    category: "data",
                     desc: "Cosmos DB patterns — FastAPI service layer, dual auth",
                 },
                 {
                     name: "azure-cosmos-py",
                     lang: "py",
+                    category: "data",
                     desc: "Cosmos DB SDK — document CRUD, queries, containers",
                 },
                 {
                     name: "azure-data-tables-py",
                     lang: "py",
+                    category: "data",
                     desc: "Tables SDK — NoSQL key-value storage, entity CRUD",
                 },
                 {
                     name: "azure-storage-blob-py",
                     lang: "py",
+                    category: "data",
                     desc: "Blob Storage — upload, download, list, containers",
                 },
                 {
                     name: "azure-storage-file-datalake-py",
                     lang: "py",
+                    category: "data",
                     desc: "Data Lake Gen2 — hierarchical file systems",
                 },
                 {
                     name: "azure-storage-file-share-py",
                     lang: "py",
+                    category: "data",
                     desc: "File Share — SMB file shares, directories",
                 },
                 {
                     name: "azure-storage-queue-py",
                     lang: "py",
+                    category: "data",
                     desc: "Queue Storage — reliable message queuing",
                 },
                 {
                     name: "azure-eventgrid-py",
                     lang: "py",
+                    category: "messaging",
                     desc: "Event Grid — publish events, event-driven architectures",
                 },
                 {
                     name: "azure-eventhub-py",
                     lang: "py",
+                    category: "messaging",
                     desc: "Event Hubs — high-throughput streaming, checkpointing",
                 },
                 {
                     name: "azure-messaging-webpubsubservice-py",
                     lang: "py",
+                    category: "messaging",
                     desc: "Web PubSub — real-time messaging, WebSocket",
                 },
                 {
                     name: "azure-servicebus-py",
                     lang: "py",
+                    category: "messaging",
                     desc: "Service Bus — queues, topics, subscriptions",
                 },
                 {
                     name: "azure-identity-py",
                     lang: "py",
+                    category: "identity",
                     desc: "Identity SDK — DefaultAzureCredential, managed identity",
                 },
                 {
                     name: "azure-keyvault-py",
                     lang: "py",
+                    category: "security",
                     desc: "Key Vault — secrets, keys, and certificates",
                 },
                 {
                     name: "azure-monitor-ingestion-py",
                     lang: "py",
+                    category: "monitoring",
                     desc: "Monitor Ingestion — send custom logs",
                 },
                 {
                     name: "azure-monitor-opentelemetry-exporter-py",
                     lang: "py",
+                    category: "monitoring",
                     desc: "OpenTelemetry Exporter — export to App Insights",
                 },
                 {
                     name: "azure-monitor-opentelemetry-py",
                     lang: "py",
+                    category: "monitoring",
                     desc: "OpenTelemetry Distro — one-line App Insights setup",
                 },
                 {
                     name: "azure-monitor-query-py",
                     lang: "py",
+                    category: "monitoring",
                     desc: "Monitor Query — query Log Analytics, metrics",
                 },
                 {
                     name: "azure-appconfiguration-py",
                     lang: "py",
+                    category: "integration",
                     desc: "App Configuration — centralized config, feature flags",
                 },
                 {
                     name: "azure-containerregistry-py",
                     lang: "py",
+                    category: "integration",
                     desc: "Container Registry — manage container images",
                 },
                 {
                     name: "azure-mgmt-apicenter-py",
                     lang: "py",
+                    category: "integration",
                     desc: "API Center — API inventory, metadata, governance",
                 },
                 {
                     name: "azure-mgmt-apimanagement-py",
                     lang: "py",
+                    category: "integration",
                     desc: "API Management — APIM services, APIs, policies",
                 },
                 {
                     name: "azure-mgmt-botservice-py",
                     lang: "py",
+                    category: "integration",
                     desc: "Bot Service — create and manage Azure Bot resources",
                 },
                 {
                     name: "azure-mgmt-fabric-py",
                     lang: "py",
+                    category: "integration",
                     desc: "Fabric Management — Microsoft Fabric capacities",
                 },
                 {
                     name: "fastapi-router-py",
                     lang: "py",
+                    category: "patterns",
                     desc: "FastAPI routers — CRUD, auth dependencies, response models",
                 },
                 {
                     name: "foundry-iq-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Foundry IQ — agentic retrieval with knowledge bases",
                 },
                 {
                     name: "pydantic-models-py",
                     lang: "py",
+                    category: "patterns",
                     desc: "Pydantic patterns — Base, Create, Update, Response variants",
                 },
                 {
                     name: "m365-agents-py",
                     lang: "py",
+                    category: "foundry",
                     desc: "Microsoft 365 Agents SDK — aiohttp hosting, AgentApplication routing, streaming, Copilot Studio client",
                 },
 
@@ -1288,151 +1404,181 @@
                 {
                     name: "azure-ai-agents-persistent-dotnet",
                     lang: "dotnet",
+                    category: "foundry",
                     desc: "Agents Persistent SDK — agent CRUD, threads, runs",
                 },
                 {
                     name: "azure-ai-document-intelligence-dotnet",
                     lang: "dotnet",
+                    category: "ai-services",
                     desc: "Document Intelligence — extract from invoices, receipts",
                 },
                 {
                     name: "azure-ai-inference-dotnet",
                     lang: "dotnet",
+                    category: "foundry",
                     desc: "Inference SDK — chat completions, embeddings",
                 },
                 {
                     name: "azure-ai-openai-dotnet",
                     lang: "dotnet",
+                    category: "foundry",
                     desc: "Azure OpenAI — chat, embeddings, image generation",
                 },
                 {
                     name: "azure-ai-projects-dotnet",
                     lang: "dotnet",
+                    category: "foundry",
                     desc: "AI Projects SDK — Foundry project client, agents",
                 },
                 {
                     name: "azure-ai-voicelive-dotnet",
                     lang: "dotnet",
+                    category: "ai-services",
                     desc: "Voice Live — real-time voice AI with WebSocket",
                 },
                 {
                     name: "m365-agents-dotnet",
                     lang: "dotnet",
+                    category: "foundry",
                     desc: "Microsoft 365 Agents SDK — ASP.NET Core hosting, AgentApplication routing, Copilot Studio client",
                 },
                 {
                     name: "azure-search-documents-dotnet",
                     lang: "dotnet",
+                    category: "foundry",
                     desc: "AI Search — full-text, vector, semantic, hybrid",
                 },
                 {
                     name: "azure-mgmt-fabric-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "Fabric ARM — provision, scale Fabric capacities",
                 },
                 {
                     name: "azure-resource-manager-cosmosdb-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "Cosmos DB ARM — create accounts, databases, RBAC",
                 },
                 {
                     name: "azure-resource-manager-mysql-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "MySQL Flexible Server — servers, databases, HA",
                 },
                 {
                     name: "azure-resource-manager-postgresql-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "PostgreSQL Flexible Server — servers, databases",
                 },
                 {
                     name: "azure-resource-manager-redis-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "Redis ARM — cache instances, firewall",
                 },
                 {
                     name: "azure-resource-manager-sql-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "SQL ARM — servers, databases, elastic pools",
                 },
                 {
                     name: "azure-eventgrid-dotnet",
                     lang: "dotnet",
+                    category: "messaging",
                     desc: "Event Grid — publish events, CloudEvents",
                 },
                 {
                     name: "azure-eventhub-dotnet",
                     lang: "dotnet",
+                    category: "messaging",
                     desc: "Event Hubs — high-throughput streaming, producers",
                 },
                 {
                     name: "azure-servicebus-dotnet",
                     lang: "dotnet",
+                    category: "messaging",
                     desc: "Service Bus — queues, topics, sessions",
                 },
                 {
                     name: "azure-identity-dotnet",
                     lang: "dotnet",
+                    category: "identity",
                     desc: "Identity SDK — DefaultAzureCredential, managed identity",
                 },
                 {
                     name: "azure-security-keyvault-keys-dotnet",
                     lang: "dotnet",
+                    category: "security",
                     desc: "Key Vault Keys — key creation, encrypt/decrypt",
                 },
                 {
                     name: "microsoft-azure-webjobs-extensions-authentication-events-dotnet",
                     lang: "dotnet",
+                    category: "identity",
                     desc: "Entra Auth Events — custom claims, token enrichment",
                 },
                 {
                     name: "azure-maps-search-dotnet",
                     lang: "dotnet",
+                    category: "integration",
                     desc: "Azure Maps — geocoding, routing, map tiles",
                 },
                 {
                     name: "azure-mgmt-apicenter-dotnet",
                     lang: "dotnet",
+                    category: "integration",
                     desc: "API Center — API inventory, governance",
                 },
                 {
                     name: "azure-mgmt-apimanagement-dotnet",
                     lang: "dotnet",
+                    category: "integration",
                     desc: "API Management ARM — APIM services, APIs",
                 },
                 {
                     name: "azure-mgmt-botservice-dotnet",
                     lang: "dotnet",
+                    category: "integration",
                     desc: "Bot Service ARM — bot resources, channels",
                 },
                 {
                     name: "azure-resource-manager-durabletask-dotnet",
                     lang: "dotnet",
+                    category: "compute",
                     desc: "Durable Task ARM — schedulers, task hubs",
                 },
                 {
                     name: "azure-resource-manager-playwright-dotnet",
                     lang: "dotnet",
+                    category: "compute",
                     desc: "Playwright Testing ARM — workspaces, quotas",
                 },
                 {
                     name: "azure-mgmt-applicationinsights-dotnet",
                     lang: "dotnet",
+                    category: "monitoring",
                     desc: "Application Insights — components, web tests",
                 },
                 {
                     name: "azure-mgmt-arizeaiobservabilityeval-dotnet",
                     lang: "dotnet",
+                    category: "monitoring",
                     desc: "Arize AI — ML observability via Azure",
                 },
                 {
                     name: "azure-mgmt-mongodbatlas-dotnet",
                     lang: "dotnet",
+                    category: "data",
                     desc: "MongoDB Atlas — manage Atlas as ARM resources",
                 },
                 {
                     name: "azure-mgmt-weightsandbiases-dotnet",
                     lang: "dotnet",
+                    category: "monitoring",
                     desc: "Weights & Biases — ML experiment tracking",
                 },
 
@@ -1440,131 +1586,157 @@
                 {
                     name: "azure-ai-agents-ts",
                     lang: "ts",
+                    category: "foundry",
                     desc: "Agents SDK — tools, threads, streaming",
                 },
                 {
                     name: "azure-ai-contentsafety-ts",
                     lang: "ts",
+                    category: "foundry",
                     desc: "Content Safety — moderate text/images",
                 },
                 {
                     name: "azure-ai-document-intelligence-ts",
                     lang: "ts",
+                    category: "ai-services",
                     desc: "Document Intelligence — extract from forms",
                 },
                 {
                     name: "azure-ai-inference-ts",
                     lang: "ts",
+                    category: "foundry",
                     desc: "Inference REST client — chat, embeddings",
                 },
                 {
                     name: "azure-ai-projects-ts",
                     lang: "ts",
+                    category: "foundry",
                     desc: "AI Projects SDK — Foundry client, agents",
                 },
                 {
                     name: "m365-agents-ts",
                     lang: "ts",
+                    category: "foundry",
                     desc: "Microsoft 365 Agents SDK — AgentApplication routing, Express hosting, streaming, Copilot Studio client",
                 },
                 {
                     name: "azure-ai-translation-ts",
                     lang: "ts",
+                    category: "ai-services",
                     desc: "Translation — text, transliteration, documents",
                 },
                 {
                     name: "azure-ai-voicelive-ts",
                     lang: "ts",
+                    category: "ai-services",
                     desc: "Voice Live — real-time voice AI",
                 },
                 {
                     name: "azure-search-documents-ts",
                     lang: "ts",
+                    category: "foundry",
                     desc: "AI Search — vector/hybrid, semantic ranking",
                 },
                 {
                     name: "frontend-ui-dark-ts",
                     lang: "ts",
+                    category: "patterns",
                     desc: "Frontend UI Dark — Vite + React + Tailwind design system",
                 },
                 {
                     name: "azure-cosmos-ts",
                     lang: "ts",
+                    category: "data",
                     desc: "Cosmos DB — document CRUD, queries",
                 },
                 {
                     name: "azure-postgres-ts",
                     lang: "ts",
+                    category: "data",
                     desc: "PostgreSQL — connect with pg, pooling, Entra ID",
                 },
                 {
                     name: "azure-storage-blob-ts",
                     lang: "ts",
+                    category: "data",
                     desc: "Blob Storage — upload, download, SAS tokens",
                 },
                 {
                     name: "azure-storage-file-share-ts",
                     lang: "ts",
+                    category: "data",
                     desc: "File Share — SMB shares, directories",
                 },
                 {
                     name: "azure-storage-queue-ts",
                     lang: "ts",
+                    category: "data",
                     desc: "Queue Storage — send, receive, peek",
                 },
                 {
                     name: "azure-eventhub-ts",
                     lang: "ts",
+                    category: "messaging",
                     desc: "Event Hubs — high-throughput streaming",
                 },
                 {
                     name: "azure-servicebus-ts",
                     lang: "ts",
+                    category: "messaging",
                     desc: "Service Bus — queues, topics, sessions",
                 },
                 {
                     name: "azure-web-pubsub-ts",
                     lang: "ts",
+                    category: "messaging",
                     desc: "Web PubSub — WebSocket real-time features",
                 },
                 {
                     name: "azure-appconfiguration-ts",
                     lang: "ts",
+                    category: "integration",
                     desc: "App Configuration — settings, feature flags",
                 },
                 {
                     name: "azure-identity-ts",
                     lang: "ts",
+                    category: "identity",
                     desc: "Identity SDK — DefaultAzureCredential, managed identity",
                 },
                 {
                     name: "azure-keyvault-keys-ts",
                     lang: "ts",
+                    category: "security",
                     desc: "Key Vault Keys — create, encrypt, sign keys",
                 },
                 {
                     name: "azure-keyvault-secrets-ts",
                     lang: "ts",
+                    category: "security",
                     desc: "Key Vault Secrets — store and retrieve secrets",
                 },
                 {
                     name: "azure-microsoft-playwright-testing-ts",
                     lang: "ts",
+                    category: "compute",
                     desc: "Playwright Testing — scale browser tests",
                 },
                 {
                     name: "azure-monitor-opentelemetry-ts",
                     lang: "ts",
+                    category: "monitoring",
                     desc: "OpenTelemetry — tracing, metrics, logs",
                 },
                 {
                     name: "react-flow-node-ts",
                     lang: "ts",
+                    category: "patterns",
                     desc: "React Flow nodes — custom nodes with TypeScript",
                 },
                 {
                     name: "zustand-store-ts",
                     lang: "ts",
+                    category: "patterns",
                     desc: "Zustand stores — TypeScript, subscribeWithSelector",
                 },
 
@@ -1572,152 +1744,183 @@
                 {
                     name: "azure-ai-agents-java",
                     lang: "java",
+                    category: "foundry",
                     desc: "Agents SDK — models, tools, OpenAI capabilities",
                 },
                 {
                     name: "azure-ai-agents-persistent-java",
                     lang: "java",
+                    category: "foundry",
                     desc: "Agents Persistent — threads, messages, runs",
                 },
                 {
                     name: "azure-ai-anomalydetector-java",
                     lang: "java",
+                    category: "ai-services",
                     desc: "Anomaly Detector — time-series analysis",
                 },
                 {
                     name: "azure-ai-contentsafety-java",
                     lang: "java",
+                    category: "foundry",
                     desc: "Content Safety — text/image analysis",
                 },
                 {
                     name: "azure-ai-formrecognizer-java",
                     lang: "java",
+                    category: "ai-services",
                     desc: "Form Recognizer — extract from documents",
                 },
                 {
                     name: "azure-ai-inference-java",
                     lang: "java",
+                    category: "foundry",
                     desc: "Inference SDK — chat completions, embeddings",
                 },
                 {
                     name: "azure-ai-projects-java",
                     lang: "java",
+                    category: "foundry",
                     desc: "AI Projects — Foundry project management",
                 },
                 {
                     name: "azure-ai-vision-imageanalysis-java",
                     lang: "java",
+                    category: "ai-services",
                     desc: "Vision SDK — captions, OCR, object detection",
                 },
                 {
                     name: "azure-ai-voicelive-java",
                     lang: "java",
+                    category: "ai-services",
                     desc: "Voice Live — real-time voice conversations",
                 },
                 {
                     name: "azure-communication-callautomation-java",
                     lang: "java",
+                    category: "integration",
                     desc: "Call Automation — IVR, call routing, recording",
                 },
                 {
                     name: "azure-communication-callingserver-java",
                     lang: "java",
+                    category: "integration",
                     desc: "CallingServer (legacy) — deprecated",
                 },
                 {
                     name: "azure-communication-chat-java",
                     lang: "java",
+                    category: "integration",
                     desc: "Chat SDK — threads, messaging, participants",
                 },
                 {
                     name: "azure-communication-common-java",
                     lang: "java",
+                    category: "integration",
                     desc: "Common utilities — token credentials",
                 },
                 {
                     name: "azure-communication-sms-java",
                     lang: "java",
+                    category: "integration",
                     desc: "SMS SDK — notifications, alerts, OTP",
                 },
                 {
                     name: "azure-cosmos-java",
                     lang: "java",
+                    category: "data",
                     desc: "Cosmos DB — NoSQL, global distribution",
                 },
                 {
                     name: "azure-data-tables-java",
                     lang: "java",
+                    category: "data",
                     desc: "Tables SDK — Table Storage or Cosmos Table API",
                 },
                 {
                     name: "azure-storage-blob-java",
                     lang: "java",
+                    category: "data",
                     desc: "Blob Storage — upload, download, streaming",
                 },
                 {
                     name: "azure-eventgrid-java",
                     lang: "java",
+                    category: "messaging",
                     desc: "Event Grid — publish events, pub/sub",
                 },
                 {
                     name: "azure-eventhub-java",
                     lang: "java",
+                    category: "messaging",
                     desc: "Event Hubs — high-throughput, event-driven",
                 },
                 {
                     name: "azure-messaging-webpubsub-java",
                     lang: "java",
+                    category: "messaging",
                     desc: "Web PubSub — WebSocket messaging",
                 },
                 {
                     name: "azure-identity-java",
                     lang: "java",
+                    category: "identity",
                     desc: "Identity SDK — DefaultAzureCredential",
                 },
                 {
                     name: "azure-security-keyvault-keys-java",
                     lang: "java",
+                    category: "security",
                     desc: "Key Vault Keys — RSA/EC keys, HSM",
                 },
                 {
                     name: "azure-security-keyvault-secrets-java",
                     lang: "java",
+                    category: "security",
                     desc: "Key Vault Secrets — passwords, API keys",
                 },
                 {
                     name: "azure-appconfiguration-java",
                     lang: "java",
+                    category: "integration",
                     desc: "App Configuration — settings, feature flags",
                 },
                 {
                     name: "azure-compute-batch-java",
                     lang: "java",
+                    category: "compute",
                     desc: "Batch SDK — large-scale parallel jobs",
                 },
                 {
                     name: "azure-monitor-ingestion-java",
                     lang: "java",
+                    category: "monitoring",
                     desc: "Monitor Ingestion — custom logs via DCR",
                 },
                 {
                     name: "azure-monitor-opentelemetry-exporter-java",
                     lang: "java",
+                    category: "monitoring",
                     desc: "OpenTelemetry Exporter — to Azure Monitor",
                 },
                 {
                     name: "azure-monitor-query-java",
                     lang: "java",
+                    category: "monitoring",
                     desc: "Monitor Query — Kusto, Log Analytics",
                 },
             ];
 
             let currentFilter = "all";
+            let currentCategory = "all";
 
-            function renderSkills(filter = "all", searchTerm = "") {
+            function renderSkills(filter = "all", searchTerm = "", category = "all") {
                 const grid = document.getElementById("skillsGrid");
                 const filtered = skills.filter((skill) => {
                     const matchesFilter =
                         filter === "all" || skill.lang === filter;
+                    const matchesCategory =
+                        category === "all" || skill.category === category;
                     const matchesSearch =
                         skill.name
                             .toLowerCase()
@@ -1725,7 +1928,7 @@
                         skill.desc
                             .toLowerCase()
                             .includes(searchTerm.toLowerCase());
-                    return matchesFilter && matchesSearch;
+                    return matchesFilter && matchesCategory && matchesSearch;
                 });
 
                 grid.innerHTML = filtered
@@ -1773,14 +1976,28 @@
                     .forEach((btn) => btn.classList.remove("active"));
                 event.target.classList.add("active");
 
-                // Re-render with current search term
+                // Re-render with current search term and category
                 const searchTerm = document.getElementById("skillSearch").value;
-                renderSkills(lang, searchTerm);
+                renderSkills(lang, searchTerm, currentCategory);
+            }
+
+            function showCategoryTab(category) {
+                currentCategory = category;
+
+                // Update active category tab
+                document
+                    .querySelectorAll(".cat-btn")
+                    .forEach((btn) => btn.classList.remove("active"));
+                event.target.classList.add("active");
+
+                // Re-render with current search term and language filter
+                const searchTerm = document.getElementById("skillSearch").value;
+                renderSkills(currentFilter, searchTerm, category);
             }
 
             function filterSkills() {
                 const searchTerm = document.getElementById("skillSearch").value;
-                renderSkills(currentFilter, searchTerm);
+                renderSkills(currentFilter, searchTerm, currentCategory);
             }
 
             function copyToClipboard(text) {

@@ -9,6 +9,8 @@ Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding
 
 > **Blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
 
+> **🔍 Skill Explorer:** [Browse all 126 skills with 1-click install](https://microsoft.github.io/agent-skills/)
+
 ## Quick Start
 
 ```bash
