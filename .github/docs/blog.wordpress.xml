@@ -1,6 +1,6 @@
 Code will be generated, not written. Most enterprise AI workloads are net-new microservices. Modular, greenfield work. Perfect for coding agents.
 
-The catch? Out-of-the-box agents lack domain knowledge about your SDKs and patterns. But frontier LLMs are extraordinarily sample efficient. The patterns you need are already encoded in their latent space from pretraining. All you need is the right activation context. That is what skills do, and <a href="https://github.com/microsoft/agent-skills">Agent Skills</a> ships 129 of them for Azure and Microsoft Foundry development.
+The catch? Out-of-the-box agents lack domain knowledge about your SDKs and patterns. But frontier LLMs are extraordinarily sample efficient. The patterns you need are already encoded in their latent space from pretraining. All you need is the right activation context. That is what skills do, and <a href="https://github.com/microsoft/agent-skills">Agent Skills</a> ships 126 of them for Azure and Microsoft Foundry development.
 
 <strong>New:</strong> Browse all skills, agents, and documentation at <a href="https://microsoft.github.io/agent-skills/">microsoft.github.io/agent-skills</a>.
 <h2>What's in Agent Skills?</h2>
@@ -10,7 +10,7 @@ The catch? Out-of-the-box agents lack domain knowledge about your SDKs and patte
 
 The repo contains:
 <ul>
- 	<li><strong>Skills</strong>: 129 modular knowledge packages for specific domains (Cosmos DB, Foundry IQ, AZD Deployment, Voice Live, etc.)</li>
+ 	<li><strong>Skills</strong>: 126 modular knowledge packages for specific domains (Cosmos DB, Foundry IQ, AZD Deployment, Voice Live, etc.)</li>
  	<li><strong>Prompts</strong>: Reusable templates for code reviews, component creation, endpoints</li>
  	<li><strong>Agents</strong>: Persona definitions (backend, frontend, infrastructure, planner, presenter, scaffolder)</li>
  	<li><strong>MCP Servers</strong>: Pre-configured servers for GitHub, Playwright, Microsoft Docs, Context7</li>
@@ -86,7 +86,7 @@ For real-time Foundry documentation access, add the Context7 MCP server or use d
 
 A GitHub workflow runs daily to sync the latest Foundry documentation updates automatically.
 <h2>Available Skills</h2>
-<strong>129 skills total</strong> — 5 core + 124 language-specific (Python, .NET, TypeScript, Java).
+<strong>126 skills total</strong> — 5 core + 121 language-specific (Python, .NET, TypeScript, Java).
 
 Browse all skills with install commands at <a href="https://microsoft.github.io/agent-skills/">microsoft.github.io/agent-skills</a>.
 <h3>Core Skills</h3>
@@ -139,12 +139,12 @@ Language-agnostic tooling and infrastructure:
 </tr>
 <tr>
 <td><strong>TypeScript</strong></td>
-<td>25</td>
+<td>24</td>
 <td>Foundry, AI, React Flow, Zustand, Storage, Messaging, Frontend patterns</td>
 </tr>
 <tr>
 <td><strong>Java</strong></td>
-<td>28</td>
+<td>26</td>
 <td>Foundry, AI, Communication Services, Cosmos, Messaging, Monitoring</td>
 </tr>
 </tbody>
@@ -158,11 +158,11 @@ Language-agnostic tooling and infrastructure:
 </tr>
 <tr>
 <td><strong>AI Foundry</strong></td>
-<td><code>azure-ai-projects-py</code>, <code>azure-ai-agents-py</code>, <code>agent-framework-azure-ai-py</code>, <code>foundry-iq-py</code></td>
+<td><code>azure-ai-projects-py</code>, <code>agent-framework-azure-ai-py</code>, <code>foundry-iq-py</code>, <code>hosted-agents-v2-py</code></td>
 </tr>
 <tr>
 <td><strong>AI Services</strong></td>
-<td><code>azure-search-documents-py</code>, <code>azure-ai-voicelive-py</code>, <code>azure-ai-inference-py</code>, <code>azure-ai-evaluation-py</code></td>
+<td><code>azure-search-documents-py</code>, <code>azure-ai-voicelive-py</code>, <code>azure-ai-contentsafety-py</code>, <code>azure-ai-evaluation-py</code></td>
 </tr>
 <tr>
 <td><strong>Backend</strong></td>
