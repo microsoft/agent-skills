@@ -1,20 +1,20 @@
 # Agent Skills
 
-[![Evals & Tests](https://img.shields.io/github/actions/workflow/status/microsoft/agent-skills/test-harness.yml?branch=main&label=Evals%20%26%20Tests)](https://github.com/microsoft/agent-skills/actions/workflows/test-harness.yml)
-[![Copilot SDK Tests](https://img.shields.io/github/actions/workflow/status/microsoft/agent-skills/skill-evaluation.yml?branch=main&label=Copilot%20SDK%20Tests)](https://github.com/microsoft/agent-skills/actions/workflows/skill-evaluation.yml)
-[![Install via skills.sh](https://img.shields.io/badge/skills.sh-install-blue)](https://skills.sh/microsoft/agent-skills)
-[![Browse on Context7](https://img.shields.io/badge/Context7-browse%20skills-purple)](https://context7.com/microsoft/agent-skills?tab=skills)
+[![Evals & Tests](https://img.shields.io/github/actions/workflow/status/microsoft/skills/test-harness.yml?branch=main&label=Evals%20%26%20Tests)](https://github.com/microsoft/skills/actions/workflows/test-harness.yml)
+[![Copilot SDK Tests](https://img.shields.io/github/actions/workflow/status/microsoft/skills/skill-evaluation.yml?branch=main&label=Copilot%20SDK%20Tests)](https://github.com/microsoft/skills/actions/workflows/skill-evaluation.yml)
+[![Install via skills.sh](https://img.shields.io/badge/skills.sh-install-blue)](https://skills.sh/microsoft/skills)
+[![Browse on Context7](https://img.shields.io/badge/Context7-browse%20skills-purple)](https://context7.com/microsoft/skills?tab=skills)
 
 Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding agents working with Azure SDKs and Microsoft AI Foundry.
 
 > **Blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
 
-> **🔍 Skill Explorer:** [Browse all 133 skills with 1-click install](https://microsoft.github.io/agent-skills/)
+> **🔍 Skill Explorer:** [Browse all 133 skills with 1-click install](https://microsoft.github.io/skills/)
 
 ## Quick Start
 
 ```bash
-npx skills add microsoft/agent-skills
+npx skills add microsoft/skills
 ```
 
 Select the skills you need from the wizard. Skills are installed to your chosen agent's directory (e.g., `.github/skills/` for GitHub Copilot) and symlinked if you use multiple agents.
@@ -26,7 +26,7 @@ Select the skills you need from the wizard. Skills are installed to your chosen 
 
 ```bash
 # Clone and copy specific skills
-git clone https://github.com/microsoft/agent-skills.git
+git clone https://github.com/microsoft/skills.git
 cp -r agent-skills/.github/skills/azure-cosmos-db-py your-project/.github/skills/
 
 # Or use symlinks for multi-project setups
@@ -39,10 +39,10 @@ ln -s ../.github/skills .claude/skills
 
 **Context7**
 
-Browse and install skills via [context7.com/microsoft/agent-skills](https://context7.com/microsoft/agent-skills?tab=skills):
+Browse and install skills via [context7.com/microsoft/skills](https://context7.com/microsoft/skills?tab=skills):
 
 ```bash
-npx ctx7 skills install /microsoft/agent-skills azure-ai-projects-py
+npx ctx7 skills install /microsoft/skills azure-ai-projects-py
 ```
 
 </details>
@@ -56,7 +56,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ---
 
-![Context-Driven Development Architecture](https://raw.githubusercontent.com/microsoft/agent-skills/main/.github/assets/agent-skills-image.png)
+![Context-Driven Development Architecture](https://raw.githubusercontent.com/microsoft/skills/main/.github/assets/agent-skills-image.png)
 
 ---
 
@@ -68,7 +68,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
-| **[Live Docs](https://context7.com/llmstxt/microsoft_github_io_agent-skills_llms-full_txt)** | Context7-indexed Foundry documentation, updated daily |
+| **[Live Docs](https://context7.com/llmstxt/microsoft_github_io_skills_llms-full_txt)** | Context7-indexed Foundry documentation, updated daily |
 
 ---
 
@@ -598,10 +598,10 @@ The **scaffold-foundry-app** prompt + **scaffolder** agent provide a complete pr
 
 ### Live Documentation
 
-[Context7](https://context7.com/llmstxt/microsoft_github_io_agent-skills_llms-full_txt) indexes this repo's Foundry documentation with semantic search. Updated daily via [GitHub workflow](.github/workflows/update-llms-txt.md):
+[Context7](https://context7.com/llmstxt/microsoft_github_io_skills_llms-full_txt) indexes this repo's Foundry documentation with semantic search. Updated daily via [GitHub workflow](.github/workflows/update-llms-txt.md):
 
 1. Scrapes the latest [Azure AI Foundry TOC](https://learn.microsoft.com/en-us/azure/ai-foundry/) from Microsoft Learn
-2. Generates `llms.txt` and `llms-full.txt`, hosted at [microsoft.github.io/agent-skills](https://microsoft.github.io/agent-skills/)
+2. Generates `llms.txt` and `llms-full.txt`, hosted at [microsoft.github.io/skills](https://microsoft.github.io/skills/)
 3. Creates a PR if documentation has changed
 
 These files follow the [llms.txt specification](https://llmstxt.org/) for LLM-friendly documentation.

@@ -154,7 +154,7 @@ Skills are domain-specific knowledge packages in `.github/skills/`. Each has a `
 
 ```bash
 # Install skills using skills.sh
-npx skills add microsoft/agent-skills
+npx skills add microsoft/skills
 ```
 
 ### Skill Catalog

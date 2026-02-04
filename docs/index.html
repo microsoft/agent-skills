@@ -704,7 +704,7 @@
                     <a href="#mcp">MCP</a>
                     <a href="#docs">Docs</a>
                     <a
-                        href="https://github.com/microsoft/agent-skills"
+                        href="https://github.com/microsoft/skills"
                         class="github-btn"
                     >
                         <svg
@@ -720,7 +720,7 @@
                         GitHub
                     </a>
                     <a
-                        href="https://github.com/microsoft/agent-skills"
+                        href="https://github.com/microsoft/skills"
                         class="star-btn"
                         id="headerStarBtn"
                     >
@@ -768,7 +768,7 @@
                         class="copy-btn"
                         onclick="
                             copyToClipboard(
-                                'npx skills add microsoft/agent-skills',
+                                'npx skills add microsoft/skills',
                             )
                         "
                     >
@@ -779,14 +779,14 @@
                             ># Install skills interactively</span
                         >
                         <span class="command"
-                            >npx skills add microsoft/agent-skills</span
+                            >npx skills add microsoft/skills</span
                         >
 
                         <span class="comment"
                             ># Or install a specific skill</span
                         >
                         <span class="command"
-                            >npx skills add microsoft/agent-skills --skill
+                            >npx skills add microsoft/skills --skill
                             azure-ai-agents-py</span
                         ></code
                     >
@@ -824,7 +824,7 @@
                 <div class="section-header">
                     <h2><span class="icon">📦</span> Skills</h2>
                     <a
-                        href="https://github.com/microsoft/agent-skills#skill-catalog"
+                        href="https://github.com/microsoft/skills#skill-catalog"
                         class="view-all"
                         >View all on GitHub →</a
                     >
@@ -910,7 +910,7 @@
                 <div class="section-header">
                     <h2><span class="icon">🤖</span> Custom Agents</h2>
                     <a
-                        href="https://github.com/microsoft/agent-skills/tree/main/.github/agents"
+                        href="https://github.com/microsoft/skills/tree/main/.github/agents"
                         class="view-all"
                         >View on GitHub →</a
                     >
@@ -969,7 +969,7 @@
                 <div class="section-header">
                     <h2><span class="icon">🔌</span> MCP Servers</h2>
                     <a
-                        href="https://github.com/microsoft/agent-skills/blob/main/.vscode/mcp.json"
+                        href="https://github.com/microsoft/skills/blob/main/.vscode/mcp.json"
                         class="view-all"
                         >View config →</a
                     >
@@ -1072,7 +1072,7 @@
                         </div>
                     </a>
                     <a
-                        href="https://context7.com/llmstxt/microsoft_github_io_agent-skills_llms-full_txt"
+                        href="https://context7.com/llmstxt/microsoft_github_io_skills_llms-full_txt"
                         class="doc-link"
                     >
                         <span class="doc-icon">🔍</span>
@@ -1085,7 +1085,7 @@
                         </div>
                     </a>
                     <a
-                        href="https://github.com/microsoft/agent-skills/blob/main/AGENTS.md"
+                        href="https://github.com/microsoft/skills/blob/main/AGENTS.md"
                         class="doc-link"
                     >
                         <span class="doc-icon">🤖</span>
@@ -1102,11 +1102,11 @@
             <p>
                 Built by <a href="https://github.com/microsoft">Microsoft</a> ·
                 <a
-                    href="https://github.com/microsoft/agent-skills/blob/main/LICENSE"
+                    href="https://github.com/microsoft/skills/blob/main/LICENSE"
                     >MIT License</a
                 >
                 ·
-                <a href="https://github.com/microsoft/agent-skills">GitHub</a>
+                <a href="https://github.com/microsoft/skills">GitHub</a>
             </p>
         </footer>
 
@@ -1987,7 +1987,7 @@
 
                 grid.innerHTML = filtered
                     .map((skill) => {
-                        const cmd = `npx skills add microsoft/agent-skills --skill ${skill.name}`;
+                        const cmd = `npx skills add microsoft/skills --skill ${skill.name}`;
                         return `
         <div class="skill-card" data-lang="${skill.lang}">
           <div class="skill-header">
@@ -2080,7 +2080,7 @@
             async function fetchStarCount() {
                 try {
                     const response = await fetch(
-                        "https://api.github.com/repos/microsoft/agent-skills",
+                        "https://api.github.com/repos/microsoft/skills",
                     );
                     if (response.ok) {
                         const data = await response.json();
