@@ -42,6 +42,7 @@ const {
             <a href="/skills/" class="logo">
               <span class="logo-icon">⚡</span>
               <span class="logo-text">Agent Skills</span>
+              <span class="logo-tagline">Domain knowledge for AI coding agents</span>
             </a>
             
             <nav class="nav">
@@ -221,6 +222,21 @@ const {
       
       .logo-icon {
         font-size: var(--text-xl);
+      }
+      
+      .logo-tagline {
+        font-size: var(--text-sm);
+        font-weight: 400;
+        color: var(--text-secondary);
+        margin-left: var(--space-md);
+        padding-left: var(--space-md);
+        border-left: 1px solid var(--border-primary);
+      }
+      
+      @media (max-width: 900px) {
+        .logo-tagline {
+          display: none;
+        }
       }
       
       .nav {
