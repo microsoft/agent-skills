@@ -38,7 +38,35 @@ import mcpServers from '../data/mcp-servers.json';
         <span class="section-dot"></span>
         Plugins
       </h2>
-      <p class="section-placeholder">Coming soon...</p>
+      <div class="plugins-grid">
+        <!-- GitHub Copilot for Azure -->
+        <a href="https://github.com/microsoft/GitHub-Copilot-for-Azure" target="_blank" rel="noopener" class="doc-card">
+          <span class="doc-icon">🔌</span>
+          <div class="doc-content">
+            <h3 class="doc-title">
+              GitHub Copilot for Azure
+              <svg class="external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+              </svg>
+            </h3>
+            <p class="doc-desc">Azure extension for GitHub Copilot — infrastructure, deployment, and Azure services assistance</p>
+          </div>
+        </a>
+
+        <!-- Awesome Copilot -->
+        <a href="https://github.com/github/awesome-copilot" target="_blank" rel="noopener" class="doc-card">
+          <span class="doc-icon">⭐</span>
+          <div class="doc-content">
+            <h3 class="doc-title">
+              Awesome Copilot
+              <svg class="external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+              </svg>
+            </h3>
+            <p class="doc-desc">Curated list of skills, prompts, plugins, cookbooks, custom agents and more</p>
+          </div>
+        </a>
+      </div>
     </section>
 
     <!-- Agents Section -->
@@ -87,13 +115,13 @@ import mcpServers from '../data/mcp-servers.json';
       </h2>
       <div class="docs-grid">
         <!-- llms.txt -->
-        <a href="./llms.txt" class="doc-card">
+        <a href="/skills/llms.txt" class="doc-card">
           <span class="doc-icon">📄</span>
           <div class="doc-content">
             <h3 class="doc-title">llms.txt</h3>
             <p class="doc-desc">LLM-friendly documentation index</p>
             <span class="doc-secondary">
-              Also available: <a href="./llms-full.txt" class="doc-link-inline" onclick="event.stopPropagation()">llms-full.txt</a>
+              Also available: <a href="/skills/llms-full.txt" class="doc-link-inline" onclick="event.stopPropagation()">llms-full.txt</a>
             </span>
           </div>
         </a>
@@ -343,6 +371,19 @@ import mcpServers from '../data/mcp-servers.json';
 
   @media (max-width: 768px) {
     .docs-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Plugins Section */
+  .plugins-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+
+  @media (max-width: 768px) {
+    .plugins-grid {
       grid-template-columns: 1fr;
     }
   }
