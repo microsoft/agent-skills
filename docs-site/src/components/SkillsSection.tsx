@@ -2,9 +2,10 @@ import { useState, useMemo, useCallback } from 'react';
 import { LanguageTabs, type Language } from './LanguageTabs';
 import { CategoryTabs, type Category } from './CategoryTabs';
 import { SearchInput } from './SearchInput';
-import { SkillCard } from './SkillCard';
+import { SkillCard, type Skill } from './SkillCard';
+import { SkillDetailModal } from './SkillDetailModal';
 
-interface Skill {
+interface SkillInput {
   name: string;
   description: string;
   lang: string;
@@ -13,7 +14,7 @@ interface Skill {
 }
 
 interface SkillsSectionProps {
-  skills: Skill[];
+  skills: SkillInput[];
 }
 
 const LANG_DISPLAY: Record<string, string> = {
@@ -29,6 +30,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
   const [selectedLang, setSelectedLang] = useState<Language>('all');
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
 
   const langCounts = useMemo(() => {
     return skills.reduce((acc, skill) => {
@@ -66,32 +68,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
   }, []);
 
   return (
-    <section style={{ padding: 'var(--space-2xl) 0' }}>
-      <div style={{ marginBottom: 'var(--space-xl)' }}>
-        <span style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 'var(--space-sm)',
-          fontSize: 'var(--text-xs)',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          color: 'var(--text-secondary)',
-          marginBottom: 'var(--space-sm)',
-        }}>
-          <span style={{ color: 'var(--accent)', fontSize: '0.5rem' }}>●</span>
-          Skills
-        </span>
-        <h2 style={{
-          fontSize: 'var(--text-2xl)',
-          fontWeight: 700,
-          color: 'var(--text-primary)',
-          margin: 0,
-        }}>
-          Browse all {skills.length} skills
-        </h2>
-      </div>
-
+    <section style={{ padding: 'var(--space-md) 0 var(--space-2xl)' }}>
       <div style={{ marginBottom: 'var(--space-lg)' }}>
         <SearchInput
           value={searchQuery}
@@ -134,19 +111,23 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
       </div>
 
       <div className="skills-grid">
-        {filteredSkills.map((skill) => (
-          <SkillCard
-            key={skill.name}
-            skill={{
-              name: skill.name,
-              description: skill.description,
-              language: skill.lang,
-              category: skill.category,
-              path: `.github/skills/${skill.name}`,
-              package: skill.package,
-            }}
-          />
-        ))}
+        {filteredSkills.map((skill) => {
+          const mappedSkill: Skill = {
+            name: skill.name,
+            description: skill.description,
+            language: skill.lang,
+            category: skill.category,
+            path: `.github/skills/${skill.name}`,
+            package: skill.package,
+          };
+          return (
+            <SkillCard
+              key={skill.name}
+              skill={mappedSkill}
+              onClick={() => setSelectedSkill(mappedSkill)}
+            />
+          );
+        })}
       </div>
 
       {filteredSkills.length === 0 && (
@@ -163,6 +144,11 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
           </p>
         </div>
       )}
+
+      <SkillDetailModal
+        skill={selectedSkill}
+        onClose={() => setSelectedSkill(null)}
+      />
     </section>
   );
 }

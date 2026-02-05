@@ -11,9 +11,10 @@ export interface Skill {
 
 interface SkillCardProps {
   skill: Skill;
+  onClick?: () => void;
 }
 
-const LANG_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+export const LANG_STYLES: Record<string, { bg: string; text: string; border: string }> = {
   py: {
     bg: 'rgba(96, 165, 250, 0.15)',
     text: '#60a5fa',
@@ -46,7 +47,7 @@ const LANG_STYLES: Record<string, { bg: string; text: string; border: string }> 
   },
 };
 
-const LANG_LABELS: Record<string, string> = {
+export const LANG_LABELS: Record<string, string> = {
   py: 'Python',
   dotnet: '.NET',
   ts: 'TypeScript',
@@ -55,7 +56,7 @@ const LANG_LABELS: Record<string, string> = {
   core: 'Core',
 };
 
-export function SkillCard({ skill }: SkillCardProps) {
+export function SkillCard({ skill, onClick }: SkillCardProps) {
   const [copied, setCopied] = useState(false);
   
   const langStyle = LANG_STYLES[skill.language] || LANG_STYLES.core;
@@ -76,20 +77,15 @@ export function SkillCard({ skill }: SkillCardProps) {
     }
   }, [installCommand]);
 
-  const githubUrl = `https://github.com/microsoft/skills/tree/main/${skill.path}`;
-
   return (
-    <a
-      href={githubUrl}
-      target="_blank"
-      rel="noopener noreferrer"
+    <div
+      onClick={onClick}
       style={{
         display: 'block',
         background: 'var(--bg-card)',
         border: '1px solid var(--border-primary)',
         borderRadius: 'var(--radius-lg)',
         padding: 'var(--space-lg)',
-        textDecoration: 'none',
         transition: 'all var(--transition-base)',
         cursor: 'pointer',
       }}
@@ -215,7 +211,7 @@ export function SkillCard({ skill }: SkillCardProps) {
           </button>
         </div>
       </div>
-    </a>
+    </div>
   );
 }
 
