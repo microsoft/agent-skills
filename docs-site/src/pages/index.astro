@@ -13,10 +13,9 @@ import mcpServers from '../data/mcp-servers.json';
     <!-- Hero Section -->
     <section class="hero">
       <div class="hero-content">
-        <p class="hero-label">Skills for Coding Agents</p>
         <h1 class="hero-title">Agent Skills</h1>
         <p class="hero-subtitle">
-          Domain knowledge for AI coding agents working with Azure SDKs and Microsoft AI Foundry.
+          Domain knowledge for AI coding agents working with Azure SDKs and Microsoft Foundry.
         </p>
         
         <!-- Quick Start + GitHub -->
@@ -242,7 +241,7 @@ import mcpServers from '../data/mcp-servers.json';
     }
   }
 
-  /* Hero Section - Compact, developer-focused */
+  /* Hero Section - Compact, developer-focused, Foundry-inspired */
   .hero {
     padding: var(--space-2xl) 0 var(--space-xl);
     text-align: center;
@@ -253,28 +252,22 @@ import mcpServers from '../data/mcp-servers.json';
     margin: 0 auto;
   }
   
-  .hero-label {
-    font-size: var(--text-sm);
-    font-weight: 500;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    margin-bottom: var(--space-sm);
-  }
-  
   .hero-title {
     font-size: clamp(2rem, 6vw, 3rem);
     font-weight: 800;
     letter-spacing: -0.02em;
-    margin-bottom: var(--space-md);
+    margin-bottom: var(--space-sm);
     color: var(--text-primary);
   }
   
   .hero-subtitle {
     font-size: var(--text-base);
     color: var(--text-secondary);
-    line-height: 1.6;
+    line-height: 1.5;
     margin-bottom: var(--space-lg);
+    max-width: 520px;
+    margin-left: auto;
+    margin-right: auto;
   }
   
   /* Hero Actions - Command + GitHub button */
@@ -290,8 +283,10 @@ import mcpServers from '../data/mcp-servers.json';
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-md);
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-primary);
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--radius-md);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
@@ -324,26 +319,28 @@ import mcpServers from '../data/mcp-servers.json';
     background: var(--bg-tertiary);
   }
   
-  /* GitHub Star Button - Primary CTA */
+  /* GitHub Star Button - Foundry accent CTA */
   .github-star-btn {
     display: inline-flex;
     align-items: center;
     gap: var(--space-sm);
     padding: var(--space-sm) var(--space-lg);
-    background: var(--text-primary);
-    color: var(--bg-primary);
+    background: linear-gradient(135deg, #8251EE 0%, #5B8DEF 100%);
+    color: #fff;
     font-size: var(--text-sm);
     font-weight: 600;
     border-radius: var(--radius-md);
     text-decoration: none;
     transition: all var(--transition-fast);
+    box-shadow: 0 0 16px rgba(130, 81, 238, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
   
   .github-star-btn:hover {
-    background: var(--text-secondary);
-    color: var(--bg-primary);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+    background: linear-gradient(135deg, #9366F5 0%, #6B9DF5 100%);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 0 24px rgba(130, 81, 238, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
   }
   
   .github-star-btn svg {
@@ -355,16 +352,44 @@ import mcpServers from '../data/mcp-servers.json';
       padding: var(--space-xl) 0 var(--space-lg);
     }
     
+    .hero-content {
+      padding: 0 var(--space-sm);
+    }
+    
     .hero-title {
       font-size: 1.75rem;
     }
     
     .hero-subtitle {
       font-size: var(--text-sm);
+      line-height: 1.6;
+      max-width: 100%;
+    }
+    
+    .hero-actions {
+      width: 100%;
+      gap: var(--space-sm);
     }
     
     .code-block {
+      width: 100%;
+      max-width: 100%;
       font-size: var(--text-xs);
+      padding: var(--space-sm);
+      justify-content: space-between;
+      overflow-x: auto;
+    }
+    
+    .code-block code {
+      word-break: break-all;
+      white-space: nowrap;
+    }
+    
+    .github-star-btn {
+      width: 100%;
+      justify-content: center;
+      padding: var(--space-md) var(--space-lg);
+      font-size: var(--text-base);
     }
   }
 

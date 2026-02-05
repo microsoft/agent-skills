@@ -9,7 +9,7 @@ Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding
 
 > **Blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
 
-> **🔍 Skill Explorer:** [Browse all 133 skills with 1-click install](https://microsoft.github.io/skills/)
+> **🔍 Skill Explorer:** [Browse all 132 skills with 1-click install](https://microsoft.github.io/skills/)
 
 ## Quick Start
 
@@ -64,7 +64,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 | Resource | Description |
 |----------|-------------|
-| **[126 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
+| **[125 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
@@ -74,12 +74,12 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ## Skill Catalog
 
-> 133 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
+> 132 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
 
 | Language | Count | Suffix | 
 |----------|-------|--------|
 | [Core](#core) | 5 | — |
-| [Python](#python) | 42 | `-py` |
+| [Python](#python) | 41 | `-py` |
 | [.NET](#net) | 29 | `-dotnet` |
 | [TypeScript](#typescript) | 24 | `-ts` |
 | [Java](#java) | 26 | `-java` |
@@ -103,7 +103,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### Python
 
-> 42 skills • suffix: `-py`
+> 41 skills • suffix: `-py`
 
 <details>
 <summary><strong>Foundry & AI</strong> (8 skills)</summary>
@@ -200,13 +200,12 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 </details>
 
 <details>
-<summary><strong>Patterns & Frameworks</strong> (4 skills)</summary>
+<summary><strong>Patterns & Frameworks</strong> (3 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
 | [azure-mgmt-fabric-py](.github/skills/azure-mgmt-fabric-py/) | Fabric Management — Microsoft Fabric capacities and resources. |
 | [fastapi-router-py](.github/skills/fastapi-router-py/) | FastAPI routers — CRUD operations, auth dependencies, response models. |
-| [foundry-iq-py](.github/skills/foundry-iq-py/) | Foundry IQ — agentic retrieval with knowledge bases and Foundry Agent Service. |
 | [pydantic-models-py](.github/skills/pydantic-models-py/) | Pydantic patterns — Base, Create, Update, Response, InDB model variants. |
 
 </details>
@@ -497,7 +496,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 AGENTS.md                # Agent configuration template
 
 .github/
-├── skills/              # All 133 skills (flat structure)
+├── skills/              # All 132 skills (flat structure)
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions
 ├── scripts/             # Automation scripts (doc scraping)
@@ -632,12 +631,12 @@ pnpm test
 
 ### Test Coverage Summary
 
-**126 skills with 1134 test scenarios** — all skills have acceptance criteria and test scenarios.
+**125 skills with 1124 test scenarios** — all skills have acceptance criteria and test scenarios.
 
 | Language | Skills | Scenarios | Top Skills by Scenarios |
 |----------|--------|-----------|-------------------------|
 | Core | 5 | 51 | `scaffold-foundry-app` (11), `podcast-generation` (8), `skill-creator` (8) |
-| Python | 42 | 341 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
+| Python | 41 | 331 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
 | .NET | 29 | 290 | `azure-resource-manager-sql-dotnet` (14), `azure-resource-manager-redis-dotnet` (14), `azure-servicebus-dotnet` (13) |
 | TypeScript | 24 | 257 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `azure-microsoft-playwright-testing-ts` (13) |
 | Java | 26 | 195 | `azure-storage-blob-java` (12), `azure-identity-java` (12), `azure-data-tables-java` (11) |
