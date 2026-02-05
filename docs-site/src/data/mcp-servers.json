@@ -1,0 +1,82 @@
+[
+  {
+    "id": "microsoft-docs",
+    "name": "Microsoft Docs",
+    "emoji": "📚",
+    "description": "Search Microsoft Learn for official Azure/Foundry documentation",
+    "category": "documentation",
+    "url": "https://learn.microsoft.com"
+  },
+  {
+    "id": "context7",
+    "name": "Context7",
+    "emoji": "7️⃣",
+    "description": "Indexed Foundry documentation with semantic search, updated daily",
+    "category": "documentation",
+    "url": "https://context7.com"
+  },
+  {
+    "id": "deepwiki",
+    "name": "DeepWiki",
+    "emoji": "📖",
+    "description": "Ask questions about GitHub repositories",
+    "category": "documentation",
+    "url": "https://deepwiki.com"
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "emoji": "🐙",
+    "description": "GitHub API operations for issues, PRs, and repos",
+    "category": "development",
+    "url": "https://github.com"
+  },
+  {
+    "id": "playwright",
+    "name": "Playwright",
+    "emoji": "🎭",
+    "description": "Browser automation and testing with Chromium, Firefox, WebKit",
+    "category": "development",
+    "url": "https://playwright.dev"
+  },
+  {
+    "id": "terraform",
+    "name": "Terraform",
+    "emoji": "🏔️",
+    "description": "Infrastructure as code for multi-cloud deployments",
+    "category": "development",
+    "url": "https://terraform.io"
+  },
+  {
+    "id": "eslint",
+    "name": "ESLint",
+    "emoji": "✅",
+    "description": "JavaScript/TypeScript linting and code quality",
+    "category": "development",
+    "url": "https://eslint.org"
+  },
+  {
+    "id": "sequentialthinking",
+    "name": "Sequential Thinking",
+    "emoji": "🧠",
+    "description": "Step-by-step reasoning for complex problem solving",
+    "category": "utilities",
+    "url": null
+  },
+  {
+    "id": "memory",
+    "name": "Memory",
+    "emoji": "💾",
+    "description": "Persistent memory across sessions for context continuity",
+    "category": "utilities",
+    "url": null
+  },
+  {
+    "id": "markitdown",
+    "name": "Markitdown",
+    "emoji": "📝",
+    "description": "Convert documents (PDF, DOCX, etc.) to markdown",
+    "category": "utilities",
+    "url": null
+  }
+]

@@ -1,0 +1,108 @@
+---
+interface Props {
+  emoji: string;
+  name: string;
+  description: string;
+  skills: string[];
+  file: string;
+}
+
+const { emoji, name, description, skills, file } = Astro.props;
+const githubUrl = `https://github.com/microsoft/skills/blob/main/.github/agents/${file}`;
+---
+
+<a href={githubUrl} class="agent-card" target="_blank" rel="noopener noreferrer">
+  <div class="agent-emoji">{emoji}</div>
+  <div class="agent-content">
+    <h3 class="agent-name">{name}</h3>
+    <p class="agent-description">{description}</p>
+    <div class="agent-skills">
+      {skills.map((skill) => (
+        <span class="skill-tag">{skill}</span>
+      ))}
+    </div>
+  </div>
+  <svg class="agent-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M7 17L17 7M17 7H7M17 7V17" />
+  </svg>
+</a>
+
+<style>
+  .agent-card {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-base);
+    position: relative;
+  }
+
+  .agent-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent);
+    box-shadow: 0 0 24px var(--accent-glow);
+    transform: translateY(-2px);
+  }
+
+  .agent-emoji {
+    font-size: 2.5rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .agent-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    flex: 1;
+    min-width: 0;
+  }
+
+  .agent-name {
+    font-size: var(--text-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .agent-description {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: var(--leading-relaxed);
+  }
+
+  .agent-skills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+  }
+
+  .skill-tag {
+    display: inline-block;
+    padding: 2px var(--space-sm);
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+
+  .agent-arrow {
+    position: absolute;
+    top: var(--space-md);
+    right: var(--space-md);
+    color: var(--text-muted);
+    opacity: 0;
+    transition: all var(--transition-fast);
+  }
+
+  .agent-card:hover .agent-arrow {
+    opacity: 1;
+    color: var(--accent);
+  }
+</style>

@@ -1,0 +1,471 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { 
+  title = 'Agent Skills | Microsoft', 
+  description = 'Skills, prompts, and MCP configurations for AI coding agents working with Azure SDKs and Microsoft AI Foundry services.'
+} = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/skills/favicon.svg" />
+    <link rel="icon" href="/skills/favicon.ico" />
+    <meta name="generator" content={Astro.generator} />
+    
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://microsoft.github.io/skills/" />
+    
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    
+    <title>{title}</title>
+  </head>
+  <body class="bg-stripes">
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <div class="min-h-screen flex flex-col">
+      <header class="header">
+        <div class="container">
+          <div class="header-content">
+            <a href="/skills/" class="logo">
+              <span class="logo-icon">⚡</span>
+              <span class="logo-text">Agent Skills</span>
+            </a>
+            
+            <nav class="nav">
+              <a href="https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/" target="_blank" rel="noopener noreferrer" class="nav-link">
+                Blog
+              </a>
+              <a href="https://context7.com/microsoft/skills" target="_blank" rel="noopener noreferrer" class="nav-link">
+                Context7
+              </a>
+              <a href="/skills/llms.txt" class="nav-link">
+                llms.txt
+              </a>
+              <a href="https://github.com/microsoft/skills" target="_blank" rel="noopener noreferrer" class="nav-link github-link">
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                </svg>
+                <span class="star-count" id="star-count">★</span>
+              </a>
+            </nav>
+            
+            <!-- Mobile hamburger button -->
+            <button class="hamburger" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+              <span class="hamburger-line"></span>
+            </button>
+          </div>
+        </div>
+      </header>
+      
+      <!-- Mobile nav drawer - placed before overlay in DOM for correct stacking -->
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation">
+        <div class="mobile-nav-header">
+          <span class="mobile-nav-title">Menu</span>
+          <button class="mobile-nav-close" id="mobile-nav-close" aria-label="Close menu">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="mobile-nav-links">
+          <a href="https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">
+            Blog
+          </a>
+          <a href="https://context7.com/microsoft/skills" target="_blank" rel="noopener noreferrer" class="mobile-nav-link">
+            Context7
+          </a>
+          <a href="/skills/llms.txt" class="mobile-nav-link">
+            llms.txt
+          </a>
+          <a href="https://github.com/microsoft/skills" target="_blank" rel="noopener noreferrer" class="mobile-nav-link github-mobile-link">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </nav>
+      <div class="mobile-nav-overlay" id="mobile-nav-overlay"></div>
+      
+      <main class="main" id="main-content">
+        <slot />
+      </main>
+      
+      <footer class="footer">
+        <div class="container">
+          <div class="footer-content">
+            <div class="footer-links">
+              <a href="https://github.com/microsoft/skills/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">MIT License</a>
+              <span class="footer-divider">•</span>
+              <a href="https://github.com/microsoft/skills" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <span class="footer-divider">•</span>
+              <a href="https://microsoft.com" target="_blank" rel="noopener noreferrer">Microsoft</a>
+            </div>
+            <p class="footer-copyright">© {new Date().getFullYear()} Microsoft Corporation</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script>
+      async function fetchStarCount() {
+        try {
+          const response = await fetch('https://api.github.com/repos/microsoft/skills');
+          const data = await response.json();
+          const starCount = document.getElementById('star-count');
+          if (starCount && data.stargazers_count) {
+            starCount.textContent = `★ ${data.stargazers_count.toLocaleString()}`;
+          }
+        } catch (e) {
+          // Silently fail - star count is not critical
+        }
+      }
+      fetchStarCount();
+
+      // Mobile navigation
+      const hamburgerBtn = document.getElementById('hamburger-btn');
+      const mobileNav = document.getElementById('mobile-nav');
+      const mobileNavOverlay = document.getElementById('mobile-nav-overlay');
+      const mobileNavClose = document.getElementById('mobile-nav-close');
+
+      function openMobileNav() {
+        mobileNav?.classList.add('open');
+        mobileNavOverlay?.classList.add('open');
+        hamburgerBtn?.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeMobileNav() {
+        mobileNav?.classList.remove('open');
+        mobileNavOverlay?.classList.remove('open');
+        hamburgerBtn?.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      hamburgerBtn?.addEventListener('click', openMobileNav);
+      mobileNavClose?.addEventListener('click', closeMobileNav);
+
+      // Close when clicking outside the drawer (on the overlay area)
+      document.addEventListener('click', (e) => {
+        if (!mobileNav?.classList.contains('open')) return;
+        const target = e.target as HTMLElement;
+        // Close if click is outside the drawer and not on the hamburger button
+        if (!mobileNav?.contains(target) && !hamburgerBtn?.contains(target)) {
+          closeMobileNav();
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileNav?.classList.contains('open')) {
+          closeMobileNav();
+        }
+      });
+
+      // Close when clicking a link in mobile nav
+      mobileNav?.querySelectorAll('a').forEach((link) => {
+        link.addEventListener('click', closeMobileNav);
+      });
+    </script>
+
+    <style>
+      .min-h-screen {
+        min-height: 100vh;
+      }
+      
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: rgba(10, 10, 10, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border-primary);
+      }
+      
+      .header-content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 64px;
+      }
+      
+      .logo {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        font-size: var(--text-lg);
+        font-weight: 700;
+        color: var(--text-primary);
+        text-decoration: none;
+      }
+      
+      .logo:hover {
+        color: var(--text-primary);
+      }
+      
+      .logo-icon {
+        font-size: var(--text-xl);
+      }
+      
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: var(--space-lg);
+      }
+      
+      .nav-link {
+        font-size: var(--text-sm);
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+      }
+      
+      .nav-link:hover {
+        color: var(--text-primary);
+      }
+      
+      .github-link {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xs);
+        padding: var(--space-xs) var(--space-sm);
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-primary);
+        border-radius: var(--radius-md);
+      }
+      
+      .github-link:hover {
+        background: var(--bg-card-hover);
+        border-color: var(--border-hover);
+      }
+      
+      .star-count {
+        font-size: var(--text-xs);
+        color: var(--text-secondary);
+      }
+      
+      .main {
+        flex: 1;
+      }
+      
+      .footer {
+        border-top: 1px solid var(--border-primary);
+        padding: var(--space-xl) 0;
+        margin-top: var(--space-3xl);
+      }
+      
+      .footer-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-md);
+        text-align: center;
+      }
+      
+      .footer-links {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+      }
+      
+      .footer-links a {
+        font-size: var(--text-sm);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+      }
+      
+      .footer-links a:hover {
+        color: var(--text-primary);
+      }
+      
+      .footer-divider {
+        color: var(--text-muted);
+      }
+      
+      .footer-copyright {
+        font-size: var(--text-xs);
+        color: var(--text-muted);
+      }
+      
+      /* Hamburger button */
+      .hamburger {
+        display: none;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        gap: 5px;
+      }
+      
+      .hamburger-line {
+        display: block;
+        width: 22px;
+        height: 2px;
+        background: var(--text-primary);
+        border-radius: 1px;
+        transition: all var(--transition-fast);
+      }
+      
+      .hamburger:hover .hamburger-line {
+        background: var(--accent);
+      }
+      
+      @media (max-width: 768px) {
+        .nav {
+          display: none;
+        }
+        
+        .hamburger {
+          display: flex;
+        }
+      }
+      
+      /* Mobile nav overlay - purely visual, no pointer events */
+      .mobile-nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+        z-index: 100;
+        pointer-events: none;
+      }
+      
+      .mobile-nav-overlay.open {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      /* Mobile nav drawer */
+      .mobile-nav {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: min(300px, 85vw);
+        height: 100%;
+        background: var(--bg-secondary);
+        border-left: 1px solid var(--border-primary);
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+        z-index: 110;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .mobile-nav.open {
+        transform: translateX(0);
+      }
+      
+      .mobile-nav-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: var(--space-md) var(--space-lg);
+        border-bottom: 1px solid var(--border-primary);
+      }
+      
+      .mobile-nav-title {
+        font-size: var(--text-lg);
+        font-weight: 600;
+        color: var(--text-primary);
+      }
+      
+      .mobile-nav-close {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        padding: 0;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        border-radius: var(--radius-md);
+        transition: background var(--transition-fast), color var(--transition-fast);
+      }
+      
+      .mobile-nav-close:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+      
+      .mobile-nav-links {
+        display: flex;
+        flex-direction: column;
+        padding: var(--space-md);
+        gap: var(--space-xs);
+      }
+      
+      .mobile-nav-link {
+        display: flex;
+        align-items: center;
+        gap: var(--space-sm);
+        padding: var(--space-md) var(--space-lg);
+        font-size: var(--text-base);
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        transition: background var(--transition-fast), color var(--transition-fast);
+        min-height: 44px;
+      }
+      
+      .mobile-nav-link:hover {
+        background: var(--bg-tertiary);
+        color: var(--text-primary);
+      }
+      
+      .github-mobile-link {
+        margin-top: var(--space-md);
+        padding-top: var(--space-md);
+        border-top: 1px solid var(--border-primary);
+      }
+      
+      /* Skip-to-content link for accessibility */
+      .skip-link {
+        position: absolute;
+        left: -9999px;
+        z-index: 999;
+        padding: var(--space-sm) var(--space-md);
+        background: var(--accent);
+        color: var(--bg-primary);
+        text-decoration: none;
+        border-radius: var(--radius-md);
+        font-weight: 500;
+        font-size: var(--text-sm);
+      }
+      
+      .skip-link:focus {
+        left: var(--space-md);
+        top: var(--space-md);
+      }
+    </style>
+  </body>
+</html>

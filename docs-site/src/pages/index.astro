@@ -1,0 +1,535 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { SkillsSection } from '../components/SkillsSection';
+import AgentCard from '../components/AgentCard.astro';
+import MCPCard from '../components/MCPCard.astro';
+import skills from '../data/skills.json';
+import agents from '../data/agents.json';
+import mcpServers from '../data/mcp-servers.json';
+
+const langCounts = skills.reduce((acc, skill) => {
+  acc[skill.lang] = (acc[skill.lang] || 0) + 1;
+  return acc;
+}, {} as Record<string, number>);
+---
+
+<Layout>
+  <div class="container">
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <h1 class="hero-title">Agent Skills</h1>
+        <p class="hero-subtitle">
+          Skills, prompts, and MCP configurations for AI coding agents working with Azure SDKs and Microsoft AI Foundry services.
+        </p>
+        
+        <!-- Quick Start -->
+        <div class="quick-start">
+          <div class="code-block">
+            <code id="install-command">npx skills add microsoft/skills</code>
+            <button class="copy-btn" id="copy-btn" title="Copy to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Badges -->
+    <section class="stats">
+      <div class="stats-grid">
+        <div class="stat-badge">
+          <span class="stat-number">{skills.length}</span>
+          <span class="stat-label">Skills</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-number">{agents.length}</span>
+          <span class="stat-label">Agents</span>
+        </div>
+        <div class="stat-badge">
+          <span class="stat-number">{mcpServers.length}</span>
+          <span class="stat-label">MCP Servers</span>
+        </div>
+      </div>
+      
+      <!-- Language breakdown -->
+      <div class="lang-stats">
+        <span class="lang-stat" data-lang="py">
+          <span class="lang-dot lang-dot-py"></span>
+          Python {langCounts['py'] || 0}
+        </span>
+        <span class="lang-stat" data-lang="dotnet">
+          <span class="lang-dot lang-dot-dotnet"></span>
+          .NET {langCounts['dotnet'] || 0}
+        </span>
+        <span class="lang-stat" data-lang="ts">
+          <span class="lang-dot lang-dot-ts"></span>
+          TypeScript {langCounts['ts'] || 0}
+        </span>
+        <span class="lang-stat" data-lang="java">
+          <span class="lang-dot lang-dot-java"></span>
+          Java {langCounts['java'] || 0}
+        </span>
+        <span class="lang-stat" data-lang="rust">
+          <span class="lang-dot lang-dot-rust"></span>
+          Rust {langCounts['rust'] || 0}
+        </span>
+        <span class="lang-stat" data-lang="core">
+          <span class="lang-dot lang-dot-core"></span>
+          Core {langCounts['core'] || 0}
+        </span>
+      </div>
+    </section>
+
+    <!-- Skills Section with Filters -->
+    <SkillsSection client:load skills={skills} />
+
+    <!-- Agents Section -->
+    <section id="agents" class="section">
+      <h2 class="section-title">
+        <span class="section-dot"></span>
+        Agents
+      </h2>
+      <div class="agents-grid">
+        {agents.map((agent) => (
+          <AgentCard
+            emoji={agent.emoji}
+            name={agent.name}
+            description={agent.description}
+            skills={agent.skills}
+            file={agent.file}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- MCP Servers Section -->
+    <section id="mcp-servers" class="section">
+      <h2 class="section-title">
+        <span class="section-dot"></span>
+        MCP Servers
+      </h2>
+      <div class="mcp-grid">
+        {mcpServers.map((server) => (
+          <MCPCard
+            emoji={server.emoji}
+            name={server.name}
+            description={server.description}
+            category={server.category}
+            url={server.url}
+          />
+        ))}
+      </div>
+    </section>
+
+    <!-- Documentation Section -->
+    <section id="documentation" class="section">
+      <h2 class="section-title">
+        <span class="section-dot"></span>
+        Documentation
+      </h2>
+      <div class="docs-grid">
+        <!-- llms.txt -->
+        <a href="./llms.txt" class="doc-card">
+          <span class="doc-icon">📄</span>
+          <div class="doc-content">
+            <h3 class="doc-title">llms.txt</h3>
+            <p class="doc-desc">LLM-friendly documentation index</p>
+            <span class="doc-secondary">
+              Also available: <a href="./llms-full.txt" class="doc-link-inline" onclick="event.stopPropagation()">llms-full.txt</a>
+            </span>
+          </div>
+        </a>
+
+        <!-- Context7 -->
+        <a href="https://context7.com/microsoft/skills?tab=skills" target="_blank" rel="noopener" class="doc-card">
+          <span class="doc-icon">7️⃣</span>
+          <div class="doc-content">
+            <h3 class="doc-title">
+              Browse on Context7
+              <svg class="external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+              </svg>
+            </h3>
+            <p class="doc-desc">Indexed documentation with semantic search</p>
+          </div>
+        </a>
+
+        <!-- AGENTS.md -->
+        <a href="https://github.com/microsoft/skills/blob/main/AGENTS.md" target="_blank" rel="noopener" class="doc-card">
+          <span class="doc-icon">🤖</span>
+          <div class="doc-content">
+            <h3 class="doc-title">
+              AGENTS.md Template
+              <svg class="external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+              </svg>
+            </h3>
+            <p class="doc-desc">Configure agent behavior in your projects</p>
+          </div>
+        </a>
+
+        <!-- Blog Post -->
+        <a href="https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/" target="_blank" rel="noopener" class="doc-card">
+          <span class="doc-icon">📝</span>
+          <div class="doc-content">
+            <h3 class="doc-title">
+              Blog: Context-Driven Development
+              <svg class="external-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" />
+              </svg>
+            </h3>
+            <p class="doc-desc">Learn about Agent Skills for Microsoft Foundry</p>
+          </div>
+        </a>
+      </div>
+    </section>
+  </div>
+</Layout>
+
+<script>
+  // Copy button functionality
+  const copyBtn = document.getElementById('copy-btn');
+  const installCommand = document.getElementById('install-command');
+  
+  copyBtn?.addEventListener('click', async () => {
+    const text = installCommand?.textContent || '';
+    try {
+      await navigator.clipboard.writeText(text);
+      copyBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+          <polyline points="20 6 9 17 4 12" />
+        </svg>
+      `;
+      setTimeout(() => {
+        copyBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+          </svg>
+        `;
+      }, 2000);
+    } catch (e) {
+      console.error('Failed to copy:', e);
+    }
+  });
+</script>
+
+<style>
+  /* Section styles */
+  .section {
+    padding: var(--space-2xl) 0;
+  }
+
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    margin-bottom: var(--space-xl);
+  }
+
+  .section-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* Agents grid */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-lg);
+  }
+
+  @media (max-width: 1024px) {
+    .agents-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .agents-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* MCP Servers grid */
+  .mcp-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-lg);
+  }
+
+  @media (max-width: 1200px) {
+    .mcp-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .mcp-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .mcp-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  /* Hero Section */
+  .hero {
+    padding: var(--space-3xl) 0 var(--space-2xl);
+    text-align: center;
+  }
+  
+  .hero-content {
+    max-width: 720px;
+    margin: 0 auto;
+  }
+  
+  .hero-title {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-lg);
+    background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .hero-subtitle {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: var(--space-xl);
+  }
+  
+  /* Quick Start Code Block */
+  .quick-start {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .code-block {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-sm) var(--space-md);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  
+  .code-block code {
+    color: var(--accent);
+  }
+  
+  .copy-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-xs);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all var(--transition-fast);
+  }
+  
+  .copy-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-tertiary);
+  }
+  
+  /* Stats Section */
+  .stats {
+    padding: var(--space-xl) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-lg);
+  }
+  
+  .stats-grid {
+    display: flex;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .stat-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-md) var(--space-xl);
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    min-width: 120px;
+  }
+  
+  .stat-number {
+    font-size: var(--text-3xl);
+    font-weight: 700;
+    color: var(--accent);
+  }
+  
+  .stat-label {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  /* Language Stats */
+  .lang-stats {
+    display: flex;
+    gap: var(--space-lg);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .lang-stat {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+  }
+  
+  .lang-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+  
+  .lang-dot-py { background: var(--lang-python); }
+  .lang-dot-dotnet { background: var(--lang-dotnet); }
+  .lang-dot-ts { background: var(--lang-typescript); }
+  .lang-dot-java { background: var(--lang-java); }
+  .lang-dot-rust { background: var(--lang-rust); }
+  .lang-dot-core { background: var(--lang-core); }
+  
+  @media (max-width: 600px) {
+    .stats-grid {
+      gap: var(--space-md);
+    }
+    
+    .stat-badge {
+      padding: var(--space-sm) var(--space-lg);
+      min-width: 100px;
+    }
+    
+    .stat-number {
+      font-size: var(--text-2xl);
+    }
+    
+    .lang-stats {
+      gap: var(--space-md);
+    }
+    
+    .hero-title {
+      font-size: 2rem;
+    }
+  }
+
+  /* Documentation Section */
+  .docs-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-lg);
+  }
+
+  @media (max-width: 768px) {
+    .docs-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .doc-card {
+    display: flex;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-primary);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    transition: all var(--transition-base);
+  }
+
+  .doc-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-hover);
+    box-shadow: 0 0 24px var(--accent-glow);
+    transform: translateY(-2px);
+  }
+
+  .doc-icon {
+    font-size: var(--text-2xl);
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .doc-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    min-width: 0;
+  }
+
+  .doc-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--text-base);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .doc-desc {
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin: 0;
+    line-height: 1.5;
+  }
+
+  .doc-secondary {
+    font-size: var(--text-xs);
+    color: var(--text-tertiary);
+    margin-top: var(--space-xs);
+  }
+
+  .doc-link-inline {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .doc-link-inline:hover {
+    color: var(--accent-hover);
+  }
+
+  .external-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    opacity: 0.6;
+  }
+
+  .doc-card:hover .external-icon {
+    opacity: 1;
+  }
+</style>

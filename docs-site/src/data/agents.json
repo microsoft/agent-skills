@@ -1,0 +1,50 @@
+[
+  {
+    "id": "backend",
+    "name": "Backend Agent",
+    "emoji": "⚙️",
+    "description": "FastAPI, Pydantic, Cosmos DB, Azure services",
+    "skills": ["FastAPI routers", "Pydantic models", "Cosmos DB", "Azure SDKs", "async patterns"],
+    "file": "backend.agent.md"
+  },
+  {
+    "id": "frontend",
+    "name": "Frontend Agent",
+    "emoji": "🎨",
+    "description": "React, TypeScript, React Flow, Zustand, Tailwind",
+    "skills": ["React components", "TypeScript", "React Flow nodes", "Zustand stores", "Tailwind CSS"],
+    "file": "frontend.agent.md"
+  },
+  {
+    "id": "infrastructure",
+    "name": "Infrastructure Agent",
+    "emoji": "🏗️",
+    "description": "Bicep, Azure CLI, Container Apps, networking",
+    "skills": ["Bicep templates", "Azure CLI", "Container Apps", "Networking", "azd deployment"],
+    "file": "infrastructure.agent.md"
+  },
+  {
+    "id": "planner",
+    "name": "Planner Agent",
+    "emoji": "📋",
+    "description": "Task decomposition, architecture decisions",
+    "skills": ["Task breakdown", "Architecture", "Tech decisions", "Dependency analysis", "Scope definition"],
+    "file": "planner.agent.md"
+  },
+  {
+    "id": "presenter",
+    "name": "Presenter Agent",
+    "emoji": "🎤",
+    "description": "Documentation, demos, technical writing",
+    "skills": ["Documentation", "README files", "Demo scripts", "Technical writing", "API docs"],
+    "file": "presenter.agent.md"
+  },
+  {
+    "id": "scaffolder",
+    "name": "Scaffolder Agent",
+    "emoji": "🏭",
+    "description": "Full-stack Microsoft Foundry app scaffolding",
+    "skills": ["Project setup", "Vite + React", "FastAPI backend", "Bicep infra", "azd config"],
+    "file": "scaffolder.agent.md"
+  }
+]
