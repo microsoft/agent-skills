@@ -163,14 +163,9 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/faq?view=foundry"
       },
       {
-        "title": "Model and region support",
-        "href": "agents/concepts/model-region-support",
-        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/model-region-support?view=foundry"
-      },
-      {
-        "title": "Quotas and limits",
-        "href": "agents/quotas-limits",
-        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/quotas-limits?view=foundry"
+        "title": "Quotas, limits, models and region support",
+        "href": "agents/concepts/limits-quotas-regions",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/limits-quotas-regions?view=foundry"
       },
       {
         "title": "Development lifecycle",
@@ -1246,11 +1241,6 @@
         "url": "https://learn.microsoft.com/rest/api/aiservices/accountmanagement/deployments/create-or-update?tabs=HTTP?view=foundry"
       },
       {
-        "title": "Azure AI Evaluation SDK",
-        "href": "/python/api/overview/azure/ai-evaluation-readme",
-        "url": "https://learn.microsoft.com/python/api/overview/azure/ai-evaluation-readme?view=foundry"
-      },
-      {
         "title": "Azure Resource Manager/Bicep/Terraform",
         "href": "/azure/templates/microsoft.cognitiveservices/accounts?pivots=deployment-language-bicep",
         "url": "https://learn.microsoft.com/azure/templates/microsoft.cognitiveservices/accounts?pivots=deployment-language-bicep?view=foundry"
@@ -1378,6 +1368,6 @@
       }
     ]
   },
-  "total_pages": 268,
-  "generated_at": "2026-02-02T03:59:13Z"
+  "total_pages": 266,
+  "generated_at": "2026-02-05T03:54:24Z"
 }

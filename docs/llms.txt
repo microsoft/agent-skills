@@ -54,8 +54,7 @@ Important information:
 
 - [Agent development overview](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/overview?view=foundry)
 - [FAQ](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/faq?view=foundry)
-- [Model and region support](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/model-region-support?view=foundry)
-- [Quotas and limits](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/quotas-limits?view=foundry)
+- [Quotas, limits, models and region support](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/limits-quotas-regions?view=foundry)
 - [Development lifecycle](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/development-lifecycle?view=foundry)
 - [Agent runtime components](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/runtime-components?view=foundry)
 - [Agent identity](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/agent-identity?view=foundry)
@@ -319,7 +318,6 @@ Important information:
 - [Python](https://learn.microsoft.com/python/api/overview/azure/ai-projects-readme?view=azure-python-preview&preserve-view=true)
 - [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiprojects/?view=foundry)
 - [REST API (resource creation & deployment)](https://learn.microsoft.com/rest/api/aiservices/accountmanagement/deployments/create-or-update?tabs=HTTP?view=foundry)
-- [Azure AI Evaluation SDK](https://learn.microsoft.com/python/api/overview/azure/ai-evaluation-readme?view=foundry)
 - [Azure Resource Manager/Bicep/Terraform](https://learn.microsoft.com/azure/templates/microsoft.cognitiveservices/accounts?pivots=deployment-language-bicep?view=foundry)
 - [Azure CLI](https://learn.microsoft.com/cli/azure/cognitiveservices?view=azure-cli-latest&preserve-view=true)
 - [Responsible AI overview](https://learn.microsoft.com/en-us/azure/ai-foundry/responsible-use-of-ai-overview?view=foundry)
