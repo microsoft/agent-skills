@@ -73,7 +73,7 @@ Apply these principles to every task.
 AGENTS.md                # Agent configuration template
 
 .github/
-├── skills/              # All 133 skills (flat structure with language suffixes)
+├── skills/              # All 132 skills (flat structure with language suffixes)
 │   └── */SKILL.md       # Each skill has YAML frontmatter + markdown body
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions (backend, frontend, infrastructure, planner, presenter)
@@ -123,7 +123,6 @@ Skills use language suffixes for discoverability:
 | `azure-ai-agents-py` | Low-level agents SDK for CRUD, threads, streaming, tools |
 | `azure-ai-voicelive-py` | Real-time voice AI with Azure AI Voice Live SDK |
 | `azure-ai-projects-py` | High-level Foundry project client, versioned agents, evals |
-| `foundry-iq-py` | Agentic retrieval with knowledge bases |
 | `frontend-ui-dark-ts` | Dark theme UI patterns (Vite + React + Tailwind + Framer Motion) |
 | `agent-framework-azure-ai-py` | Agent Framework SDK for persistent Azure agents |
 | `azd-deployment` | Azure Developer CLI deployment to Container Apps with Bicep |
