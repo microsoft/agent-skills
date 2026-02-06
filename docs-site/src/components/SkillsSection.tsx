@@ -138,7 +138,7 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
         <div 
           className="skills-grid"
           style={{
-            maxHeight: isExpanded ? 'none' : 'calc((180px + var(--space-lg)) * 2)',
+            maxHeight: isExpanded || filteredSkills.length <= MAX_VISIBLE_COLLAPSED ? 'none' : 'calc((180px + var(--space-lg)) * 2)',
             overflow: 'hidden',
             transition: 'max-height 0.3s ease-out',
           }}
