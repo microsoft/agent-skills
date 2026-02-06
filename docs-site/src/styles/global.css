@@ -16,9 +16,9 @@
   --text-muted: #9ca3af;
   
   /* Accent colors */
-  --accent: #f97316;
-  --accent-hover: #ea580c;
-  --accent-glow: rgba(249, 115, 22, 0.15);
+  --accent: #06b6d4;
+  --accent-hover: #0891b2;
+  --accent-glow: rgba(6, 182, 212, 0.15);
   
   /* Border colors */
   --border-primary: #262626;
