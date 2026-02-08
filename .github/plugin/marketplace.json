@@ -1,0 +1,34 @@
+{
+  "name": "skills",
+  "owner": {
+    "name": "microsoft",
+    "url": "https://github.com/microsoft"
+  },
+  "metadata": {
+    "description": "Skills, agents, and plugins for AI coding agents working with Azure SDKs and Microsoft AI Foundry",
+    "version": "1.0.0",
+    "pluginRoot": ".github/plugins"
+  },
+  "plugins": [
+    {
+      "name": "deep-wiki",
+      "source": "./.github/plugins/deep-wiki",
+      "description": "AI-powered wiki generator for code repositories. Generates comprehensive, Mermaid-rich structured documentation with architecture diagrams, component analysis, and source citations.",
+      "version": "1.0.0",
+      "author": {
+        "name": "thegovind",
+        "url": "https://github.com/thegovind"
+      },
+      "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/deep-wiki",
+      "repository": "https://github.com/microsoft/skills",
+      "license": "MIT",
+      "keywords": ["wiki", "documentation", "mermaid", "architecture", "code-analysis"],
+      "category": "documentation",
+      "tags": ["deep-wiki", "diagrams", "citations", "codebase-understanding"],
+      "commands": "commands/",
+      "skills": "skills/",
+      "agents": "agents/",
+      "strict": true
+    }
+  ]
+}
