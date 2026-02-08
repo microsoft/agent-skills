@@ -1,21 +1,22 @@
 # 🌊 Deep Wiki
 
-**AI-Powered Wiki Generator for Code Repositories — Claude Code Plugin**
+**AI-Powered Wiki Generator for Code Repositories — GitHub Copilot CLI Plugin**
 
 Generate comprehensive, structured, Mermaid-rich documentation wikis for any codebase. Distilled from the prompt architectures of [OpenDeepWiki](https://github.com/AIDotNet/OpenDeepWiki) and [deepwiki-open](https://github.com/AsyncFuncAI/deepwiki-open).
 
 ## Installation
 
+### From a marketplace
+
+```bash
+copilot marketplace add microsoft/skills
+copilot plugin install deep-wiki@skills
+```
+
 ### Local development
 
 ```bash
-claude --plugin-dir ./deep-wiki
-```
-
-### From a marketplace
-
-```
-/plugin install deep-wiki
+copilot --plugin-dir ./deep-wiki
 ```
 
 ## Commands
@@ -52,8 +53,8 @@ View available agents: `/agents`
 ## Quick Start
 
 ```bash
-# Start Claude Code with the plugin
-claude --plugin-dir ./deep-wiki
+# Install the plugin
+copilot plugin install deep-wiki@skills
 
 # Generate a full wiki
 /deep-wiki:generate
@@ -109,7 +110,7 @@ deep-wiki/
 │   ├── changelog.md
 │   ├── research.md
 │   └── ask.md
-├── skills/                   # Auto-invoked by Claude based on context
+├── skills/                   # Auto-invoked based on context
 │   ├── wiki-architect/
 │   │   └── SKILL.md
 │   ├── wiki-page-writer/

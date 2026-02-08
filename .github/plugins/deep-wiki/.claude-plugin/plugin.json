@@ -5,7 +5,7 @@
   "author": {
     "name": "thegovind"
   },
-  "homepage": "https://github.com/thegovind/deep-wiki",
-  "repository": "https://github.com/thegovind/deep-wiki",
+  "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/deep-wiki",
+  "repository": "https://github.com/microsoft/skills",
   "license": "MIT"
 }

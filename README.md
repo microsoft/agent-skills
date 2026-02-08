@@ -60,6 +60,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 | Resource | Description |
 |----------|-------------|
 | **[125 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
+| **[Plugins](#plugins)** | Installable plugin packages (deep-wiki, and more) |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
@@ -506,6 +507,8 @@ AGENTS.md                # Agent configuration template
 
 .github/
 ├── skills/              # All 132 skills (flat structure)
+├── plugins/             # Installable plugin packages
+│   └── deep-wiki/       # AI-powered wiki generator
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions
 ├── scripts/             # Automation scripts (doc scraping)
@@ -526,6 +529,21 @@ skills/                  # Symlinks for backward compatibility
 .vscode/
 └── mcp.json             # MCP server configurations
 ```
+
+---
+
+## Plugins
+
+Plugins are installable packages containing curated sets of agents, commands, and skills. Install via the Copilot CLI:
+
+```bash
+copilot marketplace add microsoft/skills
+copilot plugin install <plugin-name>@skills
+```
+
+| Plugin | Description | Commands |
+|--------|-------------|----------|
+| [deep-wiki](.github/plugins/deep-wiki/) | AI-powered wiki generator with Mermaid diagrams, architecture analysis, and source citations | `/deep-wiki:generate`, `/deep-wiki:catalogue`, `/deep-wiki:page`, `/deep-wiki:changelog`, `/deep-wiki:research`, `/deep-wiki:ask` |
 
 ---
 
