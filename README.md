@@ -537,8 +537,9 @@ skills/                  # Symlinks for backward compatibility
 Plugins are installable packages containing curated sets of agents, commands, and skills. Install via the Copilot CLI:
 
 ```bash
-copilot marketplace add microsoft/skills
-copilot plugin install <plugin-name>@skills
+# Inside Copilot CLI, run these slash commands:
+/plugin marketplace add microsoft/skills
+/plugin install deep-wiki@skills
 ```
 
 | Plugin | Description | Commands |

@@ -73,14 +73,14 @@ import mcpServers from '../data/mcp-servers.json';
         <p class="modal-desc">AI-powered wiki generator for code repositories. Generates comprehensive, Mermaid-rich structured documentation with architecture diagrams, component analysis, and source citations.</p>
 
         <div class="modal-section">
-          <h3 class="modal-section-title">Install with Copilot CLI</h3>
+          <h3 class="modal-section-title">Install in Copilot CLI</h3>
           <div class="modal-code-block">
-            <code>copilot marketplace add microsoft/skills</code>
-            <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('copilot marketplace add microsoft/skills');this.textContent='✓';setTimeout(()=>this.textContent='Copy',1500)" aria-label="Copy">Copy</button>
+            <code>/plugin marketplace add microsoft/skills</code>
+            <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('/plugin marketplace add microsoft/skills');this.textContent='✓';setTimeout(()=>this.textContent='Copy',1500)" aria-label="Copy">Copy</button>
           </div>
           <div class="modal-code-block">
-            <code>copilot plugin install deep-wiki@skills</code>
-            <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('copilot plugin install deep-wiki@skills');this.textContent='✓';setTimeout(()=>this.textContent='Copy',1500)" aria-label="Copy">Copy</button>
+            <code>/plugin install deep-wiki@skills</code>
+            <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('/plugin install deep-wiki@skills');this.textContent='✓';setTimeout(()=>this.textContent='Copy',1500)" aria-label="Copy">Copy</button>
           </div>
         </div>
 
@@ -442,11 +442,8 @@ import mcpServers from '../data/mcp-servers.json';
     padding: 0;
     max-width: 560px;
     width: 90vw;
+    inset: 0;
     margin: auto;
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
     box-shadow: 0 0 60px rgba(0, 0, 0, 0.6), 0 0 30px var(--accent-glow);
   }
 

@@ -9,11 +9,10 @@ Generate comprehensive, structured, Mermaid-rich documentation wikis for any cod
 ### From a marketplace
 
 ```bash
-copilot marketplace add microsoft/skills
-copilot plugin install deep-wiki@skills
+# Inside Copilot CLI, run these slash commands:
+/plugin marketplace add microsoft/skills
+/plugin install deep-wiki@skills
 ```
-
-### Local development
 
 ```bash
 copilot --plugin-dir ./deep-wiki
@@ -53,8 +52,8 @@ View available agents: `/agents`
 ## Quick Start
 
 ```bash
-# Install the plugin
-copilot plugin install deep-wiki@skills
+# Install the plugin (slash command inside Copilot CLI)
+/plugin install deep-wiki@skills
 
 # Generate a full wiki
 /deep-wiki:generate
