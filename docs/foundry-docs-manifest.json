@@ -857,6 +857,11 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/observability/how-to/optimization-model-upgrade?view=foundry"
       },
       {
+        "title": "Evaluate your AI agents",
+        "href": "observability/how-to/evaluate-agent",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/observability/how-to/evaluate-agent?view=foundry"
+      },
+      {
         "title": "Evaluation Cluster Analysis",
         "href": "observability/how-to/cluster-analysis",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/observability/how-to/cluster-analysis?view=foundry"
@@ -1013,11 +1018,6 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/cloud-evaluation?view=foundry"
       },
       {
-        "title": "Evaluate your AI agents",
-        "href": "how-to/develop/agent-evaluate-sdk",
-        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/agent-evaluate-sdk?view=foundry"
-      },
-      {
         "title": "Run evaluations from the portal",
         "href": "how-to/evaluate-generative-ai-app",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/evaluate-generative-ai-app?view=foundry"
@@ -1028,14 +1028,14 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/evaluate-results?view=foundry"
       },
       {
-        "title": "Run red teaming scans locally",
-        "href": "how-to/develop/run-scans-ai-red-teaming-agent",
-        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/run-scans-ai-red-teaming-agent?view=foundry"
-      },
-      {
         "title": "Run red teaming scans in the cloud",
         "href": "how-to/develop/run-ai-red-teaming-cloud",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/run-ai-red-teaming-cloud?view=foundry"
+      },
+      {
+        "title": "Run red teaming scans locally",
+        "href": "how-to/develop/run-scans-ai-red-teaming-agent",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/run-scans-ai-red-teaming-agent?view=foundry"
       },
       {
         "title": "Evaluation in GitHub Actions",
@@ -1374,5 +1374,5 @@
     ]
   },
   "total_pages": 267,
-  "generated_at": "2026-02-10T04:04:27Z"
+  "generated_at": "2026-02-12T04:00:32Z"
 }
