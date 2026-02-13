@@ -23,6 +23,7 @@ copilot --plugin-dir ./deep-wiki
 | Command | Description |
 |---------|-------------|
 | `/deep-wiki:generate` | Generate a complete wiki — catalogue + all pages + onboarding guides + VitePress site |
+| `/deep-wiki:crisp` | Fast wiki generation — concise, parallelized, rate-limit-friendly. 5–8 pages, no build step |
 | `/deep-wiki:catalogue` | Generate only the hierarchical wiki structure as JSON |
 | `/deep-wiki:page <topic>` | Generate a single wiki page with dark-mode Mermaid diagrams |
 | `/deep-wiki:changelog` | Generate a structured changelog from git commits |
@@ -68,6 +69,9 @@ View available agents: `/agents`
 
 # Generate a full wiki with onboarding guides and VitePress site
 /deep-wiki:generate
+
+# Fast wiki — concise, parallelized, avoids rate limits
+/deep-wiki:crisp
 
 # Just the structure
 /deep-wiki:catalogue
@@ -167,6 +171,7 @@ deep-wiki/
 │   └── plugin.json          # Plugin manifest (name, version, description)
 ├── commands/                 # Slash commands (/deep-wiki:*)
 │   ├── generate.md          # Full wiki generation pipeline
+│   ├── crisp.md             # Fast, concise wiki (rate-limit-friendly)
 │   ├── catalogue.md         # Wiki structure as JSON
 │   ├── page.md              # Single page with dark-mode diagrams
 │   ├── changelog.md         # Git-based changelog
