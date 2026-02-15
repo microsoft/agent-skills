@@ -12,7 +12,7 @@ Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding
 
 > **Blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
 
-> **🔍 Skill Explorer:** [Browse all 131 skills with 1-click install](https://microsoft.github.io/skills/)
+> **🔍 Skill Explorer:** [Browse all 132 skills with 1-click install](https://microsoft.github.io/skills/)
 
 ## Quick Start
 
@@ -59,7 +59,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 | Resource | Description |
 |----------|-------------|
-| **[125 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
+| **[126 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
 | **[Plugins](#plugins)** | Installable plugin packages (deep-wiki, and more) |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
@@ -70,12 +70,12 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ## Skill Catalog
 
-> 131 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
+> 132 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
 
 | Language | Count | Suffix | 
 |----------|-------|--------|
 | [Core](#core) | 6 | — |
-| [Python](#python) | 41 | `-py` |
+| [Python](#python) | 42 | `-py` |
 | [.NET](#net) | 28 | `-dotnet` |
 | [TypeScript](#typescript) | 24 | `-ts` |
 | [Java](#java) | 25 | `-java` |
@@ -100,7 +100,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### Python
 
-> 41 skills • suffix: `-py`
+> 42 skills • suffix: `-py`
 
 <details>
 <summary><strong>Foundry & AI</strong> (7 skills)</summary>
@@ -205,13 +205,14 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 </details>
 
 <details>
-<summary><strong>Patterns & Frameworks</strong> (3 skills)</summary>
+<summary><strong>Patterns & Frameworks</strong> (4 skills)</summary>
 
 | Skill | Description |
 |-------|-------------|
 | [azure-mgmt-fabric-py](.github/skills/azure-mgmt-fabric-py/) | Fabric Management — Microsoft Fabric capacities and resources. |
 | [fastapi-router-py](.github/skills/fastapi-router-py/) | FastAPI routers — CRUD operations, auth dependencies, response models. |
 | [pydantic-models-py](.github/skills/pydantic-models-py/) | Pydantic patterns — Base, Create, Update, Response, InDB model variants. |
+| [robot-framework-py](.github/skills/robot-framework-py/) | Robot Framework test automation — .robot/.resource design, RequestsLibrary API testing, Python custom keyword libraries. |
 
 </details>
 
