@@ -1,0 +1,249 @@
+config:
+  model: gpt-4
+  max_tokens: 3000
+  temperature: 0.2
+
+scenarios:
+  - name: hello-world-smoke-suite
+    prompt: |
+      Create a minimal Robot Framework smoke suite in one .robot file.
+      Use a deterministic assertion and keep it small.
+    expected_patterns:
+      - '*** Settings ***'
+      - '*** Test Cases ***'
+      - 'Should Be Equal'
+    forbidden_patterns:
+      - 'pytest'
+      - 'unittest'
+      - 'def test_'
+    tags:
+      - syntax
+      - smoke
+    mock_response: |
+      ```robotframework
+      *** Settings ***
+      Documentation    Minimal smoke suite
+
+      *** Test Cases ***
+      Smoke Check
+          ${actual}=    Set Variable    ok
+          Should Be Equal    ${actual}    ok
+      ```
+
+  - name: requestslibrary-get-health
+    prompt: |
+      Build a Robot Framework API test that calls GET /health and validates status and one payload field.
+      Use RequestsLibrary.
+    expected_patterns:
+      - 'Library    RequestsLibrary'
+      - 'Create Session'
+      - 'GET On Session'
+      - 'Should Be Equal As Integers'
+    forbidden_patterns:
+      - 'requests.get('
+      - 'curl '
+    tags:
+      - api
+      - requestslibrary
+    mock_response: |
+      ```robotframework
+      *** Settings ***
+      Library    RequestsLibrary
+
+      *** Variables ***
+      ${BASE_URL}    https://api.example.com
+
+      *** Test Cases ***
+      Health Check
+          Create Session    api    ${BASE_URL}
+          ${resp}=    GET On Session    api    /health
+          Should Be Equal As Integers    ${resp.status_code}    200
+          ${body}=    Set Variable    ${resp.json()}
+          Should Be Equal    ${body}[status]    UP
+      ```
+
+  - name: requestslibrary-post-json
+    prompt: |
+      Create a Robot Framework test that posts JSON to /orders, validates HTTP 201, and checks response order status.
+      Use reusable headers.
+    expected_patterns:
+      - 'Library    RequestsLibrary'
+      - 'Create Dictionary'
+      - 'POST On Session'
+      - 'Should Be Equal As Integers'
+    forbidden_patterns:
+      - 'requests.post('
+      - 'sleep 10'
+    tags:
+      - api
+      - requestslibrary
+    mock_response: |
+      ```robotframework
+      *** Settings ***
+      Library    RequestsLibrary
+
+      *** Variables ***
+      ${BASE_URL}    https://api.example.com
+
+      *** Test Cases ***
+      Create Order
+          Create Session    api    ${BASE_URL}
+          ${headers}=    Create Dictionary    Content-Type=application/json
+          ${payload}=    Create Dictionary    sku=RF-001    quantity=2
+          ${resp}=    POST On Session    api    /orders    json=${payload}    headers=${headers}
+          Should Be Equal As Integers    ${resp.status_code}    201
+          ${body}=    Set Variable    ${resp.json()}
+          Should Be Equal    ${body}[status]    CREATED
+      ```
+
+  - name: refactor-duplicated-steps-to-resource
+    prompt: |
+      Refactor duplicated API setup steps into a resource file.
+      Return two files: tests/orders.robot and resources/common.resource.
+    expected_patterns:
+      - 'tests/orders.robot'
+      - 'resources/common.resource'
+      - 'Resource    ../resources/common.resource'
+      - '*** Keywords ***'
+    forbidden_patterns:
+      - 'TODO'
+      - 'FIXME'
+    tags:
+      - refactor
+      - resources
+    mock_response: |
+      `tests/orders.robot`
+      ```robotframework
+      *** Settings ***
+      Library     RequestsLibrary
+      Resource    ../resources/common.resource
+
+      *** Test Cases ***
+      Get Orders
+          Open API Session
+          ${resp}=    GET On Session    api    /orders
+          Should Be Equal As Integers    ${resp.status_code}    200
+      ```
+
+      `resources/common.resource`
+      ```robotframework
+      *** Keywords ***
+      Open API Session
+          Create Session    api    ${BASE_URL}
+      ```
+
+  - name: python-module-keyword-library
+    prompt: |
+      Create a Python module-based custom Robot Framework keyword library with two keywords:
+      Normalize Text and Is Even Number.
+    expected_patterns:
+      - 'from robot.api.deco import keyword'
+      - '@keyword("Normalize Text")'
+      - '@keyword("Is Even Number")'
+      - 'def normalize_text'
+      - 'def is_even_number'
+    forbidden_patterns:
+      - 'print('
+      - 'input('
+    tags:
+      - python-library
+      - module-style
+    mock_response: |
+      ```python
+      from robot.api.deco import keyword
+
+      @keyword("Normalize Text")
+      def normalize_text(value: str) -> str:
+          return " ".join(value.split()).strip().lower()
+
+      @keyword("Is Even Number")
+      def is_even_number(value: int) -> bool:
+          return int(value) % 2 == 0
+      ```
+
+  - name: python-class-keyword-library
+    prompt: |
+      Create a class-based Robot Framework Python keyword library for arithmetic with Add Integers and Multiply Integers.
+    expected_patterns:
+      - 'class MathKeywords'
+      - '@keyword("Add Integers")'
+      - '@keyword("Multiply Integers")'
+      - 'def add_integers'
+      - 'def multiply_integers'
+    forbidden_patterns:
+      - 'global '
+      - 'eval('
+    tags:
+      - python-library
+      - class-style
+    mock_response: |
+      ```python
+      from robot.api.deco import keyword
+
+      class MathKeywords:
+          @keyword("Add Integers")
+          def add_integers(self, left: int, right: int) -> int:
+              return int(left) + int(right)
+
+          @keyword("Multiply Integers")
+          def multiply_integers(self, left: int, right: int) -> int:
+              return int(left) * int(right)
+      ```
+
+  - name: operating-system-library-usage
+    prompt: |
+      Write a Robot Framework test that verifies an environment variable is present and a file exists.
+      Use OperatingSystem keywords.
+    expected_patterns:
+      - 'Library    OperatingSystem'
+      - 'Get Environment Variable'
+      - 'File Should Exist'
+      - 'Should Not Be Empty'
+    forbidden_patterns:
+      - 'os.environ'
+      - 'pathlib'
+    tags:
+      - standard-library
+      - operating-system
+    mock_response: |
+      ```robotframework
+      *** Settings ***
+      Library    OperatingSystem
+
+      *** Test Cases ***
+      Verify Runtime Inputs
+          ${token}=    Get Environment Variable    API_TOKEN
+          Should Not Be Empty    ${token}
+          File Should Exist    ${CURDIR}/../variables/dev.py
+      ```
+
+  - name: scalable-suite-tags-variables-setup
+    prompt: |
+      Create a scalable Robot Framework suite with suite setup, tags, and variables for API smoke tests.
+    expected_patterns:
+      - 'Suite Setup'
+      - '[Tags]'
+      - '*** Variables ***'
+      - 'Resource'
+    forbidden_patterns:
+      - 'password='
+      - 'secret='
+    tags:
+      - scalability
+      - tagging
+    mock_response: |
+      ```robotframework
+      *** Settings ***
+      Library     RequestsLibrary
+      Resource    ../resources/common.resource
+      Suite Setup    Open API Session
+
+      *** Variables ***
+      ${BASE_URL}    https://api.example.com
+
+      *** Test Cases ***
+      Ping Service
+          [Tags]    smoke    api
+          ${resp}=    GET On Session    api    /health
+          Should Be Equal As Integers    ${resp.status_code}    200
+      ```
