@@ -220,6 +220,11 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 - Use `create_or_update_*` for idempotent operations
 - Use type hints on all function signatures
 
+### Git & GitHub
+
+- Always use `gh` CLI for GitHub operations (PRs, issues, etc.) — never the MCP `github-create_pull_request` tool
+- Use `gh pr create` for pull requests, `gh issue create` for issues
+
 ### Clean Code Checklist
 
 Before completing any code change:
@@ -275,6 +280,7 @@ assert result == expected
 - ✅ Write tests before or alongside implementation
 - ✅ Keep functions small and focused
 - ✅ Match existing patterns in the codebase
+- ✅ Use `gh` CLI for all GitHub operations (PRs, issues, releases)
 
 ### Don't
 
@@ -283,6 +289,7 @@ assert result == expected
 - ❌ Leave empty exception handlers
 - ❌ Refactor unrelated code while fixing bugs
 - ❌ Add dependencies without justification
+- ❌ Use GitHub MCP tools for write operations (enterprise token restrictions)
 
 ---
 
