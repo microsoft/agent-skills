@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { LanguageTabs, type Language } from './LanguageTabs';
 import { CategoryTabs, type Category } from './CategoryTabs';
 import { SearchInput } from './SearchInput';
@@ -26,12 +26,44 @@ const LANG_DISPLAY: Record<string, string> = {
   core: 'Core',
 };
 
+function getSkillFromHash(): string | null {
+  if (typeof window === 'undefined') return null;
+  const hash = window.location.hash;
+  if (hash.startsWith('#skill=')) {
+    return decodeURIComponent(hash.slice('#skill='.length));
+  }
+  return null;
+}
+
 export function SkillsSection({ skills }: SkillsSectionProps) {
   const [selectedLang, setSelectedLang] = useState<Language>('all');
   const [selectedCategory, setSelectedCategory] = useState<Category>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSkill, setSelectedSkill] = useState<Skill | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // On mount, check URL hash for a skill deep link
+  useEffect(() => {
+    const openSkillFromHash = () => {
+      const skillName = getSkillFromHash();
+      if (!skillName) return;
+      const found = skills.find(s => s.name === skillName);
+      if (found) {
+        setSelectedSkill({
+          name: found.name,
+          description: found.description,
+          language: found.lang,
+          category: found.category,
+          path: `.github/skills/${found.name}`,
+          package: found.package,
+        });
+      }
+    };
+
+    openSkillFromHash();
+    window.addEventListener('hashchange', openSkillFromHash);
+    return () => window.removeEventListener('hashchange', openSkillFromHash);
+  }, [skills]);
 
   // Number of rows to show when collapsed (responsive: more columns = fewer items visible per row)
   const COLLAPSED_ROWS = 2;
@@ -156,7 +188,10 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
               <SkillCard
                 key={skill.name}
                 skill={mappedSkill}
-                onClick={() => setSelectedSkill(mappedSkill)}
+                onClick={() => {
+                  setSelectedSkill(mappedSkill);
+                  window.history.replaceState(null, '', `#skill=${encodeURIComponent(mappedSkill.name)}`);
+                }}
               />
             );
           })}
@@ -244,7 +279,10 @@ export function SkillsSection({ skills }: SkillsSectionProps) {
 
       <SkillDetailModal
         skill={selectedSkill}
-        onClose={() => setSelectedSkill(null)}
+        onClose={() => {
+          setSelectedSkill(null);
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }}
       />
     </section>
   );

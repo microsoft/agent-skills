@@ -9,6 +9,7 @@ interface SkillDetailModalProps {
 
 export function SkillDetailModal({ skill, onClose }: SkillDetailModalProps) {
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   useEffect(() => {
     if (!skill) return;
@@ -40,6 +41,18 @@ export function SkillDetailModal({ skill, onClose }: SkillDetailModalProps) {
       console.error('Failed to copy:', err);
     }
   }, [installCommand]);
+
+  const shareUrl = skill ? `${window.location.origin}${window.location.pathname}#skill=${encodeURIComponent(skill.name)}` : '';
+
+  const handleShareLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+    }
+  }, [shareUrl]);
 
   if (!skill) return null;
 
@@ -236,7 +249,7 @@ export function SkillDetailModal({ skill, onClose }: SkillDetailModalProps) {
             {skill.description}
           </p>
 
-          <div style={{ marginBottom: 'var(--space-lg)' }}>
+          <div style={{ marginBottom: 'var(--space-lg)', display: 'flex', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
             <a
               href={githubUrl}
               target="_blank"
@@ -272,6 +285,54 @@ export function SkillDetailModal({ skill, onClose }: SkillDetailModalProps) {
                 <path d="M7 17L17 7M17 7H7M17 7V17" />
               </svg>
             </a>
+            <button
+              onClick={handleShareLink}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 'var(--space-sm)',
+                padding: 'var(--space-sm) var(--space-md)',
+                fontSize: 'var(--text-sm)',
+                fontWeight: 500,
+                color: linkCopied ? '#22c55e' : 'var(--text-primary)',
+                background: 'var(--bg-tertiary)',
+                border: `1px solid ${linkCopied ? '#22c55e' : 'var(--border-primary)'}`,
+                borderRadius: 'var(--radius-md)',
+                cursor: 'pointer',
+                transition: 'all var(--transition-fast)',
+              }}
+              onMouseEnter={(e) => {
+                if (!linkCopied) {
+                  e.currentTarget.style.borderColor = 'var(--accent)';
+                  e.currentTarget.style.background = 'var(--bg-card-hover)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!linkCopied) {
+                  e.currentTarget.style.borderColor = 'var(--border-primary)';
+                  e.currentTarget.style.background = 'var(--bg-tertiary)';
+                }
+              }}
+              title="Copy shareable link to this skill"
+            >
+              {linkCopied ? (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  Link Copied!
+                </>
+              ) : (
+                <>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8" />
+                    <polyline points="16 6 12 2 8 6" />
+                    <line x1="12" y1="2" x2="12" y2="15" />
+                  </svg>
+                  Share
+                </>
+              )}
+            </button>
           </div>
 
           <div>

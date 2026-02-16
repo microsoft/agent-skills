@@ -122,64 +122,48 @@ index_client.create_or_update_knowledge_base(knowledge_base)
 from azure.search.documents.knowledgebases import KnowledgeBaseRetrievalClient
 from azure.search.documents.knowledgebases.models import (
     KnowledgeBaseRetrievalRequest,
-    KnowledgeBaseMessage,
-    KnowledgeBaseMessageTextContent,
-    SearchIndexKnowledgeSourceParams,
-    KnowledgeRetrievalLowReasoningEffort
+    KnowledgeRetrievalSemanticIntent,
+    KnowledgeRetrievalMinimalReasoningEffort,
 )
 
 client = KnowledgeBaseRetrievalClient(
     endpoint=endpoint,
-    knowledge_base_name="my-knowledge-base",
-    credential=credential
+    credential=credential,
 )
 
-# Build conversation messages
-messages = [
-    KnowledgeBaseMessage(
-        role="user",
-        content=[KnowledgeBaseMessageTextContent(text="What is vector search?")]
-    )
-]
-
+# Build retrieval request with semantic intents
 request = KnowledgeBaseRetrievalRequest(
-    messages=messages,
-    knowledge_source_params=[
-        SearchIndexKnowledgeSourceParams(
-            knowledge_source_name="my-knowledge-source",
-            include_references=True,
-            include_reference_source_data=True,
-            always_query_source=True
-        )
-    ],
-    include_activity=True,
-    retrieval_reasoning_effort=KnowledgeRetrievalLowReasoningEffort
+    intents=[KnowledgeRetrievalSemanticIntent(search="What is vector search?")]
 )
 
-result = client.retrieve(retrieval_request=request)
+result = client.retrieve(
+    knowledge_base_name="my-knowledge-base",
+    retrieval_request=request,
+)
 ```
 
 ## Processing Results
 
 ```python
-# Extract synthesized answer
-response_text = ""
-for resp in result.response:
-    for content in resp.content:
-        response_text += content.text
+import json
 
-# Extract activity (query planning, search execution)
-if result.activity:
-    for activity in result.activity:
-        print(f"Activity type: {activity.type}")
-        if hasattr(activity, 'elapsed_ms'):
-            print(f"  Elapsed: {activity.elapsed_ms}ms")
+# Extract response content
+response_parts = []
+for resp in result.response or []:
+    for content in resp.content or []:
+        if hasattr(content, "text"):
+            response_parts.append(content.text)
+
+if response_parts:
+    response_content = "\n\n".join(response_parts)
+    print(response_content)
 
 # Extract references (source documents)
 if result.references:
     for ref in result.references:
         print(f"Reference ID: {ref.id}")
-        print(f"  Score: {ref.reranker_score}")
+        if hasattr(ref, 'reranker_score'):
+            print(f"  Score: {ref.reranker_score}")
         if ref.source_data:
             print(f"  Content: {ref.source_data.get('content', '')[:200]}")
 ```
@@ -187,43 +171,28 @@ if result.references:
 ## Multi-turn Conversations
 
 ```python
-# Maintain conversation history
-conversation = []
+from azure.search.documents.knowledgebases.models import (
+    KnowledgeBaseRetrievalRequest,
+    KnowledgeRetrievalSemanticIntent,
+)
 
-def chat(user_message: str) -> str:
-    # Add user message
-    conversation.append(
-        KnowledgeBaseMessage(
-            role="user",
-            content=[KnowledgeBaseMessageTextContent(text=user_message)]
-        )
-    )
-    
+def ask(question: str) -> str:
+    """Ask a question against the knowledge base."""
     request = KnowledgeBaseRetrievalRequest(
-        messages=conversation,
-        knowledge_source_params=[
-            SearchIndexKnowledgeSourceParams(
-                knowledge_source_name="my-knowledge-source",
-                include_references=True
-            )
-        ]
+        intents=[KnowledgeRetrievalSemanticIntent(search=question)]
     )
     
-    result = client.retrieve(retrieval_request=request)
+    result = client.retrieve(
+        knowledge_base_name="my-knowledge-base",
+        retrieval_request=request,
+    )
     
     # Extract response
-    response_text = "".join(
-        content.text 
-        for resp in result.response 
-        for content in resp.content
-    )
-    
-    # Add assistant response to history
-    conversation.append(
-        KnowledgeBaseMessage(
-            role="assistant",
-            content=[KnowledgeBaseMessageTextContent(text=response_text)]
-        )
+    response_text = "\n\n".join(
+        content.text
+        for resp in (result.response or [])
+        for content in (resp.content or [])
+        if hasattr(content, "text")
     )
     
     return response_text
@@ -238,19 +207,33 @@ def chat(user_message: str) -> str:
 
 ## Reasoning Effort Levels
 
-| Level | Behavior |
-|-------|----------|
+| Level | Class |
+|-------|-------|
 | `KnowledgeRetrievalMinimalReasoningEffort` | No query planning or iterative search |
 | `KnowledgeRetrievalLowReasoningEffort` | Basic query decomposition |
 | `KnowledgeRetrievalMediumReasoningEffort` | More sophisticated reasoning |
+
+**Usage:**
+```python
+from azure.search.documents.knowledgebases.models import KnowledgeRetrievalMinimalReasoningEffort
+
+knowledge_base = KnowledgeBase(
+    name="my-knowledge-base",
+    knowledge_sources=[KnowledgeSourceReference(name="my-knowledge-source")],
+    retrieval_reasoning_effort=KnowledgeRetrievalMinimalReasoningEffort(),
+)
+```
 
 ## Async Pattern
 
 ```python
 from azure.search.documents.knowledgebases.aio import KnowledgeBaseRetrievalClient
 
-async with KnowledgeBaseRetrievalClient(endpoint, kb_name, credential) as client:
-    result = await client.retrieve(retrieval_request=request)
+async with KnowledgeBaseRetrievalClient(endpoint, credential=credential) as client:
+    result = await client.retrieve(
+        knowledge_base_name="my-knowledge-base",
+        retrieval_request=request,
+    )
 ```
 
 ## Clean Up
