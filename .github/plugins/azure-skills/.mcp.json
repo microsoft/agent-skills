@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "azure": {
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start"]
+    },
+    "foundry-mcp": { 
+      "type": "http", 
+      "url": "https://mcp.ai.azure.com" 
+    } 
+  }
+}
