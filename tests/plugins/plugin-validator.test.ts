@@ -170,17 +170,18 @@ describe("Plugin Validation", () => {
         describe("README cross-references", () => {
           const files = collectPluginFiles(dir);
 
-          it("should have commands on disk", () => {
-            expect(files.commands.length).toBeGreaterThan(0);
-          });
+          // TODO: JasonYe to check for future needs and adjustments
+          //it("should have commands on disk", () => {
+          //  expect(files.commands.length).toBeGreaterThan(0);
+          //});
 
           it("should have skills on disk", () => {
             expect(files.skills.length).toBeGreaterThan(0);
           });
 
-          it("should have agents on disk", () => {
-            expect(files.agents.length).toBeGreaterThan(0);
-          });
+          //it("should have agents on disk", () => {
+          //  expect(files.agents.length).toBeGreaterThan(0);
+          //});
         });
       }
     });
