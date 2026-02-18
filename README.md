@@ -60,7 +60,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 | Resource | Description |
 |----------|-------------|
 | **[125 Skills](#skill-catalog)** | Domain-specific knowledge for Azure SDK and Foundry development |
-| **[Plugins](#plugins)** | Installable plugin packages (deep-wiki, and more) |
+| **[Plugins](#plugins)** | Installable plugin packages (deep-wiki, azure-skills and more) |
 | **[Custom Agents](#agents)** | Role-specific agents (backend, frontend, infrastructure, planner) |
 | **[AGENTS.md](AGENTS.md)** | Template for configuring agent behavior in your projects |
 | **[MCP Configs](#mcp-servers)** | Pre-configured servers for docs, GitHub, browser automation |
@@ -510,6 +510,7 @@ AGENTS.md                # Agent configuration template
 ├── skills/              # All 132 skills (flat structure)
 ├── plugins/             # Installable plugin packages
 │   └── deep-wiki/       # AI-powered wiki generator
+│   └── azure-skills/    # Azure MCP integration with cloud management skills
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions
 ├── scripts/             # Automation scripts (doc scraping)
@@ -541,11 +542,13 @@ Plugins are installable packages containing curated sets of agents, commands, an
 # Inside Copilot CLI, run these slash commands:
 /plugin marketplace add microsoft/skills
 /plugin install deep-wiki@skills
+/plugin install azure-skills@skills
 ```
 
 | Plugin | Description | Commands |
 |--------|-------------|----------|
 | [deep-wiki](.github/plugins/deep-wiki/) | AI-powered wiki generator with Mermaid diagrams, source citations, onboarding guides, AGENTS.md, and llms.txt | `/deep-wiki:generate`, `/deep-wiki:crisp`, `/deep-wiki:catalogue`, `/deep-wiki:page`, `/deep-wiki:research`, `/deep-wiki:ask`, `/deep-wiki:onboard`, `/deep-wiki:agents`, `/deep-wiki:llms`, `/deep-wiki:changelog`, `/deep-wiki:ado`, `/deep-wiki:build`, `/deep-wiki:deploy` |
+| [azure-skills](.github/plugins/azure-skills/) | Microsoft Azure MCP integration for cloud resource management, deployments, and Azure services. Includes 18 skills covering AI, storage, diagnostics, cost optimization, compliance, RBAC, and a 3-step deployment workflow (`azure-prepare` → `azure-validate` → `azure-deploy`). | Skills-based (no slash commands) — auto-triggered by intent matching via `azure` and `foundry-mcp` MCP servers |
 
 ---
 
