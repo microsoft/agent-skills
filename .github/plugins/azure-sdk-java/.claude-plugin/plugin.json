@@ -1,0 +1,13 @@
+{
+  "name": "azure-sdk-java",
+  "description": "Azure SDK patterns and best practices for Java developers covering AI, communication, storage, identity, monitoring, and management libraries.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "homepage": "https://github.com/microsoft/skills",
+  "repository": "https://github.com/microsoft/skills",
+  "license": "MIT",
+  "keywords": ["azure", "java", "sdk", "communication", "eventhub", "identity"]
+}

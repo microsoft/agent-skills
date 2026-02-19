@@ -41,6 +41,86 @@
       "homepage": "https://github.com/microsoft/github-copilot-for-azure",
       "repository": "https://github.com/microsoft/github-copilot-for-azure",
       "license": "MIT"
+    },
+    {
+      "name": "azure-sdk-python",
+      "description": "Azure SDK patterns and best practices for Python developers covering AI, storage, identity, monitoring, messaging, and management libraries.",
+      "source": "./.github/plugins/azure-sdk-python",
+      "version": "1.0.0",
+      "author": {
+        "name": "microsoft",
+        "url": "https://www.microsoft.com"
+      },
+      "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/azure-sdk-python",
+      "repository": "https://github.com/microsoft/skills",
+      "license": "MIT",
+      "keywords": ["azure", "python", "sdk", "ai", "storage", "identity", "monitoring"],
+      "category": "sdk",
+      "skills": "skills/"
+    },
+    {
+      "name": "azure-sdk-dotnet",
+      "description": "Azure SDK patterns and best practices for .NET developers covering AI, resource management, identity, messaging, and Key Vault libraries.",
+      "source": "./.github/plugins/azure-sdk-dotnet",
+      "version": "1.0.0",
+      "author": {
+        "name": "microsoft",
+        "url": "https://www.microsoft.com"
+      },
+      "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/azure-sdk-dotnet",
+      "repository": "https://github.com/microsoft/skills",
+      "license": "MIT",
+      "keywords": ["azure", "dotnet", "csharp", "sdk", "resource-manager", "identity"],
+      "category": "sdk",
+      "skills": "skills/"
+    },
+    {
+      "name": "azure-sdk-typescript",
+      "description": "Azure SDK patterns and best practices for TypeScript/Node.js developers covering AI, storage, identity, monitoring, and messaging libraries.",
+      "source": "./.github/plugins/azure-sdk-typescript",
+      "version": "1.0.0",
+      "author": {
+        "name": "microsoft",
+        "url": "https://www.microsoft.com"
+      },
+      "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/azure-sdk-typescript",
+      "repository": "https://github.com/microsoft/skills",
+      "license": "MIT",
+      "keywords": ["azure", "typescript", "nodejs", "sdk", "ai", "storage"],
+      "category": "sdk",
+      "skills": "skills/"
+    },
+    {
+      "name": "azure-sdk-java",
+      "description": "Azure SDK patterns and best practices for Java developers covering AI, communication, storage, identity, monitoring, and management libraries.",
+      "source": "./.github/plugins/azure-sdk-java",
+      "version": "1.0.0",
+      "author": {
+        "name": "microsoft",
+        "url": "https://www.microsoft.com"
+      },
+      "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/azure-sdk-java",
+      "repository": "https://github.com/microsoft/skills",
+      "license": "MIT",
+      "keywords": ["azure", "java", "sdk", "communication", "eventhub", "identity"],
+      "category": "sdk",
+      "skills": "skills/"
+    },
+    {
+      "name": "azure-sdk-rust",
+      "description": "Azure SDK patterns and best practices for Rust developers covering identity, Key Vault, storage, Cosmos DB, and Event Hubs.",
+      "source": "./.github/plugins/azure-sdk-rust",
+      "version": "1.0.0",
+      "author": {
+        "name": "microsoft",
+        "url": "https://www.microsoft.com"
+      },
+      "homepage": "https://github.com/microsoft/skills/tree/main/.github/plugins/azure-sdk-rust",
+      "repository": "https://github.com/microsoft/skills",
+      "license": "MIT",
+      "keywords": ["azure", "rust", "sdk", "keyvault", "storage", "cosmos"],
+      "category": "sdk",
+      "skills": "skills/"
     }
   ]
 }

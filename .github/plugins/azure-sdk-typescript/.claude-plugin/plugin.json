@@ -1,0 +1,13 @@
+{
+  "name": "azure-sdk-typescript",
+  "description": "Azure SDK patterns and best practices for TypeScript/Node.js developers covering AI, storage, identity, monitoring, and messaging libraries.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "homepage": "https://github.com/microsoft/skills",
+  "repository": "https://github.com/microsoft/skills",
+  "license": "MIT",
+  "keywords": ["azure", "typescript", "nodejs", "sdk", "ai", "storage"]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "azure-sdk-rust",
+  "description": "Azure SDK patterns and best practices for Rust developers covering identity, Key Vault, storage, Cosmos DB, and Event Hubs.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "homepage": "https://github.com/microsoft/skills",
+  "repository": "https://github.com/microsoft/skills",
+  "license": "MIT",
+  "keywords": ["azure", "rust", "sdk", "keyvault", "storage", "cosmos"]
+}

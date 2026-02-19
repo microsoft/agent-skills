@@ -1,0 +1,13 @@
+{
+  "name": "azure-sdk-dotnet",
+  "description": "Azure SDK patterns and best practices for .NET developers covering AI, resource management, identity, messaging, and Key Vault libraries.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "homepage": "https://github.com/microsoft/skills",
+  "repository": "https://github.com/microsoft/skills",
+  "license": "MIT",
+  "keywords": ["azure", "dotnet", "csharp", "sdk", "resource-manager", "identity"]
+}

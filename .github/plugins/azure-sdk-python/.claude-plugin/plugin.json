@@ -1,0 +1,13 @@
+{
+  "name": "azure-sdk-python",
+  "description": "Azure SDK patterns and best practices for Python developers covering AI, storage, identity, monitoring, messaging, and management libraries.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Microsoft",
+    "url": "https://www.microsoft.com"
+  },
+  "homepage": "https://github.com/microsoft/skills",
+  "repository": "https://github.com/microsoft/skills",
+  "license": "MIT",
+  "keywords": ["azure", "python", "sdk", "ai", "storage", "identity", "monitoring"]
+}
