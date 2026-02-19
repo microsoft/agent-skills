@@ -150,6 +150,8 @@ Skills are domain-specific knowledge packages in `.github/skills/`. Each has a `
 - **YAML frontmatter** (`name`, `description`) — triggers skill loading
 - **Markdown body** — loaded only when skill activates
 
+> **⚠️ Temporary duplication note:** Skills in `.github/skills/` are duplicated from `.github/plugins/*/skills/` to support `npx skills add microsoft/skills` installation. The plugin directories remain the canonical source. This duplication is temporary until the skills installer supports symlinks/pointer files.
+
 ### Quick Start
 
 ```bash
@@ -159,14 +161,14 @@ npx skills add microsoft/skills
 
 ### Skill Catalog
 
-> Location: `.github/skills/` • 124 skills • See [README.md#skill-catalog](README.md#skill-catalog)
+> Location: `.github/skills/` • 133 skills • See [README.md#skill-catalog](README.md#skill-catalog)
 
 | Language | Skills | Suffix | Examples |
 |----------|--------|--------|----------|
-| **Core** | 4 | — | `mcp-builder`, `skill-creator`, `copilot-sdk` |
+| **Core** | 6 | — | `mcp-builder`, `skill-creator`, `copilot-sdk` |
 | **Python** | 41 | `-py` | `azure-ai-projects-py`, `azure-cosmos-py`, `azure-ai-ml-py` |
 | **.NET** | 29 | `-dotnet` | `azure-ai-projects-dotnet`, `azure-resource-manager-cosmosdb-dotnet`, `azure-security-keyvault-keys-dotnet` |
-| **TypeScript** | 24 | `-ts` | `azure-ai-projects-ts`, `azure-storage-blob-ts`, `azure-servicebus-ts` |
+| **TypeScript** | 25 | `-ts` | `azure-ai-projects-ts`, `azure-storage-blob-ts`, `aspire-ts` |
 | **Java** | 26 | `-java` | `azure-ai-projects-java`, `azure-cosmos-java`, `azure-eventhub-java` |
 
 ### Skill Selection
