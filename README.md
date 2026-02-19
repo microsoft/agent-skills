@@ -77,7 +77,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 | [Core](#core) | 6 | — |
 | [Python](#python) | 41 | `-py` |
 | [.NET](#net) | 28 | `-dotnet` |
-| [TypeScript](#typescript) | 24 | `-ts` |
+| [TypeScript](#typescript) | 25 | `-ts` |
 | [Java](#java) | 25 | `-java` |
 | [Rust](#rust) | 7 | `-rust` |
 
@@ -89,7 +89,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 | Skill | Description |
 |-------|-------------|
-| [copilot-sdk](.github/skills/copilot-sdk/) | Build applications powered by GitHub Copilot using the Copilot SDK. Session management, custom tools, streaming, hooks, MCP servers, BYOK. |
+| [copilot-sdk](.github/skills/copilot-sdk/) | Build applications powered by GitHub Copilot using the Copilot SDK. Session management, custom tools, streaming, hooks, MCP servers, BYOK, deployment patterns. |
 | [github-issue-creator](.github/skills/github-issue-creator/) | Convert raw notes, error logs, or screenshots into structured GitHub issues. |
 | [mcp-builder](.github/skills/mcp-builder/) | Build MCP servers for LLM tool integration. Python (FastMCP), Node/TypeScript, or C#/.NET. |
 | [podcast-generation](.github/skills/podcast-generation/) | Generate podcast-style audio with Azure OpenAI Realtime API. Full-stack React + FastAPI + WebSocket. |
@@ -307,7 +307,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ### TypeScript
 
-> 24 skills • suffix: `-ts`
+> 25 skills • suffix: `-ts`
 
 <details>
 <summary><strong>Foundry & AI</strong> (6 skills)</summary>
@@ -378,6 +378,15 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 | [frontend-ui-dark-ts](.github/plugins/azure-sdk-typescript/skills/frontend-ui-dark-ts/) | Frontend UI Dark — Vite + React + Tailwind + Framer Motion dark-themed UI design system. |
 | [react-flow-node-ts](.github/plugins/azure-sdk-typescript/skills/react-flow-node-ts/) | React Flow nodes — custom nodes with TypeScript, handles, Zustand. |
 | [zustand-store-ts](.github/plugins/azure-sdk-typescript/skills/zustand-store-ts/) | Zustand stores — TypeScript, subscribeWithSelector, state/action separation. |
+
+</details>
+
+<details>
+<summary><strong>Infrastructure & Orchestration</strong> (1 skill)</summary>
+
+| Skill | Description |
+|-------|-------------|
+| [aspire-ts](.github/skills/aspire-ts/) | .NET Aspire orchestration — AddViteApp, AddNodeApp, AddJavaScriptApp, service discovery, telemetry, deployment. |
 
 </details>
 
@@ -619,14 +628,14 @@ pnpm test
 
 ### Test Coverage Summary
 
-**126 skills with 1135 test scenarios** — all skills have acceptance criteria and test scenarios.
+**127 skills with 1148 test scenarios** — all skills have acceptance criteria and test scenarios.
 
 | Language | Skills | Scenarios | Top Skills by Scenarios |
 |----------|--------|-----------|-------------------------|
 | Core | 6 | 62 | `copilot-sdk` (11), `podcast-generation` (8), `skill-creator` (8) |
 | Python | 41 | 331 | `azure-ai-projects-py` (12), `pydantic-models-py` (12), `azure-ai-translation-text-py` (11) |
 | .NET | 29 | 290 | `azure-resource-manager-sql-dotnet` (14), `azure-resource-manager-redis-dotnet` (14), `azure-servicebus-dotnet` (13) |
-| TypeScript | 24 | 257 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `azure-microsoft-playwright-testing-ts` (13) |
+| TypeScript | 25 | 270 | `azure-storage-blob-ts` (17), `azure-servicebus-ts` (14), `aspire-ts` (13) |
 | Java | 26 | 195 | `azure-storage-blob-java` (12), `azure-identity-java` (12), `azure-data-tables-java` (11) |
 
 ### Adding Test Coverage

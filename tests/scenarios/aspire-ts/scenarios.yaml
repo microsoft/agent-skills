@@ -1,0 +1,432 @@
+# Test scenarios for aspire-ts skill evaluation
+# Each scenario tests .NET Aspire + JavaScript/TypeScript orchestration patterns
+
+config:
+  model: gpt-4
+  max_tokens: 2000
+  temperature: 0.3
+
+scenarios:
+  # File-Based AppHost Setup
+  - name: file_based_apphost_setup
+    prompt: |
+      Create a file-based Aspire AppHost (apphost.cs) that orchestrates a
+      Vite React frontend and a Node.js Express API. Use the JavaScript
+      hosting package. The frontend should reference the API and wait for it.
+    expected_patterns:
+      - "#:sdk Aspire.AppHost.Sdk"
+      - "#:package Aspire.Hosting.JavaScript"
+      - "DistributedApplication.CreateBuilder"
+      - "AddViteApp"
+      - "AddNodeApp"
+      - "WithReference"
+      - "WaitFor"
+      - "builder.Build().Run()"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "import.*from"
+      - "require("
+    tags:
+      - apphost
+      - basic
+    mock_response: |
+      // apphost.cs — File-based AppHost for React + Express
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var api = builder.AddNodeApp("api", "./packages/api", "src/server.js")
+          .WithNpm()
+          .WithHttpHealthCheck("/health");
+
+      var web = builder.AddViteApp("web", "./packages/web")
+          .WithExternalHttpEndpoints()
+          .WithReference(api)
+          .WaitFor(api);
+
+      builder.Build().Run();
+
+  # AddViteApp for React Frontend
+  - name: add_vite_app_react
+    prompt: |
+      Write the Aspire AppHost C# code to add a Vite-based React frontend
+      that has external HTTP endpoints, a custom port via PORT env var,
+      and references an API resource. Use npm as the package manager.
+    expected_patterns:
+      - "AddViteApp"
+      - "WithExternalHttpEndpoints"
+      - "WithNpm"
+      - "WithReference"
+      - "WithHttpEndpoint"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "AddJavaScriptApp.*vite"
+    tags:
+      - apphost
+      - vite
+      - react
+    mock_response: |
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithNpm()
+          .WithHttpEndpoint(port: 5173, env: "PORT")
+          .WithExternalHttpEndpoints()
+          .WithReference(api)
+          .WaitFor(api);
+
+  # AddNodeApp for Express API
+  - name: add_node_app_express
+    prompt: |
+      Write Aspire AppHost C# code to add a Node.js Express API server.
+      The entry file is src/server.js, use npm, add a health check at
+      /health, and configure an HTTP endpoint on port 3000.
+    expected_patterns:
+      - "AddNodeApp"
+      - "src/server.js"
+      - "WithNpm"
+      - "WithHttpHealthCheck"
+      - "WithHttpEndpoint"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "AddViteApp"
+    tags:
+      - apphost
+      - node
+      - express
+    mock_response: |
+      var api = builder.AddNodeApp("api", "./packages/api", "src/server.js")
+          .WithNpm()
+          .WithHttpEndpoint(port: 3000, env: "PORT")
+          .WithHttpHealthCheck("/health");
+
+  # AddJavaScriptApp Generic
+  - name: add_javascript_app_generic
+    prompt: |
+      Write Aspire AppHost C# code to add a generic JavaScript application
+      that uses pnpm as the package manager and runs the "start" script.
+      Add external HTTP endpoints.
+    expected_patterns:
+      - "AddJavaScriptApp"
+      - "WithPnpm"
+      - "WithRunScript"
+      - "WithExternalHttpEndpoints"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "WithNpm"
+    tags:
+      - apphost
+      - javascript
+    mock_response: |
+      var service = builder.AddJavaScriptApp("service", "./packages/service")
+          .WithPnpm()
+          .WithRunScript("start")
+          .WithExternalHttpEndpoints();
+
+  # Service Discovery in Node.js
+  - name: service_discovery_nodejs
+    prompt: |
+      Write Node.js/Express code that reads the API service URL from
+      Aspire-injected environment variables and uses it to proxy requests.
+      Show how Aspire service discovery works in JavaScript.
+    expected_patterns:
+      - "process.env"
+      - "services__"
+      - "fetch"
+    forbidden_patterns:
+      - "localhost:5000"
+      - "localhost:3000"
+      - "127.0.0.1"
+      - "http://api:"
+    tags:
+      - service-discovery
+      - nodejs
+    mock_response: |
+      const express = require('express');
+      const app = express();
+
+      // Aspire injects service URLs as environment variables
+      const apiUrl = process.env["services__api__http__0"];
+
+      app.get('/api/items', async (req, res) => {
+        const response = await fetch(`${apiUrl}/items`);
+        const data = await response.json();
+        res.json(data);
+      });
+
+      const port = process.env.PORT || 3000;
+      app.listen(port, () => console.log(`Listening on ${port}`));
+
+  # OpenTelemetry Setup
+  - name: opentelemetry_setup_nodejs
+    prompt: |
+      Create a telemetry.js file for a Node.js app orchestrated by Aspire.
+      It should configure OpenTelemetry with OTLP gRPC exporters for traces
+      and metrics, use auto-instrumentations, and read the endpoint from
+      OTEL_EXPORTER_OTLP_ENDPOINT. Then show how to import it in app.js.
+    expected_patterns:
+      - "NodeSDK"
+      - "getNodeAutoInstrumentations"
+      - "OTLPTraceExporter"
+      - "OTEL_EXPORTER_OTLP_ENDPOINT"
+      - "sdk.start"
+      - "require('./telemetry')"
+    forbidden_patterns:
+      - "http://localhost:4317"
+    tags:
+      - telemetry
+      - opentelemetry
+      - nodejs
+    mock_response: |
+      // telemetry.js - MUST be imported before any other code
+      const { NodeSDK } = require('@opentelemetry/sdk-node');
+      const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+      const { OTLPTraceExporter } = require('@opentelemetry/exporter-trace-otlp-grpc');
+      const { OTLPMetricExporter } = require('@opentelemetry/exporter-metrics-otlp-grpc');
+      const { PeriodicExportingMetricReader } = require('@opentelemetry/sdk-metrics');
+
+      const sdk = new NodeSDK({
+        traceExporter: new OTLPTraceExporter({
+          url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+        }),
+        metricReader: new PeriodicExportingMetricReader({
+          exporter: new OTLPMetricExporter({
+            url: process.env.OTEL_EXPORTER_OTLP_ENDPOINT
+          })
+        }),
+        instrumentations: [getNodeAutoInstrumentations()]
+      });
+
+      sdk.start();
+
+      process.on('SIGTERM', () => {
+        sdk.shutdown().then(() => process.exit(0));
+      });
+
+      // app.js
+      require('./telemetry'); // Must be FIRST import
+      const express = require('express');
+      const app = express();
+
+  # Redis Integration
+  - name: redis_integration_apphost_and_node
+    prompt: |
+      Show both the Aspire AppHost C# code to add Redis and share it with
+      a Node.js API, and the Node.js code to consume the Redis connection
+      from environment variables. Use RunAsContainer for local dev.
+    expected_patterns:
+      - "AddRedis"
+      - "RunAsContainer"
+      - "WithReference"
+      - "ConnectionStrings__cache"
+      - "createClient"
+    forbidden_patterns:
+      - "redis://localhost"
+      - "localhost:6379"
+    tags:
+      - integration
+      - redis
+    mock_response: |
+      // apphost.cs
+      var cache = builder.AddRedis("cache")
+          .RunAsContainer();
+
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithNpm()
+          .WithReference(cache);
+
+      // server.js - Node.js consumer
+      const { createClient } = require('redis');
+
+      const connectionString = process.env["ConnectionStrings__cache"];
+      const client = createClient({ url: connectionString });
+      await client.connect();
+
+      await client.set('key', 'value');
+      const value = await client.get('key');
+
+  # PostgreSQL Integration
+  - name: postgres_integration
+    prompt: |
+      Show the Aspire AppHost C# code to add PostgreSQL with a database,
+      share it with a Node.js API, and the Node.js code to consume the
+      connection string from environment variables using the pg package.
+    expected_patterns:
+      - "AddPostgres"
+      - "AddDatabase"
+      - "RunAsContainer"
+      - "WithReference"
+      - "ConnectionStrings__"
+      - "Pool"
+      - "connectionString"
+    forbidden_patterns:
+      - "postgresql://user:pass"
+      - "localhost:5432"
+    tags:
+      - integration
+      - postgres
+    mock_response: |
+      // apphost.cs
+      var db = builder.AddPostgres("pg")
+          .RunAsContainer()
+          .AddDatabase("appdb");
+
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithNpm()
+          .WithReference(db);
+
+      // server.js - Node.js consumer
+      const { Pool } = require('pg');
+
+      const pool = new Pool({
+        connectionString: process.env["ConnectionStrings__appdb"]
+      });
+
+      const result = await pool.query('SELECT * FROM users');
+      console.log(result.rows);
+
+  # Polyglot AppHost
+  - name: polyglot_apphost
+    prompt: |
+      Create a polyglot Aspire AppHost that orchestrates a .NET API,
+      a Vite React frontend, and a Python FastAPI worker. All services
+      share a Redis cache. Use file-based AppHost with package directives.
+    expected_patterns:
+      - "Aspire.Hosting.JavaScript"
+      - "Aspire.Hosting.Python"
+      - "AddProject"
+      - "AddViteApp"
+      - "AddUvicornApp"
+      - "AddRedis"
+      - "WithReference"
+    forbidden_patterns:
+      - "AddNpmApp"
+    tags:
+      - apphost
+      - polyglot
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+      #:package Aspire.Hosting.Python@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var cache = builder.AddRedis("cache").RunAsContainer();
+
+      var api = builder.AddProject<Projects.MyApi>("api")
+          .WithReference(cache)
+          .WithHttpHealthCheck("/health");
+
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithExternalHttpEndpoints()
+          .WithReference(api)
+          .WaitFor(api);
+
+      var worker = builder.AddUvicornApp("worker", "./worker", "main:app")
+          .WithUv()
+          .WithReference(cache)
+          .WithReference(api);
+
+      builder.Build().Run();
+
+  # Script Arguments
+  - name: script_arguments
+    prompt: |
+      Show two ways to pass arguments to a Vite app in Aspire:
+      1. Using WithArgs to pass --no-open
+      2. Using a custom package.json script with WithRunScript
+    expected_patterns:
+      - "WithArgs"
+      - "WithRunScript"
+      - "AddViteApp"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "AddViteApp.*--no-open"
+    tags:
+      - apphost
+      - scripts
+    mock_response: |
+      // Option 1: WithArgs
+      var web = builder.AddViteApp("frontend", "./frontend")
+          .WithArgs("--no-open");
+
+      // Option 2: Custom script in package.json
+      // package.json: { "scripts": { "dev:no-open": "vite --no-open" } }
+      var web2 = builder.AddViteApp("frontend", "./frontend")
+          .WithRunScript("dev:no-open");
+
+  # AppHost Language Constraint
+  - name: apphost_always_csharp
+    prompt: |
+      I want to orchestrate my Node.js microservices with Aspire.
+      Create the AppHost file that adds two Node.js services and a
+      Vite frontend. The AppHost must be in C#.
+    expected_patterns:
+      - "var builder"
+      - "DistributedApplication"
+      - "AddNodeApp"
+      - "AddViteApp"
+      - "builder.Build"
+    forbidden_patterns:
+      - "import.*from"
+      - "require("
+      - "const builder"
+      - "new DistributedApplication"
+    tags:
+      - apphost
+      - language
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var userApi = builder.AddNodeApp("user-api", "./services/user-api", "index.js")
+          .WithNpm()
+          .WithHttpHealthCheck("/health");
+
+      var orderApi = builder.AddNodeApp("order-api", "./services/order-api", "index.js")
+          .WithNpm()
+          .WithHttpHealthCheck("/health")
+          .WithReference(userApi);
+
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithExternalHttpEndpoints()
+          .WithReference(userApi)
+          .WithReference(orderApi)
+          .WaitFor(userApi)
+          .WaitFor(orderApi);
+
+      builder.Build().Run();
+
+  # Health Check Configuration
+  - name: health_check_config
+    prompt: |
+      Configure health checks for a Node.js Express API in Aspire.
+      Show both the AppHost configuration with WithHttpHealthCheck and
+      the Express endpoint implementation.
+    expected_patterns:
+      - "WithHttpHealthCheck"
+      - "/health"
+      - "app.get"
+      - "status(200)"
+    forbidden_patterns:
+      - "localhost"
+    tags:
+      - health
+      - express
+    mock_response: |
+      // apphost.cs
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithNpm()
+          .WithHttpHealthCheck("/health");
+
+      // server.js - Express health endpoint
+      const express = require('express');
+      const app = express();
+
+      app.get('/health', (req, res) => {
+        res.status(200).json({ status: 'healthy' });
+      });
+
+      const port = process.env.PORT || 3000;
+      app.listen(port);

@@ -1,0 +1,1049 @@
+[
+  {
+    "name": "agent-framework-azure-ai-py",
+    "description": "Build Azure AI Foundry agents using the Microsoft Agent Framework Python SDK (agent-framework-azure-ai). Use when creating persistent agents with AzureAIAgentsProvider, using hosted tools (code interpreter, file search, web search), integrating MCP servers, managing conversation threads, or implementing streaming responses. Covers function tools, structured outputs, and multi-tool agents.",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/agent-framework-azure-ai-py",
+    "package": "agent-framework-azure-ai"
+  },
+  {
+    "name": "aspire-ts",
+    "description": "Orchestrate JavaScript/TypeScript applications with .NET Aspire. Use when building Node.js APIs, React/Vue/Svelte frontends, or Vite apps that need service discovery, telemetry, and deployment orchestration via Aspire's AppHost. Covers AddViteApp, AddNodeApp, AddJavaScriptApp, package managers, OpenTelemetry, and polyglot integration patterns.",
+    "lang": "ts",
+    "category": "general",
+    "path": ".github/skills/aspire-ts"
+  },
+  {
+    "name": "agents-v2-py",
+    "description": "Build container-based Foundry Agents using Azure AI Projects SDK with ImageBasedHostedAgentDefinition.\nUse when creating hosted agents that run custom code in Azure AI Foundry with your own container images.\nTriggers: \"ImageBasedHostedAgentDefinition\", \"hosted agent\", \"container agent\", \"Foundry Agent\",\n\"create_version\", \"ProtocolVersionRecord\", \"AgentProtocol.RESPONSES\", \"custom agent image\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/agents-v2-py",
+    "package": "azure-ai-projects"
+  },
+  {
+    "name": "azure-ai-agents-persistent-dotnet",
+    "description": "Azure AI Agents Persistent SDK for .NET. Low-level SDK for creating and managing AI agents with threads, messages, runs, and tools. Use for agent CRUD, conversation threads, streaming responses, function calling, file search, and code interpreter. Triggers: \"PersistentAgentsClient\", \"persistent agents\", \"agent threads\", \"agent runs\", \"streaming agents\", \"function calling agents .NET\".\n",
+    "lang": "dotnet",
+    "category": "general",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-ai-agents-persistent-dotnet",
+    "package": "Azure.AI.Agents.Persistent"
+  },
+  {
+    "name": "azure-ai-agents-persistent-java",
+    "description": "Azure AI Agents Persistent SDK for Java. Low-level SDK for creating and managing AI agents with threads, messages, runs, and tools.\nTriggers: \"PersistentAgentsClient\", \"persistent agents java\", \"agent threads java\", \"agent runs java\", \"streaming agents java\".\n",
+    "lang": "java",
+    "category": "general",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-agents-persistent-java",
+    "package": "com.azure:azure-ai-agents-persistent"
+  },
+  {
+    "name": "azure-ai-anomalydetector-java",
+    "description": "Build anomaly detection applications with Azure AI Anomaly Detector SDK for Java. Use when implementing univariate/multivariate anomaly detection, time-series analysis, or AI-powered monitoring.",
+    "lang": "java",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-anomalydetector-java",
+    "package": "com.azure:azure-ai-anomalydetector"
+  },
+  {
+    "name": "azure-ai-contentsafety-java",
+    "description": "Build content moderation applications with Azure AI Content Safety SDK for Java. Use when implementing text/image analysis, blocklist management, or harm detection for hate, violence, sexual content, and self-harm.",
+    "lang": "java",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-contentsafety-java",
+    "package": "com.azure:azure-ai-contentsafety"
+  },
+  {
+    "name": "azure-ai-contentsafety-py",
+    "description": "Azure AI Content Safety SDK for Python. Use for detecting harmful content in text and images with multi-severity classification.\nTriggers: \"azure-ai-contentsafety\", \"ContentSafetyClient\", \"content moderation\", \"harmful content\", \"text analysis\", \"image analysis\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-contentsafety-py",
+    "package": "azure-ai-contentsafety"
+  },
+  {
+    "name": "azure-ai-contentsafety-ts",
+    "description": "Analyze text and images for harmful content using Azure AI Content Safety (@azure-rest/ai-content-safety). Use when moderating user-generated content, detecting hate speech, violence, sexual content, or self-harm, or managing custom blocklists.",
+    "lang": "ts",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-ai-contentsafety-ts",
+    "package": "@azure-rest/ai-content-safety"
+  },
+  {
+    "name": "azure-ai-contentunderstanding-py",
+    "description": "Azure AI Content Understanding SDK for Python. Use for multimodal content extraction from documents, images, audio, and video.\nTriggers: \"azure-ai-contentunderstanding\", \"ContentUnderstandingClient\", \"multimodal analysis\", \"document extraction\", \"video analysis\", \"audio transcription\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-contentunderstanding-py",
+    "package": "azure-ai-contentunderstanding"
+  },
+  {
+    "name": "azure-ai-document-intelligence-dotnet",
+    "description": "Azure AI Document Intelligence SDK for .NET. Extract text, tables, and structured data from documents using prebuilt and custom models. Use for invoice processing, receipt extraction, ID document analysis, and custom document models. Triggers: \"Document Intelligence\", \"DocumentIntelligenceClient\", \"form recognizer\", \"invoice extraction\", \"receipt OCR\", \"document analysis .NET\".\n",
+    "lang": "dotnet",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-ai-document-intelligence-dotnet",
+    "package": "Azure.AI.DocumentIntelligence"
+  },
+  {
+    "name": "azure-ai-document-intelligence-ts",
+    "description": "Extract text, tables, and structured data from documents using Azure Document Intelligence (@azure-rest/ai-document-intelligence). Use when processing invoices, receipts, IDs, forms, or building custom document models.",
+    "lang": "ts",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-ai-document-intelligence-ts",
+    "package": "@azure-rest/ai-document-intelligence"
+  },
+  {
+    "name": "azure-ai-formrecognizer-java",
+    "description": "Build document analysis applications with Azure Document Intelligence (Form Recognizer) SDK for Java. Use when extracting text, tables, key-value pairs from documents, receipts, invoices, or building custom document models.",
+    "lang": "java",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-formrecognizer-java",
+    "package": "com.azure:azure-ai-formrecognizer"
+  },
+  {
+    "name": "azure-ai-ml-py",
+    "description": "Azure Machine Learning SDK v2 for Python. Use for ML workspaces, jobs, models, datasets, compute, and pipelines.\nTriggers: \"azure-ai-ml\", \"MLClient\", \"workspace\", \"model registry\", \"training jobs\", \"datasets\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-ml-py",
+    "package": "azure-ai-ml"
+  },
+  {
+    "name": "azure-ai-openai-dotnet",
+    "description": "Azure OpenAI SDK for .NET. Client library for Azure OpenAI and OpenAI services. Use for chat completions, embeddings, image generation, audio transcription, and assistants. Triggers: \"Azure OpenAI\", \"AzureOpenAIClient\", \"ChatClient\", \"chat completions .NET\", \"GPT-4\", \"embeddings\", \"DALL-E\", \"Whisper\", \"OpenAI .NET\".\n",
+    "lang": "dotnet",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-ai-openai-dotnet",
+    "package": "Azure.AI.OpenAI"
+  },
+  {
+    "name": "azure-ai-projects-dotnet",
+    "description": "Azure AI Projects SDK for .NET. High-level client for Azure AI Foundry projects including agents, connections, datasets, deployments, evaluations, and indexes. Use for AI Foundry project management, versioned agents, and orchestration. Triggers: \"AI Projects\", \"AIProjectClient\", \"Foundry project\", \"versioned agents\", \"evaluations\", \"datasets\", \"connections\", \"deployments .NET\".\n",
+    "lang": "dotnet",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-ai-projects-dotnet",
+    "package": "Azure.AI.Projects"
+  },
+  {
+    "name": "azure-ai-projects-java",
+    "description": "Azure AI Projects SDK for Java. High-level SDK for Azure AI Foundry project management including connections, datasets, indexes, and evaluations.\nTriggers: \"AIProjectClient java\", \"azure ai projects java\", \"Foundry project java\", \"ConnectionsClient\", \"DatasetsClient\", \"IndexesClient\".\n",
+    "lang": "java",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-projects-java",
+    "package": "com.azure:azure-ai-projects"
+  },
+  {
+    "name": "azure-ai-projects-py",
+    "description": "Build AI applications using the Azure AI Projects Python SDK (azure-ai-projects). Use when working with Foundry project clients, creating versioned agents with PromptAgentDefinition, running evaluations, managing connections/deployments/datasets/indexes, or using OpenAI-compatible clients. This is the high-level Foundry SDK - for low-level agent operations, use azure-ai-agents-python skill.",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-projects-py",
+    "package": "azure-ai-projects"
+  },
+  {
+    "name": "azure-ai-projects-ts",
+    "description": "Build AI applications using Azure AI Projects SDK for JavaScript (@azure/ai-projects). Use when working with Foundry project clients, agents, connections, deployments, datasets, indexes, evaluations, or getting OpenAI clients.",
+    "lang": "ts",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-ai-projects-ts",
+    "package": "@azure/ai-projects"
+  },
+  {
+    "name": "azure-ai-textanalytics-py",
+    "description": "Azure AI Text Analytics SDK for sentiment analysis, entity recognition, key phrases, language detection, PII, and healthcare NLP. Use for natural language processing on text.\nTriggers: \"text analytics\", \"sentiment analysis\", \"entity recognition\", \"key phrase\", \"PII detection\", \"TextAnalyticsClient\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-textanalytics-py",
+    "package": "azure-ai-textanalytics"
+  },
+  {
+    "name": "azure-ai-transcription-py",
+    "description": "Azure AI Transcription SDK for Python. Use for real-time and batch speech-to-text transcription with timestamps and diarization.\nTriggers: \"transcription\", \"speech to text\", \"Azure AI Transcription\", \"TranscriptionClient\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-transcription-py",
+    "package": "azure-ai-transcription"
+  },
+  {
+    "name": "azure-ai-translation-document-py",
+    "description": "Azure AI Document Translation SDK for batch translation of documents with format preservation. Use for translating Word, PDF, Excel, PowerPoint, and other document formats at scale.\nTriggers: \"document translation\", \"batch translation\", \"translate documents\", \"DocumentTranslationClient\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-translation-document-py",
+    "package": "azure-ai-translation-document"
+  },
+  {
+    "name": "azure-ai-translation-text-py",
+    "description": "Azure AI Text Translation SDK for real-time text translation, transliteration, language detection, and dictionary lookup. Use for translating text content in applications.\nTriggers: \"text translation\", \"translator\", \"translate text\", \"transliterate\", \"TextTranslationClient\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-translation-text-py",
+    "package": "azure-ai-translation-text"
+  },
+  {
+    "name": "azure-ai-translation-ts",
+    "description": "Build translation applications using Azure Translation SDKs for JavaScript (@azure-rest/ai-translation-text, @azure-rest/ai-translation-document). Use when implementing text translation, transliteration, language detection, or batch document translation.",
+    "lang": "ts",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-ai-translation-ts",
+    "package": "@azure-rest/ai-translation-text, @azure-rest/ai-translation-document"
+  },
+  {
+    "name": "azure-ai-vision-imageanalysis-java",
+    "description": "Build image analysis applications with Azure AI Vision SDK for Java. Use when implementing image captioning, OCR text extraction, object detection, tagging, or smart cropping.",
+    "lang": "java",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-vision-imageanalysis-java",
+    "package": "com.azure:azure-ai-vision-imageanalysis"
+  },
+  {
+    "name": "azure-ai-vision-imageanalysis-py",
+    "description": "Azure AI Vision Image Analysis SDK for captions, tags, objects, OCR, people detection, and smart cropping. Use for computer vision and image understanding tasks.\nTriggers: \"image analysis\", \"computer vision\", \"OCR\", \"object detection\", \"ImageAnalysisClient\", \"image caption\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-vision-imageanalysis-py",
+    "package": "azure-ai-vision-imageanalysis"
+  },
+  {
+    "name": "azure-ai-voicelive-dotnet",
+    "description": "Azure AI Voice Live SDK for .NET. Build real-time voice AI applications with bidirectional WebSocket communication. Use for voice assistants, conversational AI, real-time speech-to-speech, and voice-enabled chatbots. Triggers: \"voice live\", \"real-time voice\", \"VoiceLiveClient\", \"VoiceLiveSession\", \"voice assistant .NET\", \"bidirectional audio\", \"speech-to-speech\".\n",
+    "lang": "dotnet",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-ai-voicelive-dotnet",
+    "package": "Azure.AI.VoiceLive"
+  },
+  {
+    "name": "azure-ai-voicelive-java",
+    "description": "Azure AI VoiceLive SDK for Java. Real-time bidirectional voice conversations with AI assistants using WebSocket.\nTriggers: \"VoiceLiveClient java\", \"voice assistant java\", \"real-time voice java\", \"audio streaming java\", \"voice activity detection java\".\n",
+    "lang": "java",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-ai-voicelive-java",
+    "package": "com.azure:azure-ai-voicelive"
+  },
+  {
+    "name": "azure-ai-voicelive-py",
+    "description": "Build real-time voice AI applications using Azure AI Voice Live SDK (azure-ai-voicelive). Use this skill when creating Python applications that need real-time bidirectional audio communication with Azure AI, including voice assistants, voice-enabled chatbots, real-time speech-to-speech translation, voice-driven avatars, or any WebSocket-based audio streaming with AI models. Supports Server VAD (Voice Activity Detection), turn-based conversation, function calling, MCP tools, avatar integration, and transcription.",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-ai-voicelive-py",
+    "package": "azure-ai-voicelive"
+  },
+  {
+    "name": "azure-ai-voicelive-ts",
+    "description": "Azure AI Voice Live SDK for JavaScript/TypeScript. Build real-time voice AI applications with bidirectional WebSocket communication. Use for voice assistants, conversational AI, real-time speech-to-speech, and voice-enabled chatbots in Node.js or browser environments. Triggers: \"voice live\", \"real-time voice\", \"VoiceLiveClient\", \"VoiceLiveSession\", \"voice assistant TypeScript\", \"bidirectional audio\", \"speech-to-speech JavaScript\".\n",
+    "lang": "ts",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-ai-voicelive-ts",
+    "package": "@azure/ai-voicelive"
+  },
+  {
+    "name": "azure-appconfiguration-java",
+    "description": "Azure App Configuration SDK for Java. Centralized application configuration management with key-value settings, feature flags, and snapshots.\nTriggers: \"ConfigurationClient java\", \"app configuration java\", \"feature flag java\", \"configuration setting java\", \"azure config java\".\n",
+    "lang": "java",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-appconfiguration-java",
+    "package": "com.azure:azure-data-appconfiguration"
+  },
+  {
+    "name": "azure-appconfiguration-py",
+    "description": "Azure App Configuration SDK for Python. Use for centralized configuration management, feature flags, and dynamic settings.\nTriggers: \"azure-appconfiguration\", \"AzureAppConfigurationClient\", \"feature flags\", \"configuration\", \"key-value settings\".\n",
+    "lang": "py",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-appconfiguration-py",
+    "package": "azure-appconfiguration"
+  },
+  {
+    "name": "azure-appconfiguration-ts",
+    "description": "Build applications using Azure App Configuration SDK for JavaScript (@azure/app-configuration). Use when working with configuration settings, feature flags, Key Vault references, dynamic refresh, or centralized configuration management.",
+    "lang": "ts",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-appconfiguration-ts",
+    "package": "@azure/app-configuration"
+  },
+  {
+    "name": "azure-communication-callautomation-java",
+    "description": "Build call automation workflows with Azure Communication Services Call Automation Java SDK. Use when implementing IVR systems, call routing, call recording, DTMF recognition, text-to-speech, or AI-powered call flows.",
+    "lang": "java",
+    "category": "communication",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-communication-callautomation-java",
+    "package": "com.azure:azure-communication-callautomation"
+  },
+  {
+    "name": "azure-communication-callingserver-java",
+    "description": "Azure Communication Services CallingServer (legacy) Java SDK. Note - This SDK is deprecated. Use azure-communication-callautomation instead for new projects. Only use this skill when maintaining legacy code.",
+    "lang": "java",
+    "category": "communication",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-communication-callingserver-java",
+    "package": "com.azure:azure-communication-callingserver"
+  },
+  {
+    "name": "azure-communication-chat-java",
+    "description": "Build real-time chat applications with Azure Communication Services Chat Java SDK. Use when implementing chat threads, messaging, participants, read receipts, typing notifications, or real-time chat features.",
+    "lang": "java",
+    "category": "communication",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-communication-chat-java",
+    "package": "com.azure:azure-communication-chat"
+  },
+  {
+    "name": "azure-communication-common-java",
+    "description": "Azure Communication Services common utilities for Java. Use when working with CommunicationTokenCredential, user identifiers, token refresh, or shared authentication across ACS services.",
+    "lang": "java",
+    "category": "communication",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-communication-common-java",
+    "package": "com.azure:azure-communication-common"
+  },
+  {
+    "name": "azure-communication-sms-java",
+    "description": "Send SMS messages with Azure Communication Services SMS Java SDK. Use when implementing SMS notifications, alerts, OTP delivery, bulk messaging, or delivery reports.",
+    "lang": "java",
+    "category": "communication",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-communication-sms-java",
+    "package": "com.azure:azure-communication-sms"
+  },
+  {
+    "name": "azure-compute-batch-java",
+    "description": "Azure Batch SDK for Java. Run large-scale parallel and HPC batch jobs with pools, jobs, tasks, and compute nodes.\nTriggers: \"BatchClient java\", \"azure batch java\", \"batch pool java\", \"batch job java\", \"HPC java\", \"parallel computing java\".\n",
+    "lang": "java",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-compute-batch-java"
+  },
+  {
+    "name": "azure-containerregistry-py",
+    "description": "Azure Container Registry SDK for Python. Use for managing container images, artifacts, and repositories.\nTriggers: \"azure-containerregistry\", \"ContainerRegistryClient\", \"container images\", \"docker registry\", \"ACR\".\n",
+    "lang": "py",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-containerregistry-py",
+    "package": "azure-containerregistry"
+  },
+  {
+    "name": "azure-cosmos-db-py",
+    "description": "Build Azure Cosmos DB NoSQL services with Python/FastAPI following production-grade patterns. Use when implementing database client setup with dual auth (DefaultAzureCredential + emulator), service layer classes with CRUD operations, partition key strategies, parameterized queries, or TDD patterns for Cosmos. Triggers on phrases like \"Cosmos DB\", \"NoSQL database\", \"document store\", \"add persistence\", \"database service layer\", or \"Python Cosmos SDK\".",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-cosmos-db-py",
+    "package": "azure-cosmos"
+  },
+  {
+    "name": "azure-cosmos-java",
+    "description": "Azure Cosmos DB SDK for Java. NoSQL database operations with global distribution, multi-model support, and reactive patterns.\nTriggers: \"CosmosClient java\", \"CosmosAsyncClient\", \"cosmos database java\", \"cosmosdb java\", \"document database java\".\n",
+    "lang": "java",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-cosmos-java",
+    "package": "azure-cosmos"
+  },
+  {
+    "name": "azure-cosmos-py",
+    "description": "Azure Cosmos DB SDK for Python (NoSQL API). Use for document CRUD, queries, containers, and globally distributed data.\nTriggers: \"cosmos db\", \"CosmosClient\", \"container\", \"document\", \"NoSQL\", \"partition key\".\n",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-cosmos-py",
+    "package": "azure-cosmos"
+  },
+  {
+    "name": "azure-cosmos-rust",
+    "description": "Azure Cosmos DB SDK for Rust (NoSQL API). Use for document CRUD, queries, containers, and globally distributed data.\nTriggers: \"cosmos db rust\", \"CosmosClient rust\", \"container\", \"document rust\", \"NoSQL rust\", \"partition key\".\n",
+    "lang": "rust",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-cosmos-rust",
+    "package": "azure_data_cosmos"
+  },
+  {
+    "name": "azure-cosmos-ts",
+    "description": "Azure Cosmos DB JavaScript/TypeScript SDK (@azure/cosmos) for data plane operations. Use for CRUD operations on documents, queries, bulk operations, and container management. Triggers: \"Cosmos DB\", \"@azure/cosmos\", \"CosmosClient\", \"document CRUD\", \"NoSQL queries\", \"bulk operations\", \"partition key\", \"container.items\".\n",
+    "lang": "ts",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-cosmos-ts",
+    "package": "@azure/cosmos"
+  },
+  {
+    "name": "azure-data-tables-java",
+    "description": "Build table storage applications with Azure Tables SDK for Java. Use when working with Azure Table Storage or Cosmos DB Table API for NoSQL key-value data, schemaless storage, or structured data at scale.",
+    "lang": "java",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-data-tables-java",
+    "package": "com.azure:azure-data-tables"
+  },
+  {
+    "name": "azure-data-tables-py",
+    "description": "Azure Tables SDK for Python (Storage and Cosmos DB). Use for NoSQL key-value storage, entity CRUD, and batch operations.\nTriggers: \"table storage\", \"TableServiceClient\", \"TableClient\", \"entities\", \"PartitionKey\", \"RowKey\".\n",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-data-tables-py",
+    "package": "azure-data-tables"
+  },
+  {
+    "name": "azure-eventgrid-dotnet",
+    "description": "Azure Event Grid SDK for .NET. Client library for publishing and consuming events with Azure Event Grid. Use for event-driven architectures, pub/sub messaging, CloudEvents, and EventGridEvents. Triggers: \"Event Grid\", \"EventGridPublisherClient\", \"CloudEvent\", \"EventGridEvent\", \"publish events .NET\", \"event-driven\", \"pub/sub\".\n",
+    "lang": "dotnet",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-eventgrid-dotnet",
+    "package": "Azure.Messaging.EventGrid"
+  },
+  {
+    "name": "azure-eventgrid-java",
+    "description": "Build event-driven applications with Azure Event Grid SDK for Java. Use when publishing events, implementing pub/sub patterns, or integrating with Azure services via events.",
+    "lang": "java",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-eventgrid-java",
+    "package": "com.azure:azure-messaging-eventgrid"
+  },
+  {
+    "name": "azure-eventgrid-py",
+    "description": "Azure Event Grid SDK for Python. Use for publishing events, handling CloudEvents, and event-driven architectures.\nTriggers: \"event grid\", \"EventGridPublisherClient\", \"CloudEvent\", \"EventGridEvent\", \"publish events\".\n",
+    "lang": "py",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-eventgrid-py",
+    "package": "azure-eventgrid"
+  },
+  {
+    "name": "azure-eventhub-dotnet",
+    "description": "Azure Event Hubs SDK for .NET. Use for high-throughput event streaming: sending events (EventHubProducerClient, EventHubBufferedProducerClient), receiving events (EventProcessorClient with checkpointing), partition management, and real-time data ingestion. Triggers: \"Event Hubs\", \"event streaming\", \"EventHubProducerClient\", \"EventProcessorClient\", \"send events\", \"receive events\", \"checkpointing\", \"partition\".\n",
+    "lang": "dotnet",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-eventhub-dotnet",
+    "package": "Azure.Messaging.EventHubs"
+  },
+  {
+    "name": "azure-eventhub-java",
+    "description": "Build real-time streaming applications with Azure Event Hubs SDK for Java. Use when implementing event streaming, high-throughput data ingestion, or building event-driven architectures.",
+    "lang": "java",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-eventhub-java",
+    "package": "com.azure:azure-messaging-eventhubs"
+  },
+  {
+    "name": "azure-eventhub-py",
+    "description": "Azure Event Hubs SDK for Python streaming. Use for high-throughput event ingestion, producers, consumers, and checkpointing.\nTriggers: \"event hubs\", \"EventHubProducerClient\", \"EventHubConsumerClient\", \"streaming\", \"partitions\".\n",
+    "lang": "py",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-eventhub-py",
+    "package": "azure-eventhub"
+  },
+  {
+    "name": "azure-eventhub-rust",
+    "description": "Azure Event Hubs SDK for Rust. Use for sending and receiving events, streaming data ingestion.\nTriggers: \"event hubs rust\", \"ProducerClient rust\", \"ConsumerClient rust\", \"send event rust\", \"streaming rust\".\n",
+    "lang": "rust",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-eventhub-rust",
+    "package": "azure_messaging_eventhubs"
+  },
+  {
+    "name": "azure-eventhub-ts",
+    "description": "Build event streaming applications using Azure Event Hubs SDK for JavaScript (@azure/event-hubs). Use when implementing high-throughput event ingestion, real-time analytics, IoT telemetry, or event-driven architectures with partitioned consumers.",
+    "lang": "ts",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-eventhub-ts",
+    "package": "@azure/event-hubs"
+  },
+  {
+    "name": "azure-identity-dotnet",
+    "description": "Azure Identity SDK for .NET. Authentication library for Azure SDK clients using Microsoft Entra ID. Use for DefaultAzureCredential, managed identity, service principals, and developer credentials. Triggers: \"Azure Identity\", \"DefaultAzureCredential\", \"ManagedIdentityCredential\", \"ClientSecretCredential\", \"authentication .NET\", \"Azure auth\", \"credential chain\".\n",
+    "lang": "dotnet",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-identity-dotnet",
+    "package": "Azure.Identity"
+  },
+  {
+    "name": "azure-identity-java",
+    "description": "Azure Identity Java SDK for authentication with Azure services. Use when implementing DefaultAzureCredential, managed identity, service principal, or any Azure authentication pattern in Java applications.",
+    "lang": "java",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-identity-java",
+    "package": "com.azure:azure-identity"
+  },
+  {
+    "name": "azure-identity-py",
+    "description": "Azure Identity SDK for Python authentication. Use for DefaultAzureCredential, managed identity, service principals, and token caching.\nTriggers: \"azure-identity\", \"DefaultAzureCredential\", \"authentication\", \"managed identity\", \"service principal\", \"credential\".\n",
+    "lang": "py",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-identity-py",
+    "package": "azure-identity"
+  },
+  {
+    "name": "azure-identity-rust",
+    "description": "Azure Identity SDK for Rust authentication. Use for DeveloperToolsCredential, ManagedIdentityCredential, ClientSecretCredential, and token-based authentication.\nTriggers: \"azure-identity\", \"DeveloperToolsCredential\", \"authentication rust\", \"managed identity rust\", \"credential rust\".\n",
+    "lang": "rust",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-identity-rust",
+    "package": "azure_identity"
+  },
+  {
+    "name": "azure-identity-ts",
+    "description": "Authenticate to Azure services using Azure Identity SDK for JavaScript (@azure/identity). Use when configuring authentication with DefaultAzureCredential, managed identity, service principals, or interactive browser login.",
+    "lang": "ts",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-identity-ts",
+    "package": "@azure/identity"
+  },
+  {
+    "name": "azure-keyvault-certificates-rust",
+    "description": "Azure Key Vault Certificates SDK for Rust. Use for creating, importing, and managing certificates.\nTriggers: \"keyvault certificates rust\", \"CertificateClient rust\", \"create certificate rust\", \"import certificate rust\".\n",
+    "lang": "rust",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-keyvault-certificates-rust",
+    "package": "azure_security_keyvault_certificates"
+  },
+  {
+    "name": "azure-keyvault-keys-rust",
+    "description": "Azure Key Vault Keys SDK for Rust. Use for creating, managing, and using cryptographic keys.\nTriggers: \"keyvault keys rust\", \"KeyClient rust\", \"create key rust\", \"encrypt rust\", \"sign rust\".\n",
+    "lang": "rust",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-keyvault-keys-rust",
+    "package": "azure_security_keyvault_keys"
+  },
+  {
+    "name": "azure-keyvault-keys-ts",
+    "description": "Manage cryptographic keys using Azure Key Vault Keys SDK for JavaScript (@azure/keyvault-keys). Use when creating, encrypting/decrypting, signing, or rotating keys.",
+    "lang": "ts",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-keyvault-keys-ts",
+    "package": "@azure/keyvault-keys"
+  },
+  {
+    "name": "azure-keyvault-py",
+    "description": "Azure Key Vault SDK for Python. Use for secrets, keys, and certificates management with secure storage.\nTriggers: \"key vault\", \"SecretClient\", \"KeyClient\", \"CertificateClient\", \"secrets\", \"encryption keys\".\n",
+    "lang": "py",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-keyvault-py",
+    "package": "azure-keyvault-secrets, azure-keyvault-keys, azure-keyvault-certificates"
+  },
+  {
+    "name": "azure-keyvault-secrets-rust",
+    "description": "Azure Key Vault Secrets SDK for Rust. Use for storing and retrieving secrets, passwords, and API keys.\nTriggers: \"keyvault secrets rust\", \"SecretClient rust\", \"get secret rust\", \"set secret rust\".\n",
+    "lang": "rust",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-keyvault-secrets-rust",
+    "package": "azure_security_keyvault_secrets"
+  },
+  {
+    "name": "azure-keyvault-secrets-ts",
+    "description": "Manage secrets using Azure Key Vault Secrets SDK for JavaScript (@azure/keyvault-secrets). Use when storing and retrieving application secrets or configuration values.",
+    "lang": "ts",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-keyvault-secrets-ts",
+    "package": "@azure/keyvault-secrets"
+  },
+  {
+    "name": "azure-maps-search-dotnet",
+    "description": "Azure Maps SDK for .NET. Location-based services including geocoding, routing, rendering, geolocation, and weather. Use for address search, directions, map tiles, IP geolocation, and weather data. Triggers: \"Azure Maps\", \"MapsSearchClient\", \"MapsRoutingClient\", \"MapsRenderingClient\", \"geocoding .NET\", \"route directions\", \"map tiles\", \"geolocation\".\n",
+    "lang": "dotnet",
+    "category": "general",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-maps-search-dotnet",
+    "package": "Azure.Maps.Search"
+  },
+  {
+    "name": "azure-messaging-webpubsub-java",
+    "description": "Build real-time web applications with Azure Web PubSub SDK for Java. Use when implementing WebSocket-based messaging, live updates, chat applications, or server-to-client push notifications.",
+    "lang": "java",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-messaging-webpubsub-java",
+    "package": "com.azure:azure-messaging-webpubsub"
+  },
+  {
+    "name": "azure-messaging-webpubsubservice-py",
+    "description": "Azure Web PubSub Service SDK for Python. Use for real-time messaging, WebSocket connections, and pub/sub patterns.\nTriggers: \"azure-messaging-webpubsubservice\", \"WebPubSubServiceClient\", \"real-time\", \"WebSocket\", \"pub/sub\".\n",
+    "lang": "py",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-messaging-webpubsubservice-py",
+    "package": "azure-messaging-webpubsubservice"
+  },
+  {
+    "name": "azure-mgmt-apicenter-dotnet",
+    "description": "Azure API Center SDK for .NET. Centralized API inventory management with governance, versioning, and discovery. Use for creating API services, workspaces, APIs, versions, definitions, environments, deployments, and metadata schemas. Triggers: \"API Center\", \"ApiCenterService\", \"ApiCenterWorkspace\", \"ApiCenterApi\", \"API inventory\", \"API governance\", \"API versioning\", \"API catalog\", \"API discovery\".\n",
+    "lang": "dotnet",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-apicenter-dotnet",
+    "package": "Azure.ResourceManager.ApiCenter"
+  },
+  {
+    "name": "azure-mgmt-apicenter-py",
+    "description": "Azure API Center Management SDK for Python. Use for managing API inventory, metadata, and governance across your organization.\nTriggers: \"azure-mgmt-apicenter\", \"ApiCenterMgmtClient\", \"API Center\", \"API inventory\", \"API governance\".\n",
+    "lang": "py",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-mgmt-apicenter-py",
+    "package": "azure-mgmt-apicenter"
+  },
+  {
+    "name": "azure-mgmt-apimanagement-dotnet",
+    "description": "Azure Resource Manager SDK for API Management in .NET. Use for MANAGEMENT PLANE operations: creating/managing APIM services, APIs, products, subscriptions, policies, users, groups, gateways, and backends via Azure Resource Manager. Triggers: \"API Management\", \"APIM service\", \"create APIM\", \"manage APIs\", \"ApiManagementServiceResource\", \"API policies\", \"APIM products\", \"APIM subscriptions\".\n",
+    "lang": "dotnet",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-apimanagement-dotnet",
+    "package": "Azure.ResourceManager.ApiManagement"
+  },
+  {
+    "name": "azure-mgmt-apimanagement-py",
+    "description": "Azure API Management SDK for Python. Use for managing APIM services, APIs, products, subscriptions, and policies.\nTriggers: \"azure-mgmt-apimanagement\", \"ApiManagementClient\", \"APIM\", \"API gateway\", \"API Management\".\n",
+    "lang": "py",
+    "category": "integration",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-mgmt-apimanagement-py",
+    "package": "azure-mgmt-apimanagement"
+  },
+  {
+    "name": "azure-mgmt-applicationinsights-dotnet",
+    "description": "Azure Application Insights SDK for .NET. Application performance monitoring and observability resource management. Use for creating Application Insights components, web tests, workbooks, analytics items, and API keys. Triggers: \"Application Insights\", \"ApplicationInsights\", \"App Insights\", \"APM\", \"application monitoring\", \"web tests\", \"availability tests\", \"workbooks\".\n",
+    "lang": "dotnet",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-applicationinsights-dotnet",
+    "package": "Azure.ResourceManager.ApplicationInsights"
+  },
+  {
+    "name": "azure-mgmt-arizeaiobservabilityeval-dotnet",
+    "description": "Azure Resource Manager SDK for Arize AI Observability and Evaluation (.NET). Use when managing Arize AI organizations \non Azure via Azure Marketplace, creating/updating/deleting Arize resources, or integrating Arize ML observability \ninto .NET applications. Triggers: \"Arize AI\", \"ML observability\", \"ArizeAIObservabilityEval\", \"Arize organization\".\n",
+    "lang": "dotnet",
+    "category": "partner",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-arizeaiobservabilityeval-dotnet",
+    "package": "Azure.ResourceManager.ArizeAIObservabilityEval"
+  },
+  {
+    "name": "azure-mgmt-botservice-dotnet",
+    "description": "Azure Resource Manager SDK for Bot Service in .NET. Management plane operations for creating and managing Azure Bot resources, channels (Teams, DirectLine, Slack), and connection settings. Triggers: \"Bot Service\", \"BotResource\", \"Azure Bot\", \"DirectLine channel\", \"Teams channel\", \"bot management .NET\", \"create bot\".\n",
+    "lang": "dotnet",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-botservice-dotnet",
+    "package": "Azure.ResourceManager.BotService"
+  },
+  {
+    "name": "azure-mgmt-botservice-py",
+    "description": "Azure Bot Service Management SDK for Python. Use for creating, managing, and configuring Azure Bot Service resources.\nTriggers: \"azure-mgmt-botservice\", \"AzureBotService\", \"bot management\", \"conversational AI\", \"bot channels\".\n",
+    "lang": "py",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-mgmt-botservice-py"
+  },
+  {
+    "name": "azure-mgmt-fabric-dotnet",
+    "description": "Azure Resource Manager SDK for Fabric in .NET. Use for MANAGEMENT PLANE operations: provisioning, scaling, suspending/resuming Microsoft Fabric capacities, checking name availability, and listing SKUs via Azure Resource Manager. Triggers: \"Fabric capacity\", \"create capacity\", \"suspend capacity\", \"resume capacity\", \"Fabric SKU\", \"provision Fabric\", \"ARM Fabric\", \"FabricCapacityResource\".\n",
+    "lang": "dotnet",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-fabric-dotnet",
+    "package": "Azure.ResourceManager.Fabric"
+  },
+  {
+    "name": "azure-mgmt-fabric-py",
+    "description": "Azure Fabric Management SDK for Python. Use for managing Microsoft Fabric capacities and resources.\nTriggers: \"azure-mgmt-fabric\", \"FabricMgmtClient\", \"Fabric capacity\", \"Microsoft Fabric\", \"Power BI capacity\".\n",
+    "lang": "py",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-mgmt-fabric-py"
+  },
+  {
+    "name": "azure-mgmt-mongodbatlas-dotnet",
+    "description": "Manage MongoDB Atlas Organizations as Azure ARM resources using Azure.ResourceManager.MongoDBAtlas SDK. Use when creating, updating, listing, or deleting MongoDB Atlas organizations through Azure Marketplace integration. This SDK manages the Azure-side organization resource, not Atlas clusters/databases directly.",
+    "lang": "dotnet",
+    "category": "partner",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-mongodbatlas-dotnet",
+    "package": "Azure.ResourceManager.MongoDBAtlas"
+  },
+  {
+    "name": "azure-mgmt-weightsandbiases-dotnet",
+    "description": "Azure Weights & Biases SDK for .NET. ML experiment tracking and model management via Azure Marketplace. Use for creating W&B instances, managing SSO, marketplace integration, and ML observability. Triggers: \"Weights and Biases\", \"W&B\", \"WeightsAndBiases\", \"ML experiment tracking\", \"model registry\", \"experiment management\", \"wandb\".\n",
+    "lang": "dotnet",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-mgmt-weightsandbiases-dotnet",
+    "package": "Azure.ResourceManager.WeightsAndBiases"
+  },
+  {
+    "name": "azure-microsoft-playwright-testing-ts",
+    "description": "Run Playwright tests at scale using Azure Playwright Workspaces (formerly Microsoft Playwright Testing). Use when scaling browser tests across cloud-hosted browsers, integrating with CI/CD pipelines, or publishing test results to the Azure portal.",
+    "lang": "ts",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-microsoft-playwright-testing-ts",
+    "package": "@azure/playwright"
+  },
+  {
+    "name": "azure-monitor-ingestion-java",
+    "description": "Azure Monitor Ingestion SDK for Java. Send custom logs to Azure Monitor via Data Collection Rules (DCR) and Data Collection Endpoints (DCE).\nTriggers: \"LogsIngestionClient java\", \"azure monitor ingestion java\", \"custom logs java\", \"DCR java\", \"data collection rule java\".\n",
+    "lang": "java",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-monitor-ingestion-java",
+    "package": "com.azure:azure-monitor-ingestion"
+  },
+  {
+    "name": "azure-monitor-ingestion-py",
+    "description": "Azure Monitor Ingestion SDK for Python. Use for sending custom logs to Log Analytics workspace via Logs Ingestion API.\nTriggers: \"azure-monitor-ingestion\", \"LogsIngestionClient\", \"custom logs\", \"DCR\", \"data collection rule\", \"Log Analytics\".\n",
+    "lang": "py",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-monitor-ingestion-py",
+    "package": "azure-monitor-ingestion"
+  },
+  {
+    "name": "azure-monitor-opentelemetry-exporter-java",
+    "description": "Azure Monitor OpenTelemetry Exporter for Java. Export OpenTelemetry traces, metrics, and logs to Azure Monitor/Application Insights.\nTriggers: \"AzureMonitorExporter java\", \"opentelemetry azure java\", \"application insights java otel\", \"azure monitor tracing java\".\nNote: This package is DEPRECATED. Migrate to azure-monitor-opentelemetry-autoconfigure.\n",
+    "lang": "java",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-monitor-opentelemetry-exporter-java",
+    "package": "com.azure:azure-monitor-opentelemetry-exporter"
+  },
+  {
+    "name": "azure-monitor-opentelemetry-exporter-py",
+    "description": "Azure Monitor OpenTelemetry Exporter for Python. Use for low-level OpenTelemetry export to Application Insights.\nTriggers: \"azure-monitor-opentelemetry-exporter\", \"AzureMonitorTraceExporter\", \"AzureMonitorMetricExporter\", \"AzureMonitorLogExporter\".\n",
+    "lang": "py",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-monitor-opentelemetry-exporter-py",
+    "package": "azure-monitor-opentelemetry-exporter"
+  },
+  {
+    "name": "azure-monitor-opentelemetry-py",
+    "description": "Azure Monitor OpenTelemetry Distro for Python. Use for one-line Application Insights setup with auto-instrumentation.\nTriggers: \"azure-monitor-opentelemetry\", \"configure_azure_monitor\", \"Application Insights\", \"OpenTelemetry distro\", \"auto-instrumentation\".\n",
+    "lang": "py",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-monitor-opentelemetry-py",
+    "package": "azure-monitor-opentelemetry"
+  },
+  {
+    "name": "azure-monitor-opentelemetry-ts",
+    "description": "Instrument applications with Azure Monitor and OpenTelemetry for JavaScript (@azure/monitor-opentelemetry). Use when adding distributed tracing, metrics, and logs to Node.js applications with Application Insights.",
+    "lang": "ts",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-monitor-opentelemetry-ts",
+    "package": "@azure/monitor-opentelemetry"
+  },
+  {
+    "name": "azure-monitor-query-java",
+    "description": "Azure Monitor Query SDK for Java. Execute Kusto queries against Log Analytics workspaces and query metrics from Azure resources.\nTriggers: \"LogsQueryClient java\", \"MetricsQueryClient java\", \"kusto query java\", \"log analytics java\", \"azure monitor query java\".\nNote: This package is deprecated. Migrate to azure-monitor-query-logs and azure-monitor-query-metrics.\n",
+    "lang": "java",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-monitor-query-java",
+    "package": "com.azure:azure-monitor-query"
+  },
+  {
+    "name": "azure-monitor-query-py",
+    "description": "Azure Monitor Query SDK for Python. Use for querying Log Analytics workspaces and Azure Monitor metrics.\nTriggers: \"azure-monitor-query\", \"LogsQueryClient\", \"MetricsQueryClient\", \"Log Analytics\", \"Kusto queries\", \"Azure metrics\".\n",
+    "lang": "py",
+    "category": "monitoring",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-monitor-query-py",
+    "package": "azure-monitor-query"
+  },
+  {
+    "name": "azure-postgres-ts",
+    "description": "Connect to Azure Database for PostgreSQL Flexible Server from Node.js/TypeScript using the pg (node-postgres) package. Use for PostgreSQL queries, connection pooling, transactions, and Microsoft Entra ID (passwordless) authentication. Triggers: \"PostgreSQL\", \"postgres\", \"pg client\", \"node-postgres\", \"Azure PostgreSQL connection\", \"PostgreSQL TypeScript\", \"pg Pool\", \"passwordless postgres\".\n",
+    "lang": "ts",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-postgres-ts",
+    "package": "pg"
+  },
+  {
+    "name": "azure-resource-manager-cosmosdb-dotnet",
+    "description": "Azure Resource Manager SDK for Cosmos DB in .NET. Use for MANAGEMENT PLANE operations: creating/managing Cosmos DB accounts, databases, containers, throughput settings, and RBAC via Azure Resource Manager. NOT for data plane operations (CRUD on documents) - use Microsoft.Azure.Cosmos for that. Triggers: \"Cosmos DB account\", \"create Cosmos account\", \"manage Cosmos resources\", \"ARM Cosmos\", \"CosmosDBAccountResource\", \"provision Cosmos DB\".\n",
+    "lang": "dotnet",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-cosmosdb-dotnet",
+    "package": "Azure.ResourceManager.CosmosDB"
+  },
+  {
+    "name": "azure-resource-manager-durabletask-dotnet",
+    "description": "Azure Resource Manager SDK for Durable Task Scheduler in .NET. Use for MANAGEMENT PLANE operations: creating/managing Durable Task Schedulers, Task Hubs, and retention policies via Azure Resource Manager. Triggers: \"Durable Task Scheduler\", \"create scheduler\", \"task hub\", \"DurableTaskSchedulerResource\", \"provision Durable Task\", \"orchestration scheduler\".\n",
+    "lang": "dotnet",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-durabletask-dotnet",
+    "package": "Azure.ResourceManager.DurableTask"
+  },
+  {
+    "name": "azure-resource-manager-mysql-dotnet",
+    "description": "Azure MySQL Flexible Server SDK for .NET. Database management for MySQL Flexible Server deployments. Use for creating servers, databases, firewall rules, configurations, backups, and high availability. Triggers: \"MySQL\", \"MySqlFlexibleServer\", \"MySQL Flexible Server\", \"Azure Database for MySQL\", \"MySQL database management\", \"MySQL firewall\", \"MySQL backup\".\n",
+    "lang": "dotnet",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-mysql-dotnet",
+    "package": "Azure.ResourceManager.MySql"
+  },
+  {
+    "name": "azure-resource-manager-playwright-dotnet",
+    "description": "Azure Resource Manager SDK for Microsoft Playwright Testing in .NET. Use for MANAGEMENT PLANE operations: creating/managing Playwright Testing workspaces, checking name availability, and managing workspace quotas via Azure Resource Manager. NOT for running Playwright tests - use Azure.Developer.MicrosoftPlaywrightTesting.NUnit for that. Triggers: \"Playwright workspace\", \"create Playwright Testing workspace\", \"manage Playwright resources\", \"ARM Playwright\", \"PlaywrightWorkspaceResource\", \"provision Playwright Testing\".\n",
+    "lang": "dotnet",
+    "category": "compute",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-playwright-dotnet",
+    "package": "Azure.ResourceManager.Playwright"
+  },
+  {
+    "name": "azure-resource-manager-postgresql-dotnet",
+    "description": "Azure PostgreSQL Flexible Server SDK for .NET. Database management for PostgreSQL Flexible Server deployments. Use for creating servers, databases, firewall rules, configurations, backups, and high availability. Triggers: \"PostgreSQL\", \"PostgreSqlFlexibleServer\", \"PostgreSQL Flexible Server\", \"Azure Database for PostgreSQL\", \"PostgreSQL database management\", \"PostgreSQL firewall\", \"PostgreSQL backup\", \"Postgres\".\n",
+    "lang": "dotnet",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-postgresql-dotnet",
+    "package": "Azure.ResourceManager.PostgreSql"
+  },
+  {
+    "name": "azure-resource-manager-redis-dotnet",
+    "description": "Azure Resource Manager SDK for Redis in .NET. Use for MANAGEMENT PLANE operations: creating/managing Azure Cache for Redis instances, firewall rules, access keys, patch schedules, linked servers (geo-replication), and private endpoints via Azure Resource Manager. NOT for data plane operations (get/set keys, pub/sub) - use StackExchange.Redis for that. Triggers: \"Redis cache\", \"create Redis\", \"manage Redis\", \"ARM Redis\", \"RedisResource\", \"provision Redis\", \"Azure Cache for Redis\".\n",
+    "lang": "dotnet",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-redis-dotnet",
+    "package": "Azure.ResourceManager.Redis"
+  },
+  {
+    "name": "azure-resource-manager-sql-dotnet",
+    "description": "Azure Resource Manager SDK for Azure SQL in .NET. Use for MANAGEMENT PLANE operations: creating/managing SQL servers, databases, elastic pools, firewall rules, and failover groups via Azure Resource Manager. NOT for data plane operations (executing queries) - use Microsoft.Data.SqlClient for that. Triggers: \"SQL server\", \"create SQL database\", \"manage SQL resources\", \"ARM SQL\", \"SqlServerResource\", \"provision Azure SQL\", \"elastic pool\", \"firewall rule\".\n",
+    "lang": "dotnet",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-resource-manager-sql-dotnet",
+    "package": "Azure.ResourceManager.Sql"
+  },
+  {
+    "name": "azure-search-documents-dotnet",
+    "description": "Azure AI Search SDK for .NET (Azure.Search.Documents). Use for building search applications with full-text, vector, semantic, and hybrid search. Covers SearchClient (queries, document CRUD), SearchIndexClient (index management), and SearchIndexerClient (indexers, skillsets). Triggers: \"Azure Search .NET\", \"SearchClient\", \"SearchIndexClient\", \"vector search C#\", \"semantic search .NET\", \"hybrid search\", \"Azure.Search.Documents\".\n",
+    "lang": "dotnet",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-search-documents-dotnet",
+    "package": "Azure.Search.Documents"
+  },
+  {
+    "name": "azure-search-documents-py",
+    "description": "Azure AI Search SDK for Python. Use for vector search, hybrid search, semantic ranking, indexing, and skillsets.\nTriggers: \"azure-search-documents\", \"SearchClient\", \"SearchIndexClient\", \"vector search\", \"hybrid search\", \"semantic search\".\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-search-documents-py",
+    "package": "azure-search-documents"
+  },
+  {
+    "name": "azure-search-documents-ts",
+    "description": "Build search applications using Azure AI Search SDK for JavaScript (@azure/search-documents). Use when creating/managing indexes, implementing vector/hybrid search, semantic ranking, or building agentic retrieval with knowledge bases.",
+    "lang": "ts",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-search-documents-ts",
+    "package": "@azure/search-documents"
+  },
+  {
+    "name": "azure-security-keyvault-keys-dotnet",
+    "description": "Azure Key Vault Keys SDK for .NET. Client library for managing cryptographic keys in Azure Key Vault and Managed HSM. Use for key creation, rotation, encryption, decryption, signing, and verification. Triggers: \"Key Vault keys\", \"KeyClient\", \"CryptographyClient\", \"RSA key\", \"EC key\", \"encrypt decrypt .NET\", \"key rotation\", \"HSM\".\n",
+    "lang": "dotnet",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-security-keyvault-keys-dotnet",
+    "package": "Azure.Security.KeyVault.Keys"
+  },
+  {
+    "name": "azure-security-keyvault-keys-java",
+    "description": "Azure Key Vault Keys Java SDK for cryptographic key management. Use when creating, managing, or using RSA/EC keys, performing encrypt/decrypt/sign/verify operations, or working with HSM-backed keys.",
+    "lang": "java",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-security-keyvault-keys-java",
+    "package": "com.azure:azure-security-keyvault-keys"
+  },
+  {
+    "name": "azure-security-keyvault-secrets-java",
+    "description": "Azure Key Vault Secrets Java SDK for secret management. Use when storing, retrieving, or managing passwords, API keys, connection strings, or other sensitive configuration data.",
+    "lang": "java",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-security-keyvault-secrets-java",
+    "package": "com.azure:azure-security-keyvault-secrets"
+  },
+  {
+    "name": "azure-servicebus-dotnet",
+    "description": "Azure Service Bus SDK for .NET. Enterprise messaging with queues, topics, subscriptions, and sessions. Use for reliable message delivery, pub/sub patterns, dead letter handling, and background processing. Triggers: \"Service Bus\", \"ServiceBusClient\", \"ServiceBusSender\", \"ServiceBusReceiver\", \"ServiceBusProcessor\", \"message queue\", \"pub/sub .NET\", \"dead letter queue\".\n",
+    "lang": "dotnet",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/azure-servicebus-dotnet",
+    "package": "Azure.Messaging.ServiceBus"
+  },
+  {
+    "name": "azure-servicebus-py",
+    "description": "Azure Service Bus SDK for Python messaging. Use for queues, topics, subscriptions, and enterprise messaging patterns.\nTriggers: \"service bus\", \"ServiceBusClient\", \"queue\", \"topic\", \"subscription\", \"message broker\".\n",
+    "lang": "py",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-servicebus-py",
+    "package": "azure-servicebus"
+  },
+  {
+    "name": "azure-servicebus-ts",
+    "description": "Build messaging applications using Azure Service Bus SDK for JavaScript (@azure/service-bus). Use when implementing queues, topics/subscriptions, message sessions, dead-letter handling, or enterprise messaging patterns.",
+    "lang": "ts",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-servicebus-ts",
+    "package": "@azure/service-bus"
+  },
+  {
+    "name": "azure-speech-to-text-rest-py",
+    "description": "Azure Speech to Text REST API for short audio (Python). Use for simple speech recognition of audio files up to 60 seconds without the Speech SDK.\nTriggers: \"speech to text REST\", \"short audio transcription\", \"speech recognition REST API\", \"STT REST\", \"recognize speech REST\".\nDO NOT USE FOR: Long audio (>60 seconds), real-time streaming, batch transcription, custom speech models, speech translation. Use Speech SDK or Batch Transcription API instead.\n",
+    "lang": "py",
+    "category": "foundry",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-speech-to-text-rest-py"
+  },
+  {
+    "name": "azure-storage-blob-java",
+    "description": "Build blob storage applications with Azure Storage Blob SDK for Java. Use when uploading, downloading, or managing files in Azure Blob Storage, working with containers, or implementing streaming data operations.",
+    "lang": "java",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-java/skills/azure-storage-blob-java",
+    "package": "com.azure:azure-storage-blob"
+  },
+  {
+    "name": "azure-storage-blob-py",
+    "description": "Azure Blob Storage SDK for Python. Use for uploading, downloading, listing blobs, managing containers, and blob lifecycle.\nTriggers: \"blob storage\", \"BlobServiceClient\", \"ContainerClient\", \"BlobClient\", \"upload blob\", \"download blob\".\n",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-storage-blob-py",
+    "package": "azure-storage-blob"
+  },
+  {
+    "name": "azure-storage-blob-rust",
+    "description": "Azure Blob Storage SDK for Rust. Use for uploading, downloading, and managing blobs and containers.\nTriggers: \"blob storage rust\", \"BlobClient rust\", \"upload blob rust\", \"download blob rust\", \"container rust\".\n",
+    "lang": "rust",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-rust/skills/azure-storage-blob-rust",
+    "package": "azure_storage_blob"
+  },
+  {
+    "name": "azure-storage-blob-ts",
+    "description": "Azure Blob Storage JavaScript/TypeScript SDK (@azure/storage-blob) for blob operations. Use for uploading, downloading, listing, and managing blobs and containers. Supports block blobs, append blobs, page blobs, SAS tokens, and streaming. Triggers: \"blob storage\", \"@azure/storage-blob\", \"BlobServiceClient\", \"ContainerClient\", \"upload blob\", \"download blob\", \"SAS token\", \"block blob\".\n",
+    "lang": "ts",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-storage-blob-ts",
+    "package": "@azure/storage-blob"
+  },
+  {
+    "name": "azure-storage-file-datalake-py",
+    "description": "Azure Data Lake Storage Gen2 SDK for Python. Use for hierarchical file systems, big data analytics, and file/directory operations.\nTriggers: \"data lake\", \"DataLakeServiceClient\", \"FileSystemClient\", \"ADLS Gen2\", \"hierarchical namespace\".\n",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-storage-file-datalake-py",
+    "package": "azure-storage-file-datalake"
+  },
+  {
+    "name": "azure-storage-file-share-py",
+    "description": "Azure Storage File Share SDK for Python. Use for SMB file shares, directories, and file operations in the cloud.\nTriggers: \"azure-storage-file-share\", \"ShareServiceClient\", \"ShareClient\", \"file share\", \"SMB\".\n",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-storage-file-share-py"
+  },
+  {
+    "name": "azure-storage-file-share-ts",
+    "description": "Azure File Share JavaScript/TypeScript SDK (@azure/storage-file-share) for SMB file share operations. Use for creating shares, managing directories, uploading/downloading files, and handling file metadata. Supports Azure Files SMB protocol scenarios. Triggers: \"file share\", \"@azure/storage-file-share\", \"ShareServiceClient\", \"ShareClient\", \"SMB\", \"Azure Files\".\n",
+    "lang": "ts",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-storage-file-share-ts",
+    "package": "@azure/storage-file-share"
+  },
+  {
+    "name": "azure-storage-queue-py",
+    "description": "Azure Queue Storage SDK for Python. Use for reliable message queuing, task distribution, and asynchronous processing.\nTriggers: \"queue storage\", \"QueueServiceClient\", \"QueueClient\", \"message queue\", \"dequeue\".\n",
+    "lang": "py",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-python/skills/azure-storage-queue-py",
+    "package": "azure-storage-queue"
+  },
+  {
+    "name": "azure-storage-queue-ts",
+    "description": "Azure Queue Storage JavaScript/TypeScript SDK (@azure/storage-queue) for message queue operations. Use for sending, receiving, peeking, and deleting messages in queues. Supports visibility timeout, message encoding, and batch operations. Triggers: \"queue storage\", \"@azure/storage-queue\", \"QueueServiceClient\", \"QueueClient\", \"send message\", \"receive message\", \"dequeue\", \"visibility timeout\".\n",
+    "lang": "ts",
+    "category": "data",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-storage-queue-ts",
+    "package": "@azure/storage-queue"
+  },
+  {
+    "name": "azure-web-pubsub-ts",
+    "description": "Build real-time messaging applications using Azure Web PubSub SDKs for JavaScript (@azure/web-pubsub, @azure/web-pubsub-client). Use when implementing WebSocket-based real-time features, pub/sub messaging, group chat, or live notifications.",
+    "lang": "ts",
+    "category": "messaging",
+    "path": ".github/plugins/azure-sdk-typescript/skills/azure-web-pubsub-ts",
+    "package": "@azure/web-pubsub, @azure/web-pubsub-client"
+  },
+  {
+    "name": "copilot-sdk",
+    "description": "Build applications powered by GitHub Copilot using the Copilot SDK. Use when creating programmatic integrations with Copilot across Node.js/TypeScript, Python, Go, or .NET. Covers session management, custom tools, streaming, hooks, MCP servers, BYOK providers, session persistence, custom agents, skills, and deployment patterns. Requires GitHub Copilot CLI installed and a GitHub Copilot subscription (unless using BYOK).",
+    "lang": "core",
+    "category": "general",
+    "path": ".github/skills/copilot-sdk"
+  },
+  {
+    "name": "fastapi-router-py",
+    "description": "Create FastAPI routers with CRUD operations, authentication dependencies, and proper response models. Use when building REST API endpoints, creating new routes, implementing CRUD operations, or adding authenticated endpoints in FastAPI applications.",
+    "lang": "py",
+    "category": "general",
+    "path": ".github/plugins/azure-sdk-python/skills/fastapi-router-py"
+  },
+  {
+    "name": "frontend-ui-dark-ts",
+    "description": "Build dark-themed React applications using Tailwind CSS with custom theming, glassmorphism effects, and Framer Motion animations. Use when creating dashboards, admin panels, or data-rich interfaces with a refined dark aesthetic.",
+    "lang": "ts",
+    "category": "frontend",
+    "path": ".github/plugins/azure-sdk-typescript/skills/frontend-ui-dark-ts"
+  },
+  {
+    "name": "github-issue-creator",
+    "description": "Convert raw notes, error logs, voice dictation, or screenshots into crisp GitHub-flavored markdown issue reports. Use when the user pastes bug info, error messages, or informal descriptions and wants a structured GitHub issue. Supports images/GIFs for visual evidence.",
+    "lang": "core",
+    "category": "general",
+    "path": ".github/skills/github-issue-creator"
+  },
+  {
+    "name": "hosted-agents-v2-py",
+    "description": "Build hosted agents using Azure AI Projects SDK with ImageBasedHostedAgentDefinition.\nUse when creating container-based agents that run custom code in Azure AI Foundry.\nTriggers: \"ImageBasedHostedAgentDefinition\", \"hosted agent\", \"container agent\", \n\"create_version\", \"ProtocolVersionRecord\", \"AgentProtocol.RESPONSES\".\n",
+    "lang": "py",
+    "category": "general",
+    "path": ".github/plugins/azure-sdk-python/skills/hosted-agents-v2-py",
+    "package": "azure-ai-projects"
+  },
+  {
+    "name": "m365-agents-dotnet",
+    "description": "Microsoft 365 Agents SDK for .NET. Build multichannel agents for Teams/M365/Copilot Studio with ASP.NET Core hosting, AgentApplication routing, and MSAL-based auth. Triggers: \"Microsoft 365 Agents SDK\", \"Microsoft.Agents\", \"AddAgentApplicationOptions\", \"AgentApplication\", \"AddAgentAspNetAuthentication\", \"Copilot Studio client\", \"IAgentHttpAdapter\".\n",
+    "lang": "dotnet",
+    "category": "m365",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/m365-agents-dotnet",
+    "package": "Microsoft.Agents.Hosting.AspNetCore, Microsoft.Agents.Authentication.Msal, Microsoft.Agents.CopilotStudio.Client"
+  },
+  {
+    "name": "m365-agents-py",
+    "description": "Microsoft 365 Agents SDK for Python. Build multichannel agents for Teams/M365/Copilot Studio with aiohttp hosting, AgentApplication routing, streaming responses, and MSAL-based auth. Triggers: \"Microsoft 365 Agents SDK\", \"microsoft_agents\", \"AgentApplication\", \"start_agent_process\", \"TurnContext\", \"Copilot Studio client\", \"CloudAdapter\".\n",
+    "lang": "py",
+    "category": "m365",
+    "path": ".github/plugins/azure-sdk-python/skills/m365-agents-py",
+    "package": "microsoft-agents-hosting-core, microsoft-agents-hosting-aiohttp, microsoft-agents-activity, microsoft-agents-authentication-msal, microsoft-agents-copilotstudio-client"
+  },
+  {
+    "name": "m365-agents-ts",
+    "description": "Microsoft 365 Agents SDK for TypeScript/Node.js. Build multichannel agents for Teams/M365/Copilot Studio with AgentApplication routing, Express hosting, streaming responses, and Copilot Studio client integration. Triggers: \"Microsoft 365 Agents SDK\", \"@microsoft/agents-hosting\", \"AgentApplication\", \"startServer\", \"streamingResponse\", \"Copilot Studio client\", \"@microsoft/agents-copilotstudio-client\".\n",
+    "lang": "ts",
+    "category": "m365",
+    "path": ".github/plugins/azure-sdk-typescript/skills/m365-agents-ts",
+    "package": "@microsoft/agents-hosting, @microsoft/agents-hosting-express, @microsoft/agents-activity, @microsoft/agents-copilotstudio-client"
+  },
+  {
+    "name": "mcp-builder",
+    "description": "Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP), Node/TypeScript (MCP SDK), or C#/.NET (Microsoft MCP SDK).",
+    "lang": "core",
+    "category": "general",
+    "path": ".github/skills/mcp-builder"
+  },
+  {
+    "name": "microsoft-azure-webjobs-extensions-authentication-events-dotnet",
+    "description": "Microsoft Entra Authentication Events SDK for .NET. Azure Functions triggers for custom authentication extensions. Use for token enrichment, custom claims, attribute collection, and OTP customization in Entra ID. Triggers: \"Authentication Events\", \"WebJobsAuthenticationEventsTrigger\", \"OnTokenIssuanceStart\", \"OnAttributeCollectionStart\", \"custom claims\", \"token enrichment\", \"Entra custom extension\", \"authentication extension\".\n",
+    "lang": "dotnet",
+    "category": "entra",
+    "path": ".github/plugins/azure-sdk-dotnet/skills/microsoft-azure-webjobs-extensions-authentication-events-dotnet"
+  },
+  {
+    "name": "podcast-generation",
+    "description": "Generate AI-powered podcast-style audio narratives using Azure OpenAI's GPT Realtime Mini model via WebSocket. Use when building text-to-speech features, audio narrative generation, podcast creation from content, or integrating with Azure OpenAI Realtime API for real audio output. Covers full-stack implementation from React frontend to Python FastAPI backend with WebSocket streaming.",
+    "lang": "core",
+    "category": "general",
+    "path": ".github/skills/podcast-generation"
+  },
+  {
+    "name": "pydantic-models-py",
+    "description": "Create Pydantic models following the multi-model pattern with Base, Create, Update, Response, and InDB variants. Use when defining API request/response schemas, database models, or data validation in Python applications using Pydantic v2.",
+    "lang": "py",
+    "category": "general",
+    "path": ".github/plugins/azure-sdk-python/skills/pydantic-models-py"
+  },
+  {
+    "name": "react-flow-node-ts",
+    "description": "Create React Flow node components with TypeScript types, handles, and Zustand integration. Use when building custom nodes for React Flow canvas, creating visual workflow editors, or implementing node-based UI components.",
+    "lang": "ts",
+    "category": "frontend",
+    "path": ".github/plugins/azure-sdk-typescript/skills/react-flow-node-ts"
+  },
+  {
+    "name": "skill-creator",
+    "description": "Guide for creating effective skills for AI coding agents working with Azure SDKs and Microsoft Foundry services. Use when creating new skills or updating existing skills.",
+    "lang": "core",
+    "category": "general",
+    "path": ".github/skills/skill-creator"
+  },
+  {
+    "name": "zustand-store-ts",
+    "description": "Create Zustand stores with TypeScript, subscribeWithSelector middleware, and proper state/action separation. Use when building React state management, creating global stores, or implementing reactive state patterns with Zustand.",
+    "lang": "ts",
+    "category": "frontend",
+    "path": ".github/plugins/azure-sdk-typescript/skills/zustand-store-ts"
+  }
+]
