@@ -21,6 +21,7 @@ interface Skill {
   package?: string;
   lang: "py" | "dotnet" | "ts" | "java" | "rust" | "core";
   category: string;
+  path: string;
 }
 
 interface SkillFrontmatter {
@@ -92,59 +93,110 @@ function findSymlinkInfo(
   return null;
 }
 
+const PLUGIN_LANG_MAP: Record<string, Skill["lang"]> = {
+  "azure-sdk-python": "py",
+  "azure-sdk-dotnet": "dotnet",
+  "azure-sdk-typescript": "ts",
+  "azure-sdk-java": "java",
+  "azure-sdk-rust": "rust",
+};
+
+function extractSkillFromDir(
+  skillDir: string,
+  skillPath: string,
+  repoRelativePath: string,
+  lang: Skill["lang"],
+  category: string
+): Skill | null {
+  const skillMdPath = path.join(skillPath, "SKILL.md");
+  if (!fs.existsSync(skillMdPath)) return null;
+
+  try {
+    const rawContent = fs.readFileSync(skillMdPath, "utf-8");
+    const content = preprocessYamlFrontmatter(rawContent);
+    const { data } = matter(content);
+    const frontmatter = data as SkillFrontmatter;
+
+    if (!frontmatter.name) {
+      console.warn(`Skipping ${skillDir}: missing name in frontmatter`);
+      return null;
+    }
+
+    const skill: Skill = {
+      name: frontmatter.name,
+      description: frontmatter.description || frontmatter.name,
+      lang,
+      category,
+      path: repoRelativePath,
+    };
+
+    if (frontmatter.package) {
+      skill.package = frontmatter.package;
+    }
+
+    return skill;
+  } catch (err) {
+    console.warn(`Skipping ${skillDir}: ${(err as Error).message}`);
+    return null;
+  }
+}
+
 function extractSkills(): Skill[] {
   const projectRoot = path.resolve(import.meta.dirname, "../..");
+  const pluginsDir = path.join(projectRoot, ".github/plugins");
   const skillsSourceDir = path.join(projectRoot, ".github/skills");
   const skillsSymlinkDir = path.join(projectRoot, "skills");
 
   const skills: Skill[] = [];
-  const skillDirs = fs.readdirSync(skillsSourceDir);
+  const seen = new Set<string>();
 
-  for (const skillDir of skillDirs) {
-    const skillPath = path.join(skillsSourceDir, skillDir);
-    if (!fs.statSync(skillPath).isDirectory()) continue;
+  // 1. Scan plugin bundles: .github/plugins/azure-sdk-*/skills/
+  if (fs.existsSync(pluginsDir)) {
+    for (const pluginName of fs.readdirSync(pluginsDir)) {
+      const lang = PLUGIN_LANG_MAP[pluginName];
+      if (!lang) continue;
 
-    const skillMdPath = path.join(skillPath, "SKILL.md");
-    if (!fs.existsSync(skillMdPath)) continue;
+      const pluginSkillsDir = path.join(pluginsDir, pluginName, "skills");
+      if (!fs.existsSync(pluginSkillsDir)) continue;
 
-    try {
-      const rawContent = fs.readFileSync(skillMdPath, "utf-8");
-      const content = preprocessYamlFrontmatter(rawContent);
-      const { data } = matter(content);
-      const frontmatter = data as SkillFrontmatter;
+      for (const skillDir of fs.readdirSync(pluginSkillsDir)) {
+        const skillPath = path.join(pluginSkillsDir, skillDir);
+        if (!fs.statSync(skillPath).isDirectory()) continue;
 
-      if (!frontmatter.name) {
-        console.warn(`Skipping ${skillDir}: missing name in frontmatter`);
-        continue;
+        const repoRelativePath = `.github/plugins/${pluginName}/skills/${skillDir}`;
+
+        // Use symlink info from skills/ for category if available
+        const symlinkInfo = findSymlinkInfo(skillDir, skillsSymlinkDir);
+        const category = symlinkInfo?.category || "general";
+
+        const skill = extractSkillFromDir(skillDir, skillPath, repoRelativePath, lang, category);
+        if (skill) {
+          skills.push(skill);
+          seen.add(skillDir);
+        }
       }
+    }
+  }
+
+  // 2. Scan core skills still in .github/skills/ (real directories, not symlinks)
+  if (fs.existsSync(skillsSourceDir)) {
+    for (const skillDir of fs.readdirSync(skillsSourceDir)) {
+      if (seen.has(skillDir)) continue;
+
+      const skillPath = path.join(skillsSourceDir, skillDir);
+      if (!fs.statSync(skillPath).isDirectory()) continue;
+
+      const repoRelativePath = `.github/skills/${skillDir}`;
+      const lang = inferLangFromName(skillDir);
 
       const symlinkInfo = findSymlinkInfo(skillDir, skillsSymlinkDir);
+      const category = symlinkInfo?.category || "general";
 
-      let lang: Skill["lang"];
-      let category: string;
-
-      if (symlinkInfo) {
-        lang = symlinkInfo.lang;
-        category = symlinkInfo.category;
-      } else {
-        lang = inferLangFromName(skillDir);
-        category = "general";
+      const skill = extractSkillFromDir(skillDir, skillPath, repoRelativePath, lang, category);
+      if (skill) {
+        skills.push(skill);
+        seen.add(skillDir);
       }
-
-      const skill: Skill = {
-        name: frontmatter.name,
-        description: frontmatter.description || frontmatter.name,
-        lang,
-        category,
-      };
-
-      if (frontmatter.package) {
-        skill.package = frontmatter.package;
-      }
-
-      skills.push(skill);
-    } catch (err) {
-      console.warn(`Skipping ${skillDir}: ${(err as Error).message}`);
     }
   }
 

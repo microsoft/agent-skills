@@ -60,7 +60,7 @@ export function SkillDetailModal({ skill, onClose }: SkillDetailModalProps) {
   const langLabel = LANG_LABELS[skill.language] || skill.language;
 
   const githubUrl = `https://github.com/microsoft/skills/tree/main/${skill.path}`;
-  const acceptanceCriteriaUrl = `https://github.com/microsoft/skills/blob/main/.github/skills/${skill.name}/references/acceptance-criteria.md`;
+  const acceptanceCriteriaUrl = `https://github.com/microsoft/skills/blob/main/${skill.path}/references/acceptance-criteria.md`;
   const testScenariosUrl = `https://github.com/microsoft/skills/blob/main/tests/scenarios/${skill.name}/scenarios.yaml`;
   const testsFolderUrl = `https://github.com/microsoft/skills/tree/main/tests/scenarios/${skill.name}`;
 
