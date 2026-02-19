@@ -12,7 +12,7 @@
   "plugins": [
     {
       "name": "deep-wiki",
-      "source": "./.github/plugins/deep-wiki",
+      "source": "deep-wiki",
       "description": "AI-powered wiki generator for code repositories. Generates comprehensive, Mermaid-rich structured documentation with architecture diagrams, component analysis, and source citations.",
       "version": "1.0.0",
       "author": {
@@ -24,7 +24,6 @@
       "license": "MIT",
       "keywords": ["wiki", "documentation", "mermaid", "architecture", "code-analysis"],
       "category": "documentation",
-      "tags": ["deep-wiki", "diagrams", "citations", "codebase-understanding"],
       "commands": "commands/",
       "skills": "skills/",
       "agents": "agents/",
@@ -32,20 +31,24 @@
     },
     {
       "name": "azure-skills",
+      "source": "azure-skills",
       "description": "Microsoft Azure MCP integration for cloud resource management, deployments, and Azure services. Manage your Azure infrastructure, monitor applications, and deploy resources directly from Claude Code.",
-      "source": "./.github/plugins/azure-skills",
+      "version": "1.0.0",
       "author": {
         "name": "microsoft",
         "url": "https://www.microsoft.com"
       },
       "homepage": "https://github.com/microsoft/github-copilot-for-azure",
       "repository": "https://github.com/microsoft/github-copilot-for-azure",
-      "license": "MIT"
+      "license": "MIT",
+      "keywords": ["azure", "cloud", "infrastructure", "deployment", "microsoft", "devops"],
+      "category": "orchestration",
+      "skills": "skills/"
     },
     {
       "name": "azure-sdk-python",
+      "source": "azure-sdk-python",
       "description": "Azure SDK patterns and best practices for Python developers covering AI, storage, identity, monitoring, messaging, and management libraries.",
-      "source": "./.github/plugins/azure-sdk-python",
       "version": "1.0.0",
       "author": {
         "name": "microsoft",
@@ -60,8 +63,8 @@
     },
     {
       "name": "azure-sdk-dotnet",
+      "source": "azure-sdk-dotnet",
       "description": "Azure SDK patterns and best practices for .NET developers covering AI, resource management, identity, messaging, and Key Vault libraries.",
-      "source": "./.github/plugins/azure-sdk-dotnet",
       "version": "1.0.0",
       "author": {
         "name": "microsoft",
@@ -76,8 +79,8 @@
     },
     {
       "name": "azure-sdk-typescript",
+      "source": "azure-sdk-typescript",
       "description": "Azure SDK patterns and best practices for TypeScript/Node.js developers covering AI, storage, identity, monitoring, and messaging libraries.",
-      "source": "./.github/plugins/azure-sdk-typescript",
       "version": "1.0.0",
       "author": {
         "name": "microsoft",
@@ -92,8 +95,8 @@
     },
     {
       "name": "azure-sdk-java",
+      "source": "azure-sdk-java",
       "description": "Azure SDK patterns and best practices for Java developers covering AI, communication, storage, identity, monitoring, and management libraries.",
-      "source": "./.github/plugins/azure-sdk-java",
       "version": "1.0.0",
       "author": {
         "name": "microsoft",
@@ -108,8 +111,8 @@
     },
     {
       "name": "azure-sdk-rust",
+      "source": "azure-sdk-rust",
       "description": "Azure SDK patterns and best practices for Rust developers covering identity, Key Vault, storage, Cosmos DB, and Event Hubs.",
-      "source": "./.github/plugins/azure-sdk-rust",
       "version": "1.0.0",
       "author": {
         "name": "microsoft",
