@@ -7,12 +7,12 @@
   "metadata": {
     "description": "Skills, agents, and plugins for AI coding agents working with Azure SDKs and Microsoft AI Foundry",
     "version": "1.0.0",
-    "pluginRoot": ".github/plugins"
+    "pluginRoot": "./.github/plugins"
   },
   "plugins": [
     {
       "name": "deep-wiki",
-      "source": "deep-wiki",
+      "source": "./deep-wiki",
       "description": "AI-powered wiki generator for code repositories. Generates comprehensive, Mermaid-rich structured documentation with architecture diagrams, component analysis, and source citations.",
       "version": "1.0.0",
       "author": {
@@ -31,7 +31,7 @@
     },
     {
       "name": "azure-skills",
-      "source": "azure-skills",
+      "source": "./azure-skills",
       "description": "Microsoft Azure MCP integration for cloud resource management, deployments, and Azure services. Manage your Azure infrastructure, monitor applications, and deploy resources directly from Claude Code.",
       "version": "1.0.0",
       "author": {
@@ -47,7 +47,7 @@
     },
     {
       "name": "azure-sdk-python",
-      "source": "azure-sdk-python",
+      "source": "./azure-sdk-python",
       "description": "Azure SDK patterns and best practices for Python developers covering AI, storage, identity, monitoring, messaging, and management libraries.",
       "version": "1.0.0",
       "author": {
@@ -63,7 +63,7 @@
     },
     {
       "name": "azure-sdk-dotnet",
-      "source": "azure-sdk-dotnet",
+      "source": "./azure-sdk-dotnet",
       "description": "Azure SDK patterns and best practices for .NET developers covering AI, resource management, identity, messaging, and Key Vault libraries.",
       "version": "1.0.0",
       "author": {
@@ -79,7 +79,7 @@
     },
     {
       "name": "azure-sdk-typescript",
-      "source": "azure-sdk-typescript",
+      "source": "./azure-sdk-typescript",
       "description": "Azure SDK patterns and best practices for TypeScript/Node.js developers covering AI, storage, identity, monitoring, and messaging libraries.",
       "version": "1.0.0",
       "author": {
@@ -95,7 +95,7 @@
     },
     {
       "name": "azure-sdk-java",
-      "source": "azure-sdk-java",
+      "source": "./azure-sdk-java",
       "description": "Azure SDK patterns and best practices for Java developers covering AI, communication, storage, identity, monitoring, and management libraries.",
       "version": "1.0.0",
       "author": {
@@ -111,7 +111,7 @@
     },
     {
       "name": "azure-sdk-rust",
-      "source": "azure-sdk-rust",
+      "source": "./azure-sdk-rust",
       "description": "Azure SDK patterns and best practices for Rust developers covering identity, Key Vault, storage, Cosmos DB, and Event Hubs.",
       "version": "1.0.0",
       "author": {
