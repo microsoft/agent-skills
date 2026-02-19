@@ -1,7 +1,7 @@
 {
   "projectTitle": "Agent Skills",
-  "description": "129 skills for AI coding agents working with Azure SDKs and Microsoft AI Foundry. Python, .NET, TypeScript, Java patterns.",
-  "folders": [".github/skills", ".github/prompts", ".github/agents", ".github/docs", "output"],
+  "description": "130 skills for AI coding agents working with Azure SDKs and Microsoft AI Foundry. Python, .NET, TypeScript, Java patterns.",
+  "folders": [".github/skills", ".github/plugins", ".github/prompts", ".github/agents", ".github/docs", "output"],
   "excludeFolders": ["skills", ".claude", ".opencode", "node_modules"],
   "excludeFiles": ["SECURITY.md", "blog.wordpress.xml", "AGENTS.md", "README.md"],
   "rules": [

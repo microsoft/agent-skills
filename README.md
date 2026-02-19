@@ -12,7 +12,7 @@ Skills, custom agents, AGENTS.md templates, and MCP configurations for AI coding
 
 > **Blog post:** [Context-Driven Development: Agent Skills for Microsoft Foundry and Azure](https://devblogs.microsoft.com/all-things-azure/context-driven-development-agent-skills-for-microsoft-foundry-and-azure/)
 
-> **🔍 Skill Explorer:** [Browse all 131 skills with 1-click install](https://microsoft.github.io/skills/)
+> **🔍 Skill Explorer:** [Browse all 130 skills with 1-click install](https://microsoft.github.io/skills/)
 
 ## Quick Start
 
@@ -70,7 +70,7 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 ## Skill Catalog
 
-> 131 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
+> 130 skills in `.github/skills/` — flat structure with language suffixes for automatic discovery
 
 | Language | Count | Suffix | 
 |----------|-------|--------|
@@ -89,7 +89,6 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 
 | Skill | Description |
 |-------|-------------|
-| [azd-deployment](.github/skills/azd-deployment/) | Deploy to Azure Container Apps with Azure Developer CLI (azd). Bicep infrastructure, remote builds, multi-service deployments. |
 | [copilot-sdk](.github/skills/copilot-sdk/) | Build applications powered by GitHub Copilot using the Copilot SDK. Session management, custom tools, streaming, hooks, MCP servers, BYOK. |
 | [github-issue-creator](.github/skills/github-issue-creator/) | Convert raw notes, error logs, or screenshots into structured GitHub issues. |
 | [mcp-builder](.github/skills/mcp-builder/) | Build MCP servers for LLM tool integration. Python (FastMCP), Node/TypeScript, or C#/.NET. |
@@ -507,9 +506,9 @@ Coding agents like [Copilot CLI](https://github.com/features/copilot/cli) are po
 AGENTS.md                # Agent configuration template
 
 .github/
-├── skills/              # All 132 skills (flat structure)
-├── plugins/             # Installable plugin packages
-│   └── deep-wiki/       # AI-powered wiki generator
+├── skills/              # Backward-compat symlinks to plugin skills
+├── plugins/             # Language-based plugin bundles (azure-sdk-python, etc.)
+│   └── azure-sdk-*/     # Each bundle has skills/, commands/, agents/
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions
 ├── scripts/             # Automation scripts (doc scraping)

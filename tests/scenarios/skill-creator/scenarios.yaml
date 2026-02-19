@@ -209,13 +209,13 @@ scenarios:
   # Cross-Language Skill
   - name: cross_language_skill
     prompt: |
-      Create SKILL.md frontmatter and introduction for the azd-deployment skill.
+      Create SKILL.md frontmatter and introduction for the mcp-builder skill.
       This is a cross-language skill, so it should NOT have a language suffix.
-      Include azure.yaml, Bicep, and Container Apps focus areas.
+      Include MCP server creation for Python, Node.js, and C#.
     expected_patterns:
-      - "name: azd-deployment"
-      - "azure.yaml|Bicep|Container Apps"
-      - "azd|Azure Developer CLI"
+      - "name: mcp-builder"
+      - "MCP|Model Context Protocol"
+      - "Python|Node|C#"
     forbidden_patterns:
       - "name.*-py$"
       - "name.*-dotnet$"
@@ -225,26 +225,25 @@ scenarios:
       - naming
     mock_response: |
       ---
-      name: azd-deployment
+      name: mcp-builder
       description: |
-        Deploy containerized applications to Azure Container Apps using Azure Developer CLI (azd).
-        Use when setting up azd projects, writing azure.yaml configuration, creating Bicep
-        infrastructure, or troubleshooting azd up failures.
-        Triggers: "azd", "azure.yaml", "container apps deployment", "bicep infrastructure".
+        Build Model Context Protocol (MCP) servers in Python, Node.js, or C#.
+        Use when creating custom MCP tool servers, integrating with AI agents,
+        or extending agent capabilities with external tools.
+        Triggers: "MCP server", "Model Context Protocol", "custom tools", "tool server".
       ---
 
-      # Azure Developer CLI (azd) Deployment
+      # MCP Server Builder
 
-      Deploy containerized frontend + backend applications to Azure Container Apps with
-      remote builds, managed identity, and idempotent infrastructure.
+      Build custom MCP servers that extend AI agent capabilities with
+      external tools across Python, Node.js, and C#.
 
       ## Quick Start
 
       ```bash
-      azd auth login
-      azd init
-      azd env new dev
-      azd up
+      npx @anthropic-ai/create-mcp-server my-server
+      cd my-server
+      npm install
       ```
 
   # Skill with References

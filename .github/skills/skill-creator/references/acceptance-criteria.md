@@ -149,7 +149,7 @@ description: Azure Search SDK for Python.
 | .NET | `azure-ai-agents-dotnet`, `azure-openai-dotnet` |
 | TypeScript | `azure-ai-agents-ts`, `react-flow-node-ts` |
 | Java | `azure-ai-agents-java`, `azure-cosmos-java` |
-| Cross-language | `azd-deployment`, `mcp-builder`, `skill-creator` |
+| Cross-language | `mcp-builder`, `skill-creator`, `copilot-sdk` |
 
 ### 3.2 ❌ INCORRECT: Wrong Naming Patterns
 

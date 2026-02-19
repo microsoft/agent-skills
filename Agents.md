@@ -159,11 +159,11 @@ npx skills add microsoft/skills
 
 ### Skill Catalog
 
-> Location: `.github/skills/` • 125 skills • See [README.md#skill-catalog](README.md#skill-catalog)
+> Location: `.github/skills/` • 124 skills • See [README.md#skill-catalog](README.md#skill-catalog)
 
 | Language | Skills | Suffix | Examples |
 |----------|--------|--------|----------|
-| **Core** | 5 | — | `mcp-builder`, `skill-creator`, `azd-deployment` |
+| **Core** | 4 | — | `mcp-builder`, `skill-creator`, `copilot-sdk` |
 | **Python** | 41 | `-py` | `azure-ai-projects-py`, `azure-cosmos-py`, `azure-ai-ml-py` |
 | **.NET** | 29 | `-dotnet` | `azure-ai-projects-dotnet`, `azure-resource-manager-cosmosdb-dotnet`, `azure-security-keyvault-keys-dotnet` |
 | **TypeScript** | 24 | `-ts` | `azure-ai-projects-ts`, `azure-storage-blob-ts`, `azure-servicebus-ts` |

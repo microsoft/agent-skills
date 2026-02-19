@@ -70,7 +70,7 @@ export class AcceptanceCriteriaLoader {
     const entries = readdirSync(this.skillsDir, { withFileTypes: true });
 
     for (const entry of entries) {
-      if (entry.isDirectory()) {
+      if (entry.isDirectory() || entry.isSymbolicLink()) {
         const criteriaPath = join(
           this.skillsDir,
           entry.name,

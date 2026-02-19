@@ -145,6 +145,6 @@ Skills use language suffixes for automatic categorization:
 | `-dotnet` | .NET/C# | `azure-ai-inference-dotnet` |
 | `-ts` | TypeScript | `azure-ai-agents-ts` |
 | `-java` | Java | `azure-cosmos-java` |
-| (none) | Cross-language | `mcp-builder`, `azd-deployment` |
+| (none) | Cross-language | `mcp-builder`, `skill-creator` |
 
 This allows agents to filter skills by the project's technology stack.

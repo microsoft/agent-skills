@@ -1019,7 +1019,6 @@ azd down      # Tear down resources
 
 This project was scaffolded using these agent skills:
 - `frontend-ui-dark-ts` - Dark theme UI with Tailwind CSS + Framer Motion
-- `azd-deployment` - Azure Developer CLI patterns
 - `fastapi-router-py` - FastAPI router patterns
 - `pydantic-models-py` - Pydantic model patterns
 \`\`\`

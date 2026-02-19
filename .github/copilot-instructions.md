@@ -73,8 +73,10 @@ Apply these principles to every task.
 AGENTS.md                # Agent configuration template
 
 .github/
-├── skills/              # All 132 skills (flat structure with language suffixes)
+├── skills/              # Backward-compat symlinks to plugin skills
 │   └── */SKILL.md       # Each skill has YAML frontmatter + markdown body
+├── plugins/             # Language-based plugin bundles (azure-sdk-python, etc.)
+│   └── azure-sdk-*/     # Each bundle has skills/, commands/, agents/
 ├── prompts/             # Reusable prompt templates
 ├── agents/              # Agent persona definitions (backend, frontend, infrastructure, planner, presenter)
 ├── scripts/             # Automation scripts (doc scraping)
@@ -108,7 +110,7 @@ Skills use language suffixes for discoverability:
 
 | Language | Suffix | Examples |
 |----------|--------|----------|
-| **Core** | — | `mcp-builder`, `skill-creator`, `azd-deployment` |
+| **Core** | — | `mcp-builder`, `skill-creator`, `copilot-sdk` |
 | **Python** | `-py` | `azure-ai-inference-py`, `azure-cosmos-db-py`, `azure-ai-projects-py` |
 | **.NET** | `-dotnet` | `azure-ai-inference-dotnet`, `azure-resource-manager-cosmosdb-dotnet` |
 | **TypeScript** | `-ts` | `azure-ai-inference-ts`, `azure-ai-agents-ts`, `frontend-ui-dark-ts` |
@@ -125,7 +127,6 @@ Skills use language suffixes for discoverability:
 | `azure-ai-projects-py` | High-level Foundry project client, versioned agents, evals |
 | `frontend-ui-dark-ts` | Dark theme UI patterns (Vite + React + Tailwind + Framer Motion) |
 | `agent-framework-azure-ai-py` | Agent Framework SDK for persistent Azure agents |
-| `azd-deployment` | Azure Developer CLI deployment to Container Apps with Bicep |
 | `mcp-builder` | Building MCP servers (Python/Node/C#) |
 | `azure-cosmos-db-py` | Cosmos DB NoSQL with Python/FastAPI |
 | `fastapi-router-py` | FastAPI routers with CRUD, auth, response models |
@@ -136,7 +137,7 @@ Skills use language suffixes for discoverability:
 | `skill-creator` | Guide for creating new skills |
 | `github-issue-creator` | GitHub issue creation patterns |
 
-📖 **See [README.md#skill-catalog](../README.md#skill-catalog) for all 133 skills**
+📖 **See [README.md#skill-catalog](../README.md#skill-catalog) for all 130 skills**
 
 ### Skill Selection
 
