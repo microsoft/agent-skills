@@ -61,7 +61,7 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/observability?view=foundry"
       },
       {
-        "title": "Rate limits, region and virtual network support",
+        "title": "Rate limits, region support, and enterprise features",
         "href": "concepts/evaluation-regions-limits-virtual-network",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-regions-limits-virtual-network?view=foundry"
       },
@@ -236,6 +236,11 @@
         "title": "Agent 365",
         "href": "agents/how-to/agent-365",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/agent-365?view=foundry"
+      },
+      {
+        "title": "Invoke your Agent Application using the Responses API protocol",
+        "href": "agents/how-to/publish-responses",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/publish-responses?view=foundry"
       },
       {
         "title": "Service monitoring",
@@ -1383,6 +1388,6 @@
       }
     ]
   },
-  "total_pages": 269,
-  "generated_at": "2026-02-18T03:56:45Z"
+  "total_pages": 270,
+  "generated_at": "2026-02-20T03:54:49Z"
 }
