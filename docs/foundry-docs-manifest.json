@@ -61,7 +61,7 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/observability?view=foundry"
       },
       {
-        "title": "Rate limits, region and virtual network support",
+        "title": "Rate limits, region support, and enterprise features",
         "href": "concepts/evaluation-regions-limits-virtual-network",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-regions-limits-virtual-network?view=foundry"
       },
@@ -236,6 +236,11 @@
         "title": "Agent 365",
         "href": "agents/how-to/agent-365",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/agent-365?view=foundry"
+      },
+      {
+        "title": "Invoke your Agent Application using the Responses API protocol",
+        "href": "agents/how-to/publish-responses",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/publish-responses?view=foundry"
       },
       {
         "title": "Service monitoring",
@@ -528,6 +533,11 @@
         "title": "Realtime API via SIP",
         "href": "openai/how-to/realtime-audio-sip",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-sip?view=foundry"
+      },
+      {
+        "title": "Realtime API migration from Preview to GA",
+        "href": "openai/how-to/realtime-audio-preview-api-migration-guide",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-preview-api-migration-guide?view=foundry"
       },
       {
         "title": "Speech to text with Whisper",
@@ -1088,6 +1098,11 @@
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/sdk-overview?view=foundry"
       },
       {
+        "title": "Integrate with your applications",
+        "href": "how-to/integrate-with-other-apps",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/integrate-with-other-apps?view=foundry"
+      },
+      {
         "title": "Create resources using Bicep template",
         "href": "how-to/create-resource-template",
         "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/create-resource-template?view=foundry"
@@ -1251,11 +1266,6 @@
         "url": "https://learn.microsoft.com/python/api/overview/azure/ai-projects-readme?view=azure-python-preview&preserve-view=true"
       },
       {
-        "title": "REST API",
-        "href": "/rest/api/aifoundry/aiprojects/",
-        "url": "https://learn.microsoft.com/rest/api/aifoundry/aiprojects/?view=foundry"
-      },
-      {
         "title": "REST API (resource creation & deployment)",
         "href": "/rest/api/aiservices/accountmanagement/deployments/create-or-update?tabs=HTTP",
         "url": "https://learn.microsoft.com/rest/api/aiservices/accountmanagement/deployments/create-or-update?tabs=HTTP?view=foundry"
@@ -1302,6 +1312,11 @@
       }
     ],
     "Reference": [
+      {
+        "title": "REST API",
+        "href": "reference/foundry-project",
+        "url": "https://learn.microsoft.com/en-us/azure/ai-foundry/reference/foundry-project?view=foundry"
+      },
       {
         "title": "REST API (preview)",
         "href": "reference/foundry-project-rest-preview",
@@ -1383,6 +1398,6 @@
       }
     ]
   },
-  "total_pages": 269,
-  "generated_at": "2026-02-18T03:56:45Z"
+  "total_pages": 272,
+  "generated_at": "2026-02-21T03:52:27Z"
 }

@@ -50,7 +50,7 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 - [Playgrounds and quick evaluation](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/concept-playgrounds?view=foundry)
 - [Model leaderboards](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/model-benchmarks?view=foundry)
 - [Observability overview](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/observability?view=foundry)
-- [Rate limits, region and virtual network support](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-regions-limits-virtual-network?view=foundry)
+- [Rate limits, region support, and enterprise features](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-regions-limits-virtual-network?view=foundry)
 - [Transparency Note for safety evaluations](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/safety-evaluations-transparency-note?view=foundry)
 - [Built-in evaluators reference](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/built-in-evaluators?view=foundry)
 - [General purpose evaluators](https://learn.microsoft.com/en-us/azure/ai-foundry/concepts/evaluation-evaluators/general-purpose-evaluators?view=foundry)
@@ -88,6 +88,7 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 - [Publish and share agents](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/publish-agent?view=foundry)
 - [Publish to Microsoft 365 Copilot and Teams](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/publish-copilot?view=foundry)
 - [Agent 365](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/agent-365?view=foundry)
+- [Invoke your Agent Application using the Responses API protocol](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/publish-responses?view=foundry)
 - [Service monitoring](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/metrics?view=foundry)
 - [Tool catalog (preview)](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/concepts/tool-catalog?view=foundry)
 - [Create a private tool catalog (preview)](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/private-tool-catalog?view=foundry)
@@ -169,6 +170,7 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 - [Realtime API via WebRTC](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-webrtc?view=foundry)
 - [Realtime API via WebSockets](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-websockets?view=foundry)
 - [Realtime API via SIP](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-sip?view=foundry)
+- [Realtime API migration from Preview to GA](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/how-to/realtime-audio-preview-api-migration-guide?view=foundry)
 - [Speech to text with Whisper](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/whisper-quickstart?view=foundry)
 - [Azure OpenAI in Foundry Models](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/supported-languages?view=foundry)
 - [Priority processing](https://learn.microsoft.com/en-us/azure/ai-foundry/openai/concepts/priority-processing?view=foundry)
@@ -248,6 +250,7 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 - [Use the Visual Studio Code extension for agent development](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/vs-code-agents?view=foundry)
 - [Use MCP Tools in the Visual Studio Code extension](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/vs-code-agents-mcp?view=foundry)
 - [Microsoft Foundry SDKs](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/develop/sdk-overview?view=foundry)
+- [Integrate with your applications](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/integrate-with-other-apps?view=foundry)
 - [Create resources using Bicep template](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/create-resource-template?view=foundry)
 - [Manage resources using Terraform](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/create-resource-terraform?view=foundry)
 - [Upgrade from Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-foundry/how-to/upgrade-azure-openai?view=foundry)
@@ -329,6 +332,7 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 
 ## Reference
 
+- [REST API](https://learn.microsoft.com/en-us/azure/ai-foundry/reference/foundry-project?view=foundry)
 - [REST API (preview)](https://learn.microsoft.com/en-us/azure/ai-foundry/reference/foundry-project-rest-preview?view=foundry)
 - [Known issues](https://learn.microsoft.com/en-us/azure/ai-foundry/reference/foundry-known-issues?view=foundry)
 - [Feature availability by region](https://learn.microsoft.com/en-us/azure/ai-foundry/reference/region-support?view=foundry)
@@ -338,7 +342,6 @@ AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 - [C#](https://learn.microsoft.com/dotnet/api/overview/azure/ai.projects-readme?view=foundry)
 - [JavaScript](https://learn.microsoft.com/javascript/api/overview/azure/ai-projects-readme?view=azure-node-preview&preserve-view=true)
 - [Python](https://learn.microsoft.com/python/api/overview/azure/ai-projects-readme?view=azure-python-preview&preserve-view=true)
-- [REST API](https://learn.microsoft.com/rest/api/aifoundry/aiprojects/?view=foundry)
 - [REST API (resource creation & deployment)](https://learn.microsoft.com/rest/api/aiservices/accountmanagement/deployments/create-or-update?tabs=HTTP?view=foundry)
 - [Azure Resource Manager/Bicep/Terraform](https://learn.microsoft.com/azure/templates/microsoft.cognitiveservices/accounts?pivots=deployment-language-bicep?view=foundry)
 - [Azure CLI](https://learn.microsoft.com/cli/azure/cognitiveservices?view=azure-cli-latest&preserve-view=true)
