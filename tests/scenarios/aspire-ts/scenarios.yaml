@@ -430,3 +430,196 @@ scenarios:
 
       const port = process.env.PORT || 3000;
       app.listen(port);
+
+  # Azure Container Apps Deployment
+  - name: container_apps_deployment
+    prompt: |
+      Show the Aspire AppHost C# code to publish a Node.js API and a
+      Vite frontend as Azure Container Apps. Configure the frontend
+      for external ingress and the API for internal-only ingress.
+    expected_patterns:
+      - "AddNodeApp|AddViteApp"
+      - "WithExternalHttpEndpoints"
+      - "builder.Build"
+      - "AddNodeApp"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "localhost"
+      - "127.0.0.1"
+    tags:
+      - apphost
+      - deployment
+      - azure
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithNpm()
+          .WithHttpEndpoint(port: 3000, env: "PORT")
+          .WithHttpHealthCheck("/health");
+
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithNpm()
+          .WithHttpEndpoint(port: 5173, env: "PORT")
+          .WithExternalHttpEndpoints()
+          .WithReference(api)
+          .WaitFor(api);
+
+      builder.Build().Run();
+
+  # Environment Variable Configuration
+  - name: environment_variables
+    prompt: |
+      Show how to pass custom environment variables to JavaScript apps
+      in an Aspire AppHost. Include connection strings, API keys from
+      parameters, and reference-based URLs.
+    expected_patterns:
+      - "WithEnvironment"
+      - "AddParameter"
+      - "AddNodeApp|AddViteApp"
+      - "WithReference"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "hardcoded.*key"
+    tags:
+      - apphost
+      - configuration
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var apiKeyParam = builder.AddParameter("api-key", secret: true);
+
+      var cache = builder.AddRedis("cache").RunAsContainer();
+
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithNpm()
+          .WithEnvironment("NODE_ENV", "production")
+          .WithEnvironment("API_KEY", apiKeyParam)
+          .WithReference(cache);
+
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithNpm()
+          .WithEnvironment("VITE_APP_TITLE", "My App")
+          .WithReference(api)
+          .WithExternalHttpEndpoints();
+
+      builder.Build().Run();
+
+  # Dockerfile Integration
+  - name: dockerfile_integration
+    prompt: |
+      Show the Aspire AppHost C# code to add a service built from a
+      Dockerfile instead of using AddNodeApp. The Dockerfile is at
+      ./services/worker/Dockerfile and the service needs a Redis reference.
+    expected_patterns:
+      - "AddDockerfile"
+      - "Dockerfile"
+      - "WithReference"
+      - "builder.Build"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "localhost"
+    tags:
+      - apphost
+      - docker
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var cache = builder.AddRedis("cache").RunAsContainer();
+
+      var worker = builder.AddDockerfile("worker", "./services/worker")
+          .WithReference(cache)
+          .WithHttpEndpoint(port: 8080, env: "PORT");
+
+      builder.Build().Run();
+
+  # Multi-Environment AppHost
+  - name: multi_environment_config
+    prompt: |
+      Create an Aspire AppHost that configures services differently for
+      development vs production. In development, use RunAsContainer for
+      databases. Show conditional configuration using builder environment.
+    expected_patterns:
+      - "DistributedApplication.CreateBuilder"
+      - "RunAsContainer"
+      - "AddPostgres|AddRedis"
+      - "builder.Build"
+      - "Environment|IsDevelopment|IsProduction"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "localhost"
+    tags:
+      - apphost
+      - configuration
+      - environment
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var postgres = builder.AddPostgres("db");
+
+      if (builder.Environment.IsDevelopment())
+      {
+          postgres = postgres.RunAsContainer()
+              .WithPgAdmin();
+      }
+
+      var db = postgres.AddDatabase("appdb");
+
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithNpm()
+          .WithReference(db)
+          .WithHttpHealthCheck("/health");
+
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithNpm()
+          .WithReference(api)
+          .WithExternalHttpEndpoints();
+
+      builder.Build().Run();
+
+  # Yarn Package Manager
+  - name: yarn_package_manager
+    prompt: |
+      Show Aspire AppHost C# code to add a Vite app and a Node.js API
+      that both use Yarn as their package manager instead of npm or pnpm.
+    expected_patterns:
+      - "AddViteApp"
+      - "AddNodeApp"
+      - "WithYarn"
+      - "builder.Build"
+    forbidden_patterns:
+      - "AddNpmApp"
+      - "WithNpm"
+      - "WithPnpm"
+    tags:
+      - apphost
+      - yarn
+    mock_response: |
+      #:sdk Aspire.AppHost.Sdk@13.1.0
+      #:package Aspire.Hosting.JavaScript@13.1.0
+
+      var builder = DistributedApplication.CreateBuilder(args);
+
+      var api = builder.AddNodeApp("api", "./api", "server.js")
+          .WithYarn()
+          .WithHttpEndpoint(port: 3000, env: "PORT")
+          .WithHttpHealthCheck("/health");
+
+      var web = builder.AddViteApp("web", "./frontend")
+          .WithYarn()
+          .WithExternalHttpEndpoints()
+          .WithReference(api)
+          .WaitFor(api);
+
+      builder.Build().Run();

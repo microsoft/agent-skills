@@ -461,3 +461,251 @@ scenarios:
         prompt: "Review this function: function add(a, b) { return a + b; }",
       });
       await client.stop();
+
+  # Multi-Tool Session
+  - name: multi_tool_session
+    prompt: |
+      Create a Copilot SDK application in TypeScript that registers
+      multiple custom tools (a file reader and a calculator) and uses
+      them together in a single session.
+    expected_patterns:
+      - "defineTool"
+      - "tools.*\\["
+      - "handler"
+      - "createSession"
+      - "parameters"
+    forbidden_patterns:
+      - "any"
+      - "api_key.*=.*[\"']sk-"
+    tags:
+      - typescript
+      - tools
+      - multi-tool
+    mock_response: |
+      import { CopilotClient, defineTool } from "@github/copilot-sdk";
+
+      const readFile = defineTool("read_file", {
+        description: "Read the contents of a file",
+        parameters: {
+          type: "object",
+          properties: {
+            path: { type: "string", description: "File path to read" },
+          },
+          required: ["path"],
+        },
+        handler: async ({ path }) => {
+          const fs = await import("fs/promises");
+          const content = await fs.readFile(path, "utf-8");
+          return { content };
+        },
+      });
+
+      const calculate = defineTool("calculate", {
+        description: "Evaluate a math expression",
+        parameters: {
+          type: "object",
+          properties: {
+            expression: { type: "string", description: "Math expression" },
+          },
+          required: ["expression"],
+        },
+        handler: async ({ expression }) => {
+          const result = Function(`"use strict"; return (${expression})`)();
+          return { result };
+        },
+      });
+
+      const client = new CopilotClient();
+      const session = await client.createSession({
+        model: "gpt-4.1",
+        tools: [readFile, calculate],
+      });
+
+      await session.sendAndWait({
+        prompt: "Read package.json and count how many dependencies there are",
+      });
+      await client.stop();
+
+  # Error Handling Pattern
+  - name: error_handling_typescript
+    prompt: |
+      Create a Copilot SDK application in TypeScript with proper error
+      handling. Wrap client operations in try/catch/finally blocks and
+      ensure the client is always stopped even on errors.
+    expected_patterns:
+      - "try"
+      - "catch"
+      - "finally"
+      - "stop\\(\\)"
+      - "CopilotClient"
+      - "createSession"
+    forbidden_patterns:
+      - "api_key.*=.*[\"']sk-"
+    tags:
+      - typescript
+      - error-handling
+    mock_response: |
+      import { CopilotClient } from "@github/copilot-sdk";
+
+      const client = new CopilotClient();
+
+      try {
+        const session = await client.createSession({ model: "gpt-4.1" });
+        const response = await session.sendAndWait({
+          prompt: "Explain error handling best practices",
+        });
+
+        if (response?.data.content) {
+          console.log(response.data.content);
+        } else {
+          console.error("No response received");
+        }
+      } catch (error) {
+        console.error("Copilot SDK error:", error);
+        process.exitCode = 1;
+      } finally {
+        await client.stop();
+      }
+
+  # Streaming with Tools
+  - name: streaming_with_tools
+    prompt: |
+      Create a Copilot SDK application in TypeScript that combines
+      streaming responses with a custom tool. Enable streaming and
+      listen for both delta events and tool call events.
+    expected_patterns:
+      - "streaming.*true"
+      - "defineTool"
+      - "tools.*\\["
+      - "on\\("
+      - "deltaContent|delta_content"
+      - "sendAndWait"
+    forbidden_patterns:
+      - "any"
+    tags:
+      - typescript
+      - streaming
+      - tools
+    mock_response: |
+      import { CopilotClient, defineTool } from "@github/copilot-sdk";
+
+      const getWeather = defineTool("get_weather", {
+        description: "Get the current weather for a city",
+        parameters: {
+          type: "object",
+          properties: {
+            city: { type: "string", description: "City name" },
+          },
+          required: ["city"],
+        },
+        handler: async ({ city }) => {
+          return { city, temperature: 72, condition: "sunny" };
+        },
+      });
+
+      const client = new CopilotClient();
+      const session = await client.createSession({
+        model: "gpt-4.1",
+        streaming: true,
+        tools: [getWeather],
+      });
+
+      session.on("assistant.message_delta", (event) => {
+        process.stdout.write(event.data.deltaContent);
+      });
+
+      session.on("session.idle", () => {
+        console.log("\n--- Done ---");
+      });
+
+      await session.sendAndWait({
+        prompt: "What's the weather in San Francisco?",
+      });
+      await client.stop();
+
+  # Python Streaming
+  - name: python_streaming
+    prompt: |
+      Create a Copilot SDK application in Python that uses streaming
+      to print response tokens as they arrive. Use async event handlers
+      and proper cleanup.
+    expected_patterns:
+      - "from copilot import CopilotClient"
+      - "await.*start"
+      - "create_session"
+      - "streaming"
+      - "on.*delta|on_event"
+      - "await.*stop"
+      - "asyncio"
+    forbidden_patterns:
+      - "import copilot_sdk"
+    tags:
+      - python
+      - streaming
+    mock_response: |
+      import asyncio
+      from copilot import CopilotClient
+
+      async def main():
+          client = CopilotClient()
+          await client.start()
+
+          session = await client.create_session({
+              "model": "gpt-4.1",
+              "streaming": True,
+          })
+
+          def on_delta(event):
+              print(event.data.delta_content, end="", flush=True)
+
+          def on_idle(event):
+              print("\n--- Stream complete ---")
+
+          session.on("assistant.message_delta", on_delta)
+          session.on("session.idle", on_idle)
+
+          await session.send_and_wait({"prompt": "Write a haiku about Python"})
+          await client.stop()
+
+      asyncio.run(main())
+
+  # MCP with Tool Filtering
+  - name: mcp_tool_filtering
+    prompt: |
+      Create a Copilot SDK session in TypeScript that connects to an
+      MCP server but only allows specific tools instead of all tools.
+      Show how to filter which MCP tools are available.
+    expected_patterns:
+      - "mcpServers"
+      - "tools.*\\["
+      - "type.*local|type.*http"
+      - "createSession"
+    forbidden_patterns:
+      - "api_key.*=.*[\"']sk-"
+    tags:
+      - typescript
+      - mcp
+      - security
+    mock_response: |
+      import { CopilotClient } from "@github/copilot-sdk";
+
+      const client = new CopilotClient();
+      const session = await client.createSession({
+        model: "gpt-4.1",
+        mcpServers: {
+          filesystem: {
+            type: "local",
+            command: "npx",
+            args: ["-y", "@modelcontextprotocol/server-filesystem", "/workspace"],
+            tools: ["read_file", "list_directory"],
+          },
+          github: {
+            type: "http",
+            url: "https://api.githubcopilot.com/mcp/",
+            tools: ["search_repositories", "get_file_contents"],
+          },
+        },
+      });
+
+      await session.sendAndWait({ prompt: "List files in the workspace" });
+      await client.stop();
