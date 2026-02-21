@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "eslint": "^9.5.0",
+    "eslint": "^10.0.1",
     "tsx": "^4.15.6",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
